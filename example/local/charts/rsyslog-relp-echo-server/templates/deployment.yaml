@@ -1,0 +1,41 @@
+# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rsyslog-relp-echo-server
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: rsyslog-relp-echo-server
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  revisionHistoryLimit: 0
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rsyslog-relp-echo-server
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: rsyslog-relp-echo-server
+        app.kubernetes.io/instance: {{ .Release.Name }}
+      annotations:
+        checksum/rsyslog-echo-server-config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      containers:
+      - name: rsyslog-relp-echo-server
+        image: {{ .Values.images.rsyslog }}
+        imagePullPolicy: {{ .Values.images.pullPolicy }}
+        ports:
+        - containerPort: 10250
+        volumeMounts:
+        - name: rsyslog-relp-echo-server
+          mountPath: /etc/rsyslog.d
+      volumes:
+      - name: rsyslog-relp-echo-server
+        configMap:
+          name: rsyslog-relp-echo-server

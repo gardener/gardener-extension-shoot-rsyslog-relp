@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rsyslog-relp-echo-server
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: rsyslog-relp-echo-server
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  60-relp.conf: |
+    module(load="imrelp")
+    input(
+      type="imrelp"
+      port="10250"
+      maxDataSize="10k"
+      tls="off"
+    )
+
+    template(name="OutFmt" type="list") {
+      property(name="msg")
+      constant(value="\n")
+    }
+    module(load="omstdout")
+    action(type="omstdout" template="OutFmt")

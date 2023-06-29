@@ -1,0 +1,71 @@
+# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+---
+apiVersion: core.gardener.cloud/v1beta1
+kind: Shoot
+metadata:
+  name: local
+  namespace: garden-local
+  annotations:
+    shoot.gardener.cloud/infrastructure-cleanup-wait-period-seconds: "0"
+    shoot.gardener.cloud/cloud-config-execution-max-delay-seconds: "0"
+spec:
+  extensions:
+  - type: shoot-rsyslog-relp
+    providerConfig:
+      apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
+      kind: RsyslogRelpConfig
+      target: 10.2.64.54
+      port: 80
+      loggingRules:
+      # only forward logs from systemd that are at Info(6) syslog severity or below to the target server
+      - severity: 6
+        programNames: ["systemd"]
+      # only forward logs from download-cloud-config.sh that are at Debug(7) syslog severity or below to the target server
+      - severity: 7
+        programNames: ["download-cloud-config.sh"]
+      resumeRetryCount: -1 # never discard logs if the target server is not available
+    # timeout: 90
+    # rebindInterval: 1000
+    # reportSuspensionContinuation: true
+    # tls:
+    #   enabled: true
+    #   secretReferenceName: rsyslog-tls-certificates
+    #   authMode: name # {name, fingerprint}
+    #   permittedPeer:
+    #   - "10.2.64.54"
+  seedName: local
+  cloudProfileName: local
+  secretBindingName: local # dummy, doesn't contain any credentials
+  region: local
+  networking:
+    type: calico
+    providerConfig:
+      apiVersion: calico.networking.extensions.gardener.cloud/v1alpha1
+      kind: NetworkConfig
+      backend: none
+      typha:
+        enabled: false
+  provider:
+    type: local
+    workers:
+    - name: local
+      machine:
+        type: local
+      cri:
+        name: containerd
+      minimum: 1
+      maximum: 1 # currently, only single-node clusters are supported
+      maxSurge: 1
+      maxUnavailable: 0
+  kubernetes:
+    version: 1.25.4
+    kubelet:
+      seccompDefault: true
+      serializeImagePulls: false
+      registryPullQPS: 10
+      registryBurst: 20
+      protectKernelDefaults: true
+      streamingConnectionIdleTimeout: 5m

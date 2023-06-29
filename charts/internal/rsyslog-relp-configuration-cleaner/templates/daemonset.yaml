@@ -1,0 +1,69 @@
+# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "labels" . | indent 4 }}
+spec:
+  selector:
+    matchLabels:
+{{ include "labels" . | indent 6 }}
+  template:
+    metadata:
+      labels:
+{{ include "labels" . | indent 8 }}
+    spec:
+      containers:
+      - name: pause-container
+        image: {{ .Values.images.pause }}
+        imagePullPolicy: {{ .Values.images.pullPolicy }}
+      initContainers:
+      - name: rsyslog-configuration-cleaner
+        image: {{ .Values.images.alpine }}
+        imagePullPolicy: {{ .Values.images.pullPolicy }}
+        securityContext:
+          privileged: true
+        command:
+        - "sh"
+        - "-c"
+        - |
+          if [[ -f /host/etc/systemd/system/rsyslog-configurator.service ]]; then
+            chroot /host /bin/bash -c 'systemctl disable rsyslog-configurator; systemctl stop rsyslog-configurator; rm -f /etc/systemd/system/rsyslog-configurator.service'
+          fi
+
+          if [[ -f /host/etc/audit/plugins.d/syslog.conf ]]; then
+            sed -i 's/yes/no/g' /host/etc/audit/plugins.d/syslog.conf
+          fi
+
+          if [[ -d /host/etc/audit/rules.d.original ]]; then
+            if [[ -d /host/etc/audit/rules.d ]]; then
+              rm -rf /host/etc/audit/rules.d
+            fi
+            mv /host/etc/audit/rules.d.original /host/etc/audit/rules.d
+            chroot /host /bin/bash -c 'if systemctl list-unit-files auditd.service > /dev/null; then augenrules --load; systemctl restart auditd; fi'
+          fi
+
+          if [[ -f /host/etc/rsyslog.d/60-audit.conf ]]; then
+            rm -f /host/etc/rsyslog.d/60-audit.conf
+            chroot /host /bin/bash -c 'if systemctl list-unit-files rsyslog.service > /dev/null; then systemctl restart rsyslog; fi'
+          fi
+
+          if [[ -d /host/var/lib/rsyslog-relp-configurator ]]; then
+            rm -rf /host/var/lib/rsyslog-relp-configurator
+          fi
+        volumeMounts:
+        - name: host-root-volume
+          mountPath: /host
+          readOnly: false
+          mountPropagation: HostToContainer
+      hostPID: true
+      volumes:
+      - name: host-root-volume
+        hostPath:
+          path: /

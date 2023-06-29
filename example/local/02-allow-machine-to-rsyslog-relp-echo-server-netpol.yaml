@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-machine-to-rsyslog-relp-echo-server
+  namespace: shoot--local--local
+spec:
+  podSelector:
+    matchLabels:
+      app: machine
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: rsyslog-relp-echo-server
+            app.kubernetes.io/instance: rsyslog-relp-echo-server
+        namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: rsyslog-relp-echo-server

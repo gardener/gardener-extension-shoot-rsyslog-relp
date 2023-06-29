@@ -1,0 +1,136 @@
+# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "name" . }}-config
+  namespace: {{ .Release.Namespace }}
+data:
+  rsyslog-configurator.service: |
+    [Unit]
+    Description=rsyslog configurator daemon
+    Documentation=https://github.com/gardener/gardener-extension-shoot-rsyslog-relp
+    [Service]
+    Type=simple
+    Restart=always
+    RestartSec=15
+    ExecStart=/var/lib/rsyslog-relp-configurator/configure-rsyslog.sh
+    [Install]
+    WantedBy=multi-user.target
+
+  configure-rsyslog.sh: |
+    #!/bin/bash
+
+    function configure_auditd() {
+      if [[ ! -d /etc/audit/rules.d.original ]] && [[ -d /etc/audit/rules.d ]]; then
+        mv /etc/audit/rules.d /etc/audit/rules.d.original
+      fi
+
+      if [[ ! -d /etc/audit/rules.d ]]; then
+        mkdir -p /etc/audit/rules.d
+      fi
+      if ! diff -rq /var/lib/rsyslog-relp-configurator/audit/rules.d /etc/audit/rules.d ; then
+        rm -rf /etc/audit/rules.d/*
+        cp -L /var/lib/rsyslog-relp-configurator/audit/rules.d/* /etc/audit/rules.d/
+        if [[ -f /etc/audit/plugins.d/syslog.conf ]]; then
+          sed -i 's/no/yes/g' /etc/audit/plugins.d/syslog.conf
+        fi
+        augenrules --load
+        systemctl restart auditd
+      fi
+    }
+
+    function configure_rsyslog() {
+      if [[ ! -f etc/rsyslog.d/60-audit.conf ]] || ! diff -rq /var/lib/rsyslog-relp-configurator/rsyslog.d/60-audit.conf /etc/rsyslog.d/60-audit.conf ; then
+        cp -fL /var/lib/rsyslog-relp-configurator/rsyslog.d/60-audit.conf /etc/rsyslog.d/60-audit.conf
+        systemctl restart rsyslog
+      fi
+    }
+
+    if systemctl list-unit-files auditd.service > /dev/null; then
+      echo "Configuring auditd.service ..."
+      configure_auditd
+    else
+      echo "auditd.service is not installed, skipping configuration"
+    fi
+
+    if systemctl list-unit-files rsyslog.service > /dev/null; then
+      echo "Configuring rsysllog.service ..."
+      configure_rsyslog
+    else
+      echo "rsyslog.service is not installed, skipping configuration"
+    fi
+
+  60-audit.conf: |
+    template(name="SyslogForwarderTemplate" type="list") {
+      constant(value=" ")
+      constant(value="{{ required ".Values.rsyslogConfig.projectName is required" .Values.rsyslogConfig.projectName }}")
+      constant(value=" ")
+      constant(value="{{ required ".Values.rsyslogConfig.shootName is required" .Values.rsyslogConfig.shootName }}")
+      constant(value=" ")
+      constant(value="{{ required ".Values.rsyslogConfig.shootUID is required" .Values.rsyslogConfig.shootUID }}")
+      constant(value=" ")
+      property(name="hostname")
+      constant(value=" ")
+      property(name="pri")
+      constant(value=" ")
+      property(name="syslogtag")
+      constant(value=" ")
+      property(name="timestamp" dateFormat="rfc3339")
+      constant(value=" ")
+      property(name="procid")
+      constant(value=" ")
+      property(name="msgid")
+      constant(value=" ")
+      property(name="msg")
+      constant(value=" ")
+    }
+
+    module(load="omrelp")
+
+    module(load="impstats"
+       interval="600"
+       severity="7"
+       log.syslog="off"
+       log.file="/var/log/rsyslog-stats.log"
+    )
+
+    ruleset(name="relpruleset") {
+      action(
+        type="omrelp"
+        target="{{ required ".Values.rsyslogConfig.target is required" .Values.rsyslogConfig.target }}"
+        port="{{ required ".Values.rsyslogConfig.port is required" .Values.rsyslogConfig.port }}"
+        Template="SyslogForwarderTemplate"
+        {{- if .Values.rsyslogConfig.rebindInterval }}
+        rebindInterval="{{ .Values.rsyslogConfig.rebindInterval }}"
+        {{- end }}
+        {{- if .Values.rsyslogConfig.timeout }}
+        timeout="{{ .Values.rsyslogConfig.timeout }}"
+        {{- end }}
+        {{- if .Values.rsyslogConfig.resumeRetryCount }}
+        action.resumeRetryCount="{{ .Values.rsyslogConfig.resumeRetryCount }}"
+        {{- end }}
+        {{- if .Values.rsyslogConfig.reportSuspensionContinuation }}
+        action.reportSuspensionContinuation="{{ .Values.rsyslogConfig.reportSuspensionContinuation }}"
+        {{- end }}
+        {{- if .Values.rsyslogConfig.tls.enabled }}
+        tls="on"
+        tls.caCert="/var/lib/rsyslog-relp-configurator/tls/ca.crt"
+        tls.myCert="/var/lib/rsyslog-relp-configurator/tls/tls.crt"
+        tls.myPrivKey="/var/lib/rsyslog-relp-configurator/tls/tls.key"
+        {{- end }}
+        {{- if .Values.rsyslogConfig.tls.authMode }}
+        tls.authmode="{{ .Values.rsyslogConfig.tls.authMode }}"
+        {{- end }}
+        {{- if .Values.rsyslogConfig.tls.permittedPeer }}
+        tls.permittedpeer="{{ .Values.rsyslogConfig.tls.permittedPeer }}"
+        {{- end }}
+      )
+    }
+    ruleset(name="config") {
+{{ required ".Values.rsyslogConfig.filters is required" .Values.rsyslogConfig.filters | indent 6}}
+    }
+
+    input(type="imuxsock" Socket="/run/systemd/journal/syslog" ruleset="config")
