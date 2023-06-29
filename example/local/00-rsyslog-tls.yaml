@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: rsyslog-relp-tls
+  namespace: garden-local
+stringData:
+  key: |
+    -----BEGIN BEGIN RSA PRIVATE KEY-----
+    ...
+    -----END RSA PRIVATE KEY-----
+  crt: |
+    -----BEGIN BEGIN RSA PRIVATE KEY-----
+    ...
+    -----END RSA PRIVATE KEY-----
+  ca: |
+    -----BEGIN BEGIN RSA PRIVATE KEY-----
+    ...
+    -----END RSA PRIVATE KEY-----

@@ -1,0 +1,44 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Gardener gardener-extension-shoot-rsyslog-relp
+Upstream-Contact: The Gardener project <gardener@googlegroups.com>
+Source: https://github.com/gardener/gardener-extension-shoot-rsyslog-relp
+Comment:
+
+# --------------------------------------------------
+# declare copyright and license of files which can't carry license headers
+# --------------------------------------------------
+# source code
+Files:
+  .gitignore
+  .golangci.yaml
+  CODEOWNERS
+  VERSION
+  charts/gardener-extension-shoot-rsyslog-relp/.helmignore
+  charts/gardener-extension-shoot-rsyslog-relp/templates/_helpers.tpl
+  charts/gardener-extension-shoot-rsyslog-relp/templates/_versions.tpl
+  charts/gardener-extension-shoot-rsyslog-relp-admission/.helmignore
+  charts/gardener-extension-shoot-rsyslog-relp-admission/templates/_helpers.tpl
+  charts/gardener-extension-shoot-rsyslog-relp-admission/templates/_versions.tpl
+  charts/internal/rsyslog-relp-configurator/templates/0helpers.tpl
+  charts/internal/rsyslog-relp-configuration-cleaner/templates/0helpers.tpl
+  example/controller-registration.yaml
+  go.mod
+  go.sum
+  *.json
+Copyright: 2022 SAP SE or an SAP affiliate company and Gardener contributors
+License: Apache-2.0
+
+# --------------------------------------------------
+# documentation
+Files:
+  docs/**
+  *.md
+Copyright: 2022 SAP SE or an SAP affiliate company and Gardener contributors
+License: CC-BY-4.0
+
+# --------------------------------------------------
+# source (vendored) dependencies
+#
+# Files: <relative path to vendored component>
+# Copyright: <vendored component's copyright>
+# License: <vendored component's license>

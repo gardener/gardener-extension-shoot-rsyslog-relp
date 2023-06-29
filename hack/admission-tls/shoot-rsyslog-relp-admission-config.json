@@ -1,0 +1,16 @@
+{
+    "CN": "gardener-extension-shoot-rsyslog-relp-admission.garden.svc.cluster.local",
+    "hosts": [
+        "gardener-extension-shoot-rsyslog-relp-admission",
+        "gardener-extension-shoot-rsyslog-relp-admission.garden",
+        "gardener-extension-shoot-rsyslog-relp-admission.garden.svc",
+        "gardener-extension-shoot-rsyslog-relp-admission.garden.svc.cluster",
+        "gardener-extension-shoot-rsyslog-relp-admission.garden.svc.cluster.local"
+    ],
+    "key": {
+        "algo": "rsa",
+        "size": 2048
+    },
+    "names": [
+    ]
+}

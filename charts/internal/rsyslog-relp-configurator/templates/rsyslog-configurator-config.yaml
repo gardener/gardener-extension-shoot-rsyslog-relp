@@ -1,0 +1,83 @@
+# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "name" . }}-config
+  namespace: {{ .Release.Namespace }}
+data:
+  60-audit.conf: |
+    template(name="SyslogForwarderTemplate" type="list") {
+      constant(value=" ")
+      constant(value="{{ .Values.projectName }}")
+      constant(value=" ")
+      constant(value="{{ .Values.shootName }}")
+      constant(value=" ")
+      constant(value="{{ .Values.shootUID }}")
+      constant(value=" ")
+      property(name="hostname")
+      constant(value=" ")
+      property(name="pri")
+      constant(value=" ")
+      property(name="syslogtag")
+      constant(value=" ")
+      property(name="timestamp" dateFormat="rfc3339")
+      constant(value=" ")
+      property(name="procid")
+      constant(value=" ")
+      property(name="msgid")
+      constant(value=" ")
+      property(name="msg")
+      constant(value=" ")
+    }
+
+    module(load="omrelp")
+
+    module(load="impstats"
+       interval="600"
+       severity="7"
+       log.syslog="off"
+       log.file="/var/log/rsyslog-stats.log"
+    )
+
+    ruleset(name="defaultruleset") {
+      action(
+        type="omrelp"
+        target="{{ required ".Values.rsyslogConfig.target is required" .Values.rsyslogConfig.target }}"
+        port="{{ required ".Values.rsyslogConfig.port is required" .Values.rsyslogConfig.port }}"
+        Template="SyslogForwarderTemplate"
+        {{- if .Values.rsyslogConfig.rebindInterval }}
+        rebindInterval="{{ .Values.rsyslogConfig.rebindInterval }}"
+        {{- end }}
+        {{- if .Values.rsyslogConfig.timeout }}
+        timeout="{{ .Values.rsyslogConfig.timeout }}"
+        {{- end }}
+        {{- if .Values.rsyslogConfig.resumeRetryCount }}
+        action.resumeRetryCount="{{ .Values.rsyslogConfig.resumeRetryCount }}"
+        {{- end }}
+        {{- if .Values.rsyslogConfig.reportSuspensionContinuation }}
+        action.reportSuspensionContinuation="{{ .Values.rsyslogConfig.reportSuspensionContinuation }}"
+        {{- end }}
+        {{- if .Values.rsyslogConfig.tls.enabled }}
+        tls="on"
+        tls.caCert="{{ .Values.rsyslogConfig.tls.certificatePath }}/ca.crt"
+        tls.myCert="{{ .Values.rsyslogConfig.tls.certificatePath }}/tls.crt"
+        tls.myPrivKey="{{ .Values.rsyslogConfig.tls.certificatePath }}/tls.key"
+        {{- end }}
+        {{- if .Values.rsyslogConfig.tls.authMode }}
+        tls.authmode="{{ .Values.rsyslogConfig.tls.authMode }}"
+        {{- end }}
+        {{- if .Values.rsyslogConfig.tls.permittedPeer }}
+        tls.permittedpeer="{{ .Values.rsyslogConfig.tls.permittedPeer }}"
+        {{- end }}
+      )
+    }
+    ruleset(name="config") {
+    {{- if .Values.rsyslogConfig.filters }}
+{{ .Values.rsyslogConfig.filters | indent 6}}
+    {{- end }}
+    }
+
+    input(type="imuxsock" Socket="/run/systemd/journal/syslog" ruleset="config")

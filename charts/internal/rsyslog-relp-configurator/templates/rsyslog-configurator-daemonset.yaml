@@ -1,0 +1,89 @@
+# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "labels" . | indent 4 }}
+spec:
+  selector:
+    matchLabels:
+{{ include "labels" . | indent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/rsyslog-secret-tls: {{ include (print $.Template.BasePath "/rsyslog-secret-tls.yaml") . | sha256sum }}
+        checksum/rsyslog-configurator-config: {{ include (print $.Template.BasePath "/rsyslog-configurator-config.yaml") . | sha256sum }}
+        checksum/auditd-config: {{ include (print $.Template.BasePath "/auditd-config.yaml") . | sha256sum }}
+      labels:
+{{ include "labels" . | indent 8 }}
+    spec:
+      containers:
+      - name: pause
+        image: {{ .Values.images.pause }}
+        imagePullPolicy: {{ .Values.images.pullPolicy }}
+      initContainers:
+      - name: rsyslog-configurator
+        image: {{ .Values.images.alpine }}
+        imagePullPolicy: {{ .Values.images.pullPolicy }}
+        securityContext:
+          privileged: true
+        command:
+        - "sh"
+        - "-c"
+        - |
+          if ! diff -rq /var/auditd/config /host/etc/audit/rules.d ; then
+            if [[ ! -d /host/etc/audit/rules.d.original ]]; then
+              mkdir -p /host/etc/audit/rules.d.original
+              mv /host/etc/audit/rules.d/* /host/etc/audit/rules.d.original/
+            else
+              rm -f /host/etc/audit/rules.d/*
+            fi
+            cp -L /var/auditd/config/* /host/etc/audit/rules.d/
+            if [[ -f /host/etc/audit/plugins.d/syslog.conf ]]; then
+              sed -i 's/no/yes/g' /host/etc/audit/plugins.d/syslog.conf
+            fi
+            chroot /host /bin/bash -c 'augenrules --load && systemctl restart auditd'
+          fi
+
+          mkdir -p /host/{{ .Values.rsyslogConfig.tls.certificatePath }}
+          cp -fL /var/rsyslog/tls/* /host/{{ .Values.rsyslogConfig.tls.certificatePath }}/
+          if ! diff -rq /var/rsyslog/config /host/etc/rsyslog.d ; then
+            if [[ ! -d /host/etc/rsyslog.d.original ]]; then
+              mkdir -p /host/etc/rsyslog.d.original
+              mv /host/etc/rsyslog.d/* /host/etc/rsyslog.d.original/
+            else
+              rm -f /host/etc/rsyslog.d/*
+            fi
+            cp -fL /var/rsyslog/config/* /host/etc/rsyslog.d/
+            chroot /host /bin/bash -c 'systemctl restart rsyslog'
+          fi
+        volumeMounts:
+        - name: rsyslog-relp-configurator-tls-volume
+          mountPath: /var/rsyslog/tls
+        - name: rsyslog-relp-configurator-config-volume
+          mountPath: /var/rsyslog/config
+        - name: auditd-config-volume
+          mountPath: /var/auditd/config
+        - name: host-root-volume
+          mountPath: /host
+          readOnly: false
+          mountPropagation: HostToContainer
+      hostPID: true
+      volumes:
+      - name: rsyslog-relp-configurator-tls-volume
+        secret:
+          secretName: {{ include "name" . }}-tls
+      - name: rsyslog-relp-configurator-config-volume
+        configMap:
+          name: {{ include "name" . }}-config
+      - name: auditd-config-volume
+        configMap:
+          name: {{ include "name" . }}-auditd-config
+      - name: host-root-volume
+        hostPath:
+          path: /

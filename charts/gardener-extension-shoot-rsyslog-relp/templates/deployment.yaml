@@ -1,0 +1,132 @@
+# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gardener-extension-{{ .Values.serviceName }}
+  namespace: {{ .Release.Namespace }}
+{{- if .Values.ignoreResources }}
+  annotations:
+    resources.gardener.cloud/ignore: "true"
+{{- end }}
+  labels:
+    app.kubernetes.io/name: gardener-extension-{{ .Values.serviceName }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  revisionHistoryLimit: 2
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gardener-extension-{{ .Values.serviceName }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      annotations:
+        checksum/extension-config: {{ include (print $.Template.BasePath "/extension-config.yaml") . | sha256sum }}
+      {{- if .Values.imageVectorOverwrite }}
+        checksum/configmap-extension-imagevector-overwrite: {{ include (print $.Template.BasePath "/configmap-imagevector-overwrite.yaml") . | sha256sum }}
+      {{- end }}
+      {{- if .Values.metrics.enableScraping }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.metrics.port }}"
+      {{- end }}
+      labels:
+        app.kubernetes.io/name: gardener-extension-{{ .Values.serviceName }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        high-availability-config.resources.gardener.cloud/type: server
+        networking.resources.gardener.cloud/to-all-shoots-kube-apiserver-tcp-443: allowed
+        networking.gardener.cloud/to-runtime-apiserver: allowed
+        networking.gardener.cloud/to-dns: allowed
+    spec:
+      {{- if gt (int .Values.replicaCount) 1 }}
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                - gardener-extension-{{ .Values.serviceName }}
+              - key: app.kubernetes.io/instance
+                operator: In
+                values:
+                - {{ .Release.Name }}
+            topologyKey: "kubernetes.io/hostname"
+      {{- end }}
+      priorityClassName: gardener-system-500
+      serviceAccountName: gardener-extension-{{ .Values.serviceName }}
+      {{- if not .Values.localDevelopment.enabled }}
+      imagePullSecrets:
+      - name: gardener-extension-{{ .Values.serviceName }}-image-pull-gcr
+      {{- end }}
+      containers:
+      - name: gardener-extension-{{ .Values.serviceName }}
+        image: {{ include "image" . }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command:
+        - /gardener-extension-shoot-rsyslog-relp
+        - --config=/etc/rsyslog-relp/config.yaml
+        - --lifecycle-max-concurrent-reconciles={{ .Values.controllers.lifecycle.concurrentSyncs }}
+        - --healthcheck-max-concurrent-reconciles={{ .Values.controllers.healthcheck.concurrentSyncs }}
+        - --ignore-operation-annotation={{ .Values.controllers.ignoreOperationAnnotation }}
+        - --leader-election-id={{ include "leaderelectionid" . }}
+        - --heartbeat-namespace={{ .Release.Namespace }}
+        - --heartbeat-renew-interval-seconds={{ .Values.controllers.heartbeat.renewIntervalSeconds }}
+        - --gardener-version={{ .Values.gardener.version }}
+        - --metrics-bind-address=:{{ .Values.metrics.port }}
+        - --health-bind-address=:{{ .Values.healthPort }}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: {{ .Values.healthPort }}
+            scheme: HTTP
+          initialDelaySeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: {{ .Values.healthPort }}
+            scheme: HTTP
+          initialDelaySeconds: 5
+        env:
+        - name: LEADER_ELECTION_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: RUNTIME_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        {{- if .Values.imageVectorOverwrite }}
+        - name: IMAGEVECTOR_OVERWRITE
+          value: /charts_overwrite/images_overwrite.yaml
+        {{- end }}
+        {{- if .Values.resources }}
+        resources:
+{{ toYaml .Values.resources | trim | indent 10 }}
+        {{- end }}
+        volumeMounts:
+        - name: rsyslog-relp-config
+          mountPath: /etc/rsyslog-relp
+          readOnly: true
+        {{- if .Values.imageVectorOverwrite }}
+        - name: extension-imagevector-overwrite
+          mountPath: /charts_overwrite/
+          readOnly: true
+        {{- end }}
+      volumes:
+      - name: rsyslog-relp-config
+        configMap:
+          name: extension-shoot-rsyslog-relp.config
+          items:
+            - key: config.yaml
+              path: config.yaml
+      {{- if .Values.imageVectorOverwrite }}
+      - name: extension-imagevector-overwrite
+        configMap:
+          name: gardener-extension-{{ .Values.serviceName }}-imagevector-overwrite
+          defaultMode: 420
+      {{- end }}

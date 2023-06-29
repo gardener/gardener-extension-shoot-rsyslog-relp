@@ -1,0 +1,49 @@
+# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+image:
+  repository: eu.gcr.io/gardener-project/gardener/extensions/shoot-rsyslog-relp-admission
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  readOnly: ""
+
+replicaCount: 1
+
+admissionConfig:
+  allowedServiceURLs: []
+
+resources: {}
+
+metricsPort: 8080
+healthPort: 8081
+
+vpa:
+  enabled: true
+  resourcePolicy:
+    minAllowed:
+      cpu: 50m
+      memory: 64Mi
+  updatePolicy:
+    updateMode: "Auto"
+
+webhookConfig:
+  serverPort: 10250
+  tls:
+    crt: |
+      -----BEGIN CERTIFICATE-----
+      ...
+      -----END CERTIFICATE-----
+    key: |
+      -----BEGIN RSA PRIVATE KEY-----
+      ...
+      -----END RSA PRIVATE KEY-----
+# Kubeconfig to the target cluster. In-cluster configuration will be used if not specified.
+kubeconfig:
+
+serviceAccountTokenVolumeProjection:
+  enabled: false
+  expirationSeconds: 43200
+  audience: ""

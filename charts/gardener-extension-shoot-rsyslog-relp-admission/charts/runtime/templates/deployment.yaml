@@ -1,0 +1,114 @@
+# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "labels" . | indent 4 }}
+    high-availability-config.resources.gardener.cloud/type: server
+spec:
+  revisionHistoryLimit: 2
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+{{ include "labels" . | indent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/gardener-extension-shoot-rsyslog-relp-admission-tls: {{ include (print $.Template.BasePath "/secret-tls.yaml") . | sha256sum }}
+        {{- if .Values.kubeconfig }}
+        checksum/gardener-extension-shoot-rsyslog-relp-admission-kubeconfig: {{ include (print $.Template.BasePath "/secret-kubeconfig.yaml") . | sha256sum }}
+        {{- end }}
+      labels:
+        networking.gardener.cloud/to-dns: allowed
+        networking.resources.gardener.cloud/to-virtual-garden-kube-apiserver-tcp-443: allowed
+        networking.gardener.cloud/to-runtime-apiserver: allowed
+{{ include "labels" . | indent 8 }}
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: {{ include "name" . }}
+      {{- if .Values.imagePullSecrets.readOnly }}
+      imagePullSecrets:
+      - name: {{ include "name" . }}-image-pull
+      {{- end }}
+      {{- if .Values.kubeconfig }}
+      automountServiceAccountToken: false
+      {{- end }}
+      containers:
+      - name: {{ include "name" . }}
+        image: {{ include "image" .Values.image }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command:
+        - /gardener-extension-shoot-rsyslog-relp-admission
+        - --webhook-config-server-port={{ .Values.webhookConfig.serverPort }}
+        - --webhook-config-cert-dir=/etc/gardener-extension-shoot-rsyslog-relp-admission/srv
+        {{- if .Values.kubeconfig }}
+        - --kubeconfig=/etc/gardener-extension-shoot-rsyslog-relp-admission/kubeconfig/kubeconfig
+        {{- end }}
+        {{- if .Values.metricsPort }}
+        - --metrics-bind-address=:{{ .Values.metricsPort }}
+        {{- end }}
+        - --health-bind-address=:{{ .Values.healthPort }}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: {{ .Values.healthPort }}
+            scheme: HTTP
+          initialDelaySeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: {{ .Values.healthPort }}
+            scheme: HTTP
+          initialDelaySeconds: 5
+        ports:
+        - name: webhook-server
+          containerPort: {{ .Values.webhookConfig.serverPort }}
+          protocol: TCP
+{{- if .Values.resources }}
+        resources:
+{{ toYaml .Values.resources | nindent 10 }}
+{{- end }}
+        volumeMounts:
+        - name: {{ include "name" . }}-tls
+          mountPath: /etc/gardener-extension-shoot-rsyslog-relp-admission/srv
+          readOnly: true
+        {{- if .Values.kubeconfig }}
+        - name: {{ include "name" . }}-kubeconfig
+          mountPath: /etc/gardener-extension-shoot-rsyslog-relp-admission/kubeconfig
+          readOnly: true
+        {{- end }}
+        {{- if .Values.serviceAccountTokenVolumeProjection.enabled }}
+        - name: service-account-token
+          mountPath: /var/run/secrets/projected/serviceaccount
+          readOnly: true
+        {{- end }}
+      volumes:
+      - name: {{ include "name" . }}-tls
+        secret:
+          secretName: {{ include "name" . }}-tls
+          defaultMode: 420
+      {{- if .Values.kubeconfig }}
+      - name: {{ include "name" . }}-kubeconfig
+        secret:
+          secretName: {{ include "name" . }}-kubeconfig
+          defaultMode: 420
+      {{- end }}
+      {{- if .Values.serviceAccountTokenVolumeProjection.enabled }}
+      - name: service-account-token
+        projected:
+          sources:
+          - serviceAccountToken:
+              path: token
+              expirationSeconds: {{ .Values.serviceAccountTokenVolumeProjection.expirationSeconds }}
+              {{- if .Values.serviceAccountTokenVolumeProjection.audience }}
+              audience: {{ .Values.serviceAccountTokenVolumeProjection.audience }}
+              {{- end }}
+      {{- end }}
