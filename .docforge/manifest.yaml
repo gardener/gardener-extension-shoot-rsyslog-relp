@@ -1,11 +1,20 @@
 structure:
 - name: _index.md
   source: /README.md
+- name: development
+  properties:
+    frontmatter:
+      title: Development
+      weight: 3
+      categories:
+        - Developers
+  nodesSelector:
+    path: /docs/development
 - name: usage
   properties:
     frontmatter:
       title: Usage
-      weight: 3
+      weight: 4
       categories:
         - Users
   nodesSelector:
