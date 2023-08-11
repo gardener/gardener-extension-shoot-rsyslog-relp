@@ -35,7 +35,8 @@ spec:
       target: some.rsyslog-rlep.server
       # Set the port of the target server.
       port: 10250
-      # Define rules to select which logs are forwarded to the target server.
+      # Define rules to select logs from which programs and with what syslog severity
+      # are forwarded to the target server.
       loggingRules:
       - severity: 4
         programNames: ["kubelet", "audisp-syslog"]
@@ -74,7 +75,20 @@ spec:
 ```
 
 ### Choosing Which Log Messages to Send to the Target Server
-The `.loggingRules` field defines rules about which logs should be sent to the target server. When a log is processed by rsyslog it is compared against the list of rules in order. If the program name and the syslog severity of the log messages matches the rule, the message is forwarded to the target server.
+The `.loggingRules` field defines rules about which logs should be sent to the target server. When a log is processed by rsyslog it is compared against the list of rules in order. If the program name and the syslog severity of the log messages matches the rule, the message is forwarded to the target server. The following table describes the syslog severity and their corresponding codes:
+```
+Numerical         Severity
+  Code
+
+  0               Emergency: system is unusable
+  1               Alert: action must be taken immediately
+  2               Critical: critical conditions
+  3               Error: error conditions
+  4               Warning: warning conditions
+  5               Notice: normal but significant condition
+  6               Informational: informational messages
+  7               Debug: debug-level messages
+```
 
 Below is an example with a `.loggingRules` section that will only forward logs from the `kubelet` program with syslog severity of 6 or lower and any other program with syslog severity of 2 or lower:
 
