@@ -14,9 +14,6 @@ usingKindSetup: false
 
 replicaCount: 1
 
-admissionConfig:
-  allowedServiceURLs: []
-
 resources: {}
 
 metricsPort: 8080

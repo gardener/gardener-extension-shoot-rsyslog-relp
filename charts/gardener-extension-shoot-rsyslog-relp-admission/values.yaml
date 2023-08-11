@@ -25,9 +25,6 @@ runtime:
 
   replicaCount: 1
 
-  admissionConfig:
-    allowedServiceURLs: []
-
   resources:
     requests:
       cpu: "50m"
