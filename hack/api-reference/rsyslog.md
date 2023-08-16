@@ -201,6 +201,7 @@ int
 <a href="#rsyslog-relp.extensions.gardener.cloud/v1alpha1.RsyslogRelpConfig">RsyslogRelpConfig</a>)
 </p>
 <p>
+<p>TLS contains options for the tls connection to the target server.</p>
 </p>
 <table>
 <thead>
