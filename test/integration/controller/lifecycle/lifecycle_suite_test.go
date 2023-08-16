@@ -44,14 +44,11 @@ var (
 	testEnv    *envtest.Environment
 	testClient client.Client
 	mgrClient  client.Client
-	testRunID  string
 
 	projectName        string
 	shootName          string
 	shootTechnicalID   string
 	shootSeedNamespace *corev1.Namespace
-
-	deletionGracePeriodHours = 24
 )
 
 var _ = BeforeSuite(func() {

@@ -27,8 +27,6 @@ endif
 TOOLS_DIR := $(REPO_ROOT)/hack/tools
 include $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/tools.mk
 
-GOLANGCI_LINT_VERSION := v1.48.0
-
 #########################################
 # Rules for local development scenarios #
 #########################################
@@ -111,7 +109,7 @@ generate-controller-registration:
 	@$(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/generate.sh ./charts/...
 
 .PHONY: format
-format: $(GOIMPORTS)
+format: $(GOIMPORTS) $(GOIMPORTSREVISER)
 	@$(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/format.sh ./cmd ./pkg ./test
 
 .PHONY: test

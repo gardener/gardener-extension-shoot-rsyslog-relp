@@ -13,8 +13,10 @@ import (
 	rsyslogrelpcmd "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/cmd/rsyslogrelp"
 )
 
+// ExtensionName is the name of the extension.
 const ExtensionName = "shoot-rsyslog-relp"
 
+// Options holds configuration passed to the rsyslog relp controller.
 type Options struct {
 	generalOptions     *controllercmd.GeneralOptions
 	rsyslogRelpOptions *rsyslogrelpcmd.Options
@@ -29,6 +31,7 @@ type Options struct {
 	optionAggregator   controllercmd.OptionAggregator
 }
 
+// NewOptions creates a new Options instance.
 func NewOptions() *Options {
 	options := &Options{
 		generalOptions:     &controllercmd.GeneralOptions{},

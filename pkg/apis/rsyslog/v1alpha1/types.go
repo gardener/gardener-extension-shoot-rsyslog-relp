@@ -40,6 +40,7 @@ type RsyslogRelpConfig struct {
 	ReportSuspensionContinuation *bool `json:"reportSuspensionContinuation,omitempty"`
 }
 
+// TLS contains options for the tls connection to the target server.
 type TLS struct {
 	// Enabled determines whether TLS encryption should be used for the connection
 	// to the target server.
@@ -73,6 +74,6 @@ type AuthMode string
 const (
 	// AuthModeName specifies the rsyslog name authentication mode.
 	AuthModeName AuthMode = "name"
-	// AuthModeFingerprint specifies the rsyslog fingerprint authentication mode.
+	// AuthModeFingerPrint specifies the rsyslog fingerprint authentication mode.
 	AuthModeFingerPrint AuthMode = "fingerprint"
 )

@@ -441,6 +441,9 @@ spec:
 		DeferCleanup(func() {
 			By("Delete Cluster")
 			Expect(client.IgnoreNotFound(testClient.Delete(ctx, cluster))).To(Succeed())
+
+			By("Delete all ManagedResources")
+			Expect(testClient.DeleteAllOf(ctx, &resourcesv1alpha1.ManagedResource{})).To(Succeed())
 		})
 	})
 

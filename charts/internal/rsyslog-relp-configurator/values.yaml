@@ -13,10 +13,11 @@ podAnnotations: {}
 rsyslogConfig:
   target: localhost
   port: 10515
-  rebindInterval: 1000
-  timeout: 90
   tls:
     enabled: false
+  projectName: foo
+  shootName: bar
+  shootUID: 1234
 
 auditdConfig:
   enabled: true
