@@ -202,7 +202,7 @@ data:
     fi
 
     if systemctl list-unit-files rsyslog.service > /dev/null; then
-      echo "Configuring rsysllog.service ..."
+      echo "Configuring rsyslog.service ..."
       configure_rsyslog
     else
       echo "rsyslog.service is not installed, skipping configuration"
@@ -241,8 +241,7 @@ data:
        log.syslog="off"
        log.file="/var/log/rsyslog-stats.log"
     )
-
-    ruleset(name="relpruleset") {
+    if $programname == ["systemd","audisp-syslog"] and $syslogseverity <= 0 then {
       action(
         type="omrelp"
         target="localhost"
@@ -253,13 +252,36 @@ data:
         tls.myCert="/var/lib/rsyslog-relp-configurator/tls/tls.crt"
         tls.myPrivKey="/var/lib/rsyslog-relp-configurator/tls/tls.key"`, "") + `
       )
+      & stop
     }
-    ruleset(name="config") {
-      if $programname == ["systemd"] and $syslogseverity <= 0 then { call relpruleset stop }
-      if $programname == ["kubelet"] and $syslogseverity <= 7 then { call relpruleset stop }
+    if $programname == ["kubelet"] and $syslogseverity <= 7 then {
+      action(
+        type="omrelp"
+        target="localhost"
+        port="10250"
+        Template="SyslogForwarderTemplate"` + stringBasedOnCondition(tlsEnabled, `
+        tls="on"
+        tls.caCert="/var/lib/rsyslog-relp-configurator/tls/ca.crt"
+        tls.myCert="/var/lib/rsyslog-relp-configurator/tls/tls.crt"
+        tls.myPrivKey="/var/lib/rsyslog-relp-configurator/tls/tls.key"`, "") + `
+      )
+      & stop
+    }
+    if $syslogseverity <= 2 then {
+      action(
+        type="omrelp"
+        target="localhost"
+        port="10250"
+        Template="SyslogForwarderTemplate"` + stringBasedOnCondition(tlsEnabled, `
+        tls="on"
+        tls.caCert="/var/lib/rsyslog-relp-configurator/tls/ca.crt"
+        tls.myCert="/var/lib/rsyslog-relp-configurator/tls/tls.crt"
+        tls.myPrivKey="/var/lib/rsyslog-relp-configurator/tls/tls.key"`, "") + `
+      )
+      & stop
     }
 
-    input(type="imuxsock" Socket="/run/systemd/journal/syslog" ruleset="config")`
+    input(type="imuxsock" Socket="/run/systemd/journal/syslog")`
 		}
 
 		rsyslogTlsSecretYaml = func(tlsEnabled bool) string {
@@ -317,7 +339,7 @@ spec:
         image: registry.k8s.io/pause:3.7
         imagePullPolicy: IfNotPresent
       initContainers:
-      - name: rsyslog-configurator
+      - name: rsyslog-relp-configurator
         image: eu.gcr.io/gardener-project/3rd/alpine:3.15.8
         imagePullPolicy: IfNotPresent
         securityContext:
@@ -349,6 +371,11 @@ spec:
           readOnly: false
           mountPropagation: HostToContainer
       hostPID: true
+      tolerations:
+      - effect: NoSchedule
+        operator: Exists
+      - effect: NoExecute
+        operator: Exists
       volumes:` + stringBasedOnCondition(tlsEnabled, `
       - name: rsyslog-relp-configurator-tls-volume
         secret:
@@ -444,11 +471,14 @@ spec:
 								LoggingRules: []rsyslog.LoggingRule{
 									{
 										Severity:     0,
-										ProgramNames: []string{"systemd"},
+										ProgramNames: []string{"systemd", "audisp-syslog"},
 									},
 									{
 										Severity:     7,
 										ProgramNames: []string{"kubelet"},
+									},
+									{
+										Severity: 2,
 									},
 								},
 							},

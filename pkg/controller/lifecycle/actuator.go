@@ -121,7 +121,7 @@ func (a *actuator) Reconcile(ctx context.Context, log logr.Logger, ex *extension
 		}
 	}
 
-	logFilterExpression := computeLogFilterExpression(shootRsyslogRelpConfig.LoggingRules)
+	filters := computeLogFilters(shootRsyslogRelpConfig.LoggingRules)
 
 	rsyslogConfigValues := map[string]interface{}{
 		"target":                       shootRsyslogRelpConfig.Target,
@@ -129,7 +129,7 @@ func (a *actuator) Reconcile(ctx context.Context, log logr.Logger, ex *extension
 		"projectName":                  projectName,
 		"shootName":                    cluster.Shoot.Name,
 		"shootUID":                     cluster.Shoot.UID,
-		"filters":                      logFilterExpression,
+		"filters":                      filters,
 		"rebindInterval":               shootRsyslogRelpConfig.RebindInterval,
 		"timeout":                      shootRsyslogRelpConfig.Timeout,
 		"resumeRetryCount":             shootRsyslogRelpConfig.ResumeRetryCount,
@@ -295,20 +295,20 @@ func lookupReferencedSecret(cluster *extensionscontroller.Cluster, refname strin
 	return "", fmt.Errorf("missing or invalid referenced resource: %s", refname)
 }
 
-func computeLogFilterExpression(loggingRules []rsyslog.LoggingRule) string {
-	var filterExpression string
+func computeLogFilters(loggingRules []rsyslog.LoggingRule) []string {
+	var filters []string
 	for _, rule := range loggingRules {
 		var programNames string
-		for _, programName := range rule.ProgramNames {
-			programNames += fmt.Sprintf("\"%s\",", programName)
+		for i, programName := range rule.ProgramNames {
+			rule.ProgramNames[i] = fmt.Sprintf("\"%s\"", programName)
 		}
+		programNames = strings.Join(rule.ProgramNames, ",")
 		if programNames != "" {
-			programNames = strings.TrimSuffix(programNames, ",")
-			filterExpression += fmt.Sprintf("if $programname == [%s] and $syslogseverity <= %d then { call relpruleset stop }\n", programNames, rule.Severity)
+			filters = append(filters, fmt.Sprintf("$programname == [%s] and $syslogseverity <= %d", programNames, rule.Severity))
 		} else {
-			filterExpression += fmt.Sprintf("if $syslogseverity <= %d then { call relpruleset stop }\n", rule.Severity)
+			filters = append(filters, fmt.Sprintf("$syslogseverity <= %d", rule.Severity))
 		}
 	}
 
-	return strings.TrimSuffix(filterExpression, "\n")
+	return filters
 }

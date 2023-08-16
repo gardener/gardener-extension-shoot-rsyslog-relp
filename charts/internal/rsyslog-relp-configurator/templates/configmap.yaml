@@ -57,7 +57,7 @@ data:
     fi
 
     if systemctl list-unit-files rsyslog.service > /dev/null; then
-      echo "Configuring rsysllog.service ..."
+      echo "Configuring rsyslog.service ..."
       configure_rsyslog
     else
       echo "rsyslog.service is not installed, skipping configuration"
@@ -97,40 +97,40 @@ data:
        log.file="/var/log/rsyslog-stats.log"
     )
 
-    ruleset(name="relpruleset") {
+    {{- range .Values.rsyslogConfig.filters }}
+    if {{ . }} then {
       action(
         type="omrelp"
-        target="{{ required ".Values.rsyslogConfig.target is required" .Values.rsyslogConfig.target }}"
-        port="{{ required ".Values.rsyslogConfig.port is required" .Values.rsyslogConfig.port }}"
+        target="{{ required "$.Values.rsyslogConfig.target is required" $.Values.rsyslogConfig.target }}"
+        port="{{ required "$.Values.rsyslogConfig.port is required" $.Values.rsyslogConfig.port }}"
         Template="SyslogForwarderTemplate"
-        {{- if .Values.rsyslogConfig.rebindInterval }}
-        rebindInterval="{{ .Values.rsyslogConfig.rebindInterval }}"
+        {{- if $.Values.rsyslogConfig.rebindInterval }}
+        rebindInterval="{{ $.Values.rsyslogConfig.rebindInterval }}"
         {{- end }}
-        {{- if .Values.rsyslogConfig.timeout }}
-        timeout="{{ .Values.rsyslogConfig.timeout }}"
+        {{- if $.Values.rsyslogConfig.timeout }}
+        timeout="{{ $.Values.rsyslogConfig.timeout }}"
         {{- end }}
-        {{- if .Values.rsyslogConfig.resumeRetryCount }}
-        action.resumeRetryCount="{{ .Values.rsyslogConfig.resumeRetryCount }}"
+        {{- if $.Values.rsyslogConfig.resumeRetryCount }}
+        action.resumeRetryCount="{{ $.Values.rsyslogConfig.resumeRetryCount }}"
         {{- end }}
-        {{- if .Values.rsyslogConfig.reportSuspensionContinuation }}
-        action.reportSuspensionContinuation="{{ .Values.rsyslogConfig.reportSuspensionContinuation }}"
+        {{- if $.Values.rsyslogConfig.reportSuspensionContinuation }}
+        action.reportSuspensionContinuation="{{ $.Values.rsyslogConfig.reportSuspensionContinuation }}"
         {{- end }}
-        {{- if .Values.rsyslogConfig.tls.enabled }}
+        {{- if $.Values.rsyslogConfig.tls.enabled }}
         tls="on"
         tls.caCert="/var/lib/rsyslog-relp-configurator/tls/ca.crt"
         tls.myCert="/var/lib/rsyslog-relp-configurator/tls/tls.crt"
         tls.myPrivKey="/var/lib/rsyslog-relp-configurator/tls/tls.key"
         {{- end }}
-        {{- if .Values.rsyslogConfig.tls.authMode }}
-        tls.authmode="{{ .Values.rsyslogConfig.tls.authMode }}"
+        {{- if $.Values.rsyslogConfig.tls.authMode }}
+        tls.authmode="{{ $.Values.rsyslogConfig.tls.authMode }}"
         {{- end }}
-        {{- if .Values.rsyslogConfig.tls.permittedPeer }}
-        tls.permittedpeer="{{ .Values.rsyslogConfig.tls.permittedPeer }}"
+        {{- if $.Values.rsyslogConfig.tls.permittedPeer }}
+        tls.permittedpeer="{{ $.Values.rsyslogConfig.tls.permittedPeer }}"
         {{- end }}
       )
+      & stop
     }
-    ruleset(name="config") {
-{{ required ".Values.rsyslogConfig.filters is required" .Values.rsyslogConfig.filters | indent 6}}
-    }
+    {{- end }}
 
-    input(type="imuxsock" Socket="/run/systemd/journal/syslog" ruleset="config")
+    input(type="imuxsock" Socket="/run/systemd/journal/syslog")
