@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -156,9 +157,15 @@ func (a *actuator) Reconcile(ctx context.Context, log logr.Logger, ex *extension
 			return err
 		}
 
-		var permittedPeer string
-		if len(shootRsyslogRelpConfig.TLS.PermittedPeer) > 0 {
-			permittedPeer = fmt.Sprintf("[%s]", strings.Join(shootRsyslogRelpConfig.TLS.PermittedPeer, ","))
+		// var permittedPeer string
+		// if len(shootRsyslogRelpConfig.TLS.PermittedPeer) > 0 {
+		// 	permittedPeers :=
+		// 	permittedPeer = fmt.Sprintf("[%s]", strings.Join(shootRsyslogRelpConfig.TLS.PermittedPeer, ","))
+		// }
+
+		var permittedPeers []string
+		for _, permittedPeer := range shootRsyslogRelpConfig.TLS.PermittedPeer {
+			permittedPeers = append(permittedPeers, strconv.Quote(permittedPeer))
 		}
 
 		var authMode string
@@ -168,7 +175,7 @@ func (a *actuator) Reconcile(ctx context.Context, log logr.Logger, ex *extension
 
 		rsyslogConfigValues["tls"] = map[string]interface{}{
 			"enabled":       shootRsyslogRelpConfig.TLS.Enabled,
-			"permittedPeer": permittedPeer,
+			"permittedPeer": strings.Join(permittedPeers, ","),
 			"authMode":      authMode,
 			"ca":            refSecret.Data["ca"],
 			"crt":           refSecret.Data["crt"],
@@ -298,13 +305,12 @@ func lookupReferencedSecret(cluster *extensionscontroller.Cluster, refname strin
 func computeLogFilters(loggingRules []rsyslog.LoggingRule) []string {
 	var filters []string
 	for _, rule := range loggingRules {
-		var programNames string
-		for i, programName := range rule.ProgramNames {
-			rule.ProgramNames[i] = fmt.Sprintf("\"%s\"", programName)
+		var programNames []string
+		for _, programName := range rule.ProgramNames {
+			programNames = append(programNames, strconv.Quote(programName))
 		}
-		programNames = strings.Join(rule.ProgramNames, ",")
-		if programNames != "" {
-			filters = append(filters, fmt.Sprintf("$programname == [%s] and $syslogseverity <= %d", programNames, rule.Severity))
+		if len(programNames) > 0 {
+			filters = append(filters, fmt.Sprintf("$programname == [%s] and $syslogseverity <= %d", strings.Join(programNames, ","), rule.Severity))
 		} else {
 			filters = append(filters, fmt.Sprintf("$syslogseverity <= %d", rule.Severity))
 		}

@@ -97,40 +97,46 @@ data:
        log.file="/var/log/rsyslog-stats.log"
     )
 
-    {{- range .Values.rsyslogConfig.filters }}
-    if {{ . }} then {
+    ruleset(name="relp_action_ruleset") {
       action(
         type="omrelp"
-        target="{{ required "$.Values.rsyslogConfig.target is required" $.Values.rsyslogConfig.target }}"
-        port="{{ required "$.Values.rsyslogConfig.port is required" $.Values.rsyslogConfig.port }}"
+        target="{{ required ".Values.rsyslogConfig.target is required" .Values.rsyslogConfig.target }}"
+        port="{{ required ".Values.rsyslogConfig.port is required" .Values.rsyslogConfig.port }}"
         Template="SyslogForwarderTemplate"
-        {{- if $.Values.rsyslogConfig.rebindInterval }}
-        rebindInterval="{{ $.Values.rsyslogConfig.rebindInterval }}"
+        {{- if .Values.rsyslogConfig.rebindInterval }}
+        rebindInterval="{{ .Values.rsyslogConfig.rebindInterval }}"
         {{- end }}
-        {{- if $.Values.rsyslogConfig.timeout }}
-        timeout="{{ $.Values.rsyslogConfig.timeout }}"
+        {{- if .Values.rsyslogConfig.timeout }}
+        timeout="{{ .Values.rsyslogConfig.timeout }}"
         {{- end }}
-        {{- if $.Values.rsyslogConfig.resumeRetryCount }}
-        action.resumeRetryCount="{{ $.Values.rsyslogConfig.resumeRetryCount }}"
+        {{- if .Values.rsyslogConfig.resumeRetryCount }}
+        action.resumeRetryCount="{{ .Values.rsyslogConfig.resumeRetryCount }}"
         {{- end }}
-        {{- if $.Values.rsyslogConfig.reportSuspensionContinuation }}
-        action.reportSuspensionContinuation="{{ $.Values.rsyslogConfig.reportSuspensionContinuation }}"
+        {{- if .Values.rsyslogConfig.reportSuspensionContinuation }}
+        action.reportSuspensionContinuation="{{ .Values.rsyslogConfig.reportSuspensionContinuation }}"
         {{- end }}
-        {{- if $.Values.rsyslogConfig.tls.enabled }}
+        {{- if .Values.rsyslogConfig.tls.enabled }}
         tls="on"
         tls.caCert="/var/lib/rsyslog-relp-configurator/tls/ca.crt"
         tls.myCert="/var/lib/rsyslog-relp-configurator/tls/tls.crt"
         tls.myPrivKey="/var/lib/rsyslog-relp-configurator/tls/tls.key"
         {{- end }}
-        {{- if $.Values.rsyslogConfig.tls.authMode }}
-        tls.authmode="{{ $.Values.rsyslogConfig.tls.authMode }}"
+        {{- if .Values.rsyslogConfig.tls.authMode }}
+        tls.authmode="{{ .Values.rsyslogConfig.tls.authMode }}"
         {{- end }}
-        {{- if $.Values.rsyslogConfig.tls.permittedPeer }}
-        tls.permittedpeer="{{ $.Values.rsyslogConfig.tls.permittedPeer }}"
+        {{- if .Values.rsyslogConfig.tls.permittedPeer }}
+        tls.permittedpeer=[{{ .Values.rsyslogConfig.tls.permittedPeer }}]
         {{- end }}
       )
-      & stop
     }
-    {{- end }}
 
-    input(type="imuxsock" Socket="/run/systemd/journal/syslog")
+    ruleset(name="audit_ruleset") {
+    {{- range .Values.rsyslogConfig.filters }}
+      if {{ . }} then {
+        call relp_action_ruleset
+        stop
+      }
+    {{- end}}
+    }
+
+    input(type="imuxsock" Socket="/run/systemd/journal/syslog" ruleset="audit_ruleset")

@@ -31,6 +31,8 @@ import (
 
 var _ = Describe("Lifecycle controller tests", func() {
 	var (
+		authModeName rsyslog.AuthMode = "name"
+
 		rsyslogConfigurationCleanerDaemonsetYaml = `# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -241,7 +243,8 @@ data:
        log.syslog="off"
        log.file="/var/log/rsyslog-stats.log"
     )
-    if $programname == ["systemd","audisp-syslog"] and $syslogseverity <= 0 then {
+
+    ruleset(name="relp_action_ruleset") {
       action(
         type="omrelp"
         target="localhost"
@@ -250,38 +253,28 @@ data:
         tls="on"
         tls.caCert="/var/lib/rsyslog-relp-configurator/tls/ca.crt"
         tls.myCert="/var/lib/rsyslog-relp-configurator/tls/tls.crt"
-        tls.myPrivKey="/var/lib/rsyslog-relp-configurator/tls/tls.key"`, "") + `
+        tls.myPrivKey="/var/lib/rsyslog-relp-configurator/tls/tls.key"
+        tls.authmode="name"
+        tls.permittedpeer=["rsyslog-server.foo","rsyslog-server.foo.bar"]`, "") + `
       )
-      & stop
-    }
-    if $programname == ["kubelet"] and $syslogseverity <= 7 then {
-      action(
-        type="omrelp"
-        target="localhost"
-        port="10250"
-        Template="SyslogForwarderTemplate"` + stringBasedOnCondition(tlsEnabled, `
-        tls="on"
-        tls.caCert="/var/lib/rsyslog-relp-configurator/tls/ca.crt"
-        tls.myCert="/var/lib/rsyslog-relp-configurator/tls/tls.crt"
-        tls.myPrivKey="/var/lib/rsyslog-relp-configurator/tls/tls.key"`, "") + `
-      )
-      & stop
-    }
-    if $syslogseverity <= 2 then {
-      action(
-        type="omrelp"
-        target="localhost"
-        port="10250"
-        Template="SyslogForwarderTemplate"` + stringBasedOnCondition(tlsEnabled, `
-        tls="on"
-        tls.caCert="/var/lib/rsyslog-relp-configurator/tls/ca.crt"
-        tls.myCert="/var/lib/rsyslog-relp-configurator/tls/tls.crt"
-        tls.myPrivKey="/var/lib/rsyslog-relp-configurator/tls/tls.key"`, "") + `
-      )
-      & stop
     }
 
-    input(type="imuxsock" Socket="/run/systemd/journal/syslog")`
+    ruleset(name="audit_ruleset") {
+      if $programname == ["systemd","audisp-syslog"] and $syslogseverity <= 5 then {
+        call relp_action_ruleset
+        stop
+      }
+      if $programname == ["kubelet"] and $syslogseverity <= 7 then {
+        call relp_action_ruleset
+        stop
+      }
+      if $syslogseverity <= 2 then {
+        call relp_action_ruleset
+        stop
+      }
+    }
+
+    input(type="imuxsock" Socket="/run/systemd/journal/syslog" ruleset="audit_ruleset")`
 		}
 
 		rsyslogTlsSecretYaml = func(tlsEnabled bool) string {
@@ -470,7 +463,7 @@ spec:
 								Port:   10250,
 								LoggingRules: []rsyslog.LoggingRule{
 									{
-										Severity:     0,
+										Severity:     5,
 										ProgramNames: []string{"systemd", "audisp-syslog"},
 									},
 									{
@@ -493,6 +486,8 @@ spec:
 				extensionConfig.TLS = &rsyslog.TLS{
 					Enabled:             true,
 					SecretReferenceName: pointer.String("rsyslog-tls"),
+					AuthMode:            &authModeName,
+					PermittedPeer:       []string{"rsyslog-server.foo", "rsyslog-server.foo.bar"},
 				}
 				rsyslogSecret := &corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
