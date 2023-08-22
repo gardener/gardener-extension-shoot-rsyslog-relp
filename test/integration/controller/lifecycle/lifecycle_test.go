@@ -390,7 +390,24 @@ spec:
 	)
 
 	BeforeEach(func() {
+		shootName = "shoot-" + utils.ComputeSHA256Hex([]byte(uuid.NewUUID()))[:8]
+		projectName = "test-" + utils.ComputeSHA256Hex([]byte(uuid.NewUUID()))[:5]
 		shootUID = uuid.NewUUID()
+		shootTechnicalID = fmt.Sprintf("shoot--%s--%s", projectName, shootName)
+
+		By("Create test Namespace")
+		shootSeedNamespace = &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: shootTechnicalID,
+			},
+		}
+		Expect(testClient.Create(ctx, shootSeedNamespace)).To(Succeed())
+		log.Info("Created Namespace for test", "namespaceName", shootSeedNamespace.Name)
+
+		DeferCleanup(func() {
+			By("Delete test Namespace")
+			Expect(client.IgnoreNotFound(testClient.Delete(ctx, shootSeedNamespace))).To(Succeed())
+		})
 
 		By("Create Cluster")
 		cluster = &extensionsv1alpha1.Cluster{
@@ -441,9 +458,6 @@ spec:
 		DeferCleanup(func() {
 			By("Delete Cluster")
 			Expect(client.IgnoreNotFound(testClient.Delete(ctx, cluster))).To(Succeed())
-
-			By("Delete all ManagedResources")
-			Expect(testClient.DeleteAllOf(ctx, &resourcesv1alpha1.ManagedResource{})).To(Succeed())
 		})
 	})
 
@@ -505,6 +519,8 @@ spec:
 				}
 				By("Create rsyslog-tls secret")
 				Expect(testClient.Create(ctx, rsyslogSecret)).To(Succeed())
+				log.Info("Created rsyslog-tls secret", "secret", client.ObjectKeyFromObject(rsyslogSecret))
+
 				DeferCleanup(func() {
 					By("Delete rsyslog-tls Secret")
 					Expect(testClient.Delete(ctx, rsyslogSecret)).To(Or(Succeed(), BeNotFoundError()))
@@ -513,6 +529,8 @@ spec:
 
 			By("Create shoot-rsyslog-relp Extension Resource")
 			Expect(testClient.Create(ctx, extensionResource)).To(Succeed())
+			log.Info("Created shoot-rsyslog-tls extension resource", "extension", client.ObjectKeyFromObject(extensionResource))
+
 			DeferCleanup(func() {
 				By("Delete shoot-rsyslog-relp Extension Resource")
 				Expect(testClient.Delete(ctx, extensionResource)).To(Or(Succeed(), BeNotFoundError()))

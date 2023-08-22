@@ -6,19 +6,15 @@ package lifecycle_test
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
 	"testing"
 
 	"github.com/gardener/gardener/pkg/client/kubernetes"
 	"github.com/gardener/gardener/pkg/logger"
-	"github.com/gardener/gardener/pkg/utils"
 	"github.com/go-logr/logr"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
@@ -83,23 +79,6 @@ var _ = BeforeSuite(func() {
 	By("Create test client")
 	testClient, err = client.New(restConfig, client.Options{Scheme: kubernetes.SeedScheme})
 	Expect(err).NotTo(HaveOccurred())
-
-	shootName = "shoot-" + utils.ComputeSHA256Hex([]byte(uuid.NewUUID()))[:8]
-	projectName = "test-" + utils.ComputeSHA256Hex([]byte(uuid.NewUUID()))[:5]
-	shootTechnicalID = fmt.Sprintf("shoot--%s--%s", projectName, shootName)
-
-	By("Create test Namespace")
-	shootSeedNamespace = &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: shootTechnicalID,
-		},
-	}
-	Expect(testClient.Create(ctx, shootSeedNamespace)).To(Succeed())
-
-	DeferCleanup(func() {
-		By("Delete test Namespace")
-		Expect(client.IgnoreNotFound(testClient.Delete(ctx, shootSeedNamespace))).To(Succeed())
-	})
 
 	By("Setup manager")
 	mgr, err := manager.New(restConfig, manager.Options{
