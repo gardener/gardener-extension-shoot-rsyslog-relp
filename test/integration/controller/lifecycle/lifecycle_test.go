@@ -259,22 +259,20 @@ data:
       )
     }
 
-    ruleset(name="audit_ruleset") {
-      if $programname == ["systemd","audisp-syslog"] and $syslogseverity <= 5 then {
-        call relp_action_ruleset
-        stop
-      }
-      if $programname == ["kubelet"] and $syslogseverity <= 7 then {
-        call relp_action_ruleset
-        stop
-      }
-      if $syslogseverity <= 2 then {
-        call relp_action_ruleset
-        stop
-      }
+    if $programname == ["systemd","audisp-syslog"] and $syslogseverity <= 5 then {
+      call relp_action_ruleset
+      stop
+    }
+    if $programname == ["kubelet"] and $syslogseverity <= 7 then {
+      call relp_action_ruleset
+      stop
+    }
+    if $syslogseverity <= 2 then {
+      call relp_action_ruleset
+      stop
     }
 
-    input(type="imuxsock" Socket="/run/systemd/journal/syslog" ruleset="audit_ruleset")`
+    input(type="imuxsock" Socket="/run/systemd/journal/syslog")`
 		}
 
 		rsyslogTlsSecretYaml = func(tlsEnabled bool) string {

@@ -134,6 +134,14 @@ verify: check check-docforge format test
 .PHONY: verify-extended
 verify-extended: check-generate check check-docforge format test test-cov test-clean
 
-.PHONY: rsyslog-relp-up-kind
-rsyslog-relp-up-kind:
-	@EFFECTIVE_VERSION=$(EFFECTIVE_VERSION) $(REPO_ROOT)/hack/rsyslog-relp-up-kind.sh
+# use static label for skaffold to prevent rolling all gardener components on every `skaffold` invocation
+extension-up extension-down: export SKAFFOLD_LABEL = skaffold.dev/run-id=extension-local
+
+extension-up: $(SKAFFOLD) $(HELM) $(KUBECTL)
+	$(SKAFFOLD) run
+
+extension-dev: $(SKAFFOLD) $(HELM) $(KUBECTL)
+	$(SKAFFOLD) dev --cleanup=false --trigger=manual
+
+extension-down: $(SKAFFOLD) $(HELM) $(KUBECTL)
+	$(SKAFFOLD) delete

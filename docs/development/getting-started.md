@@ -10,10 +10,10 @@ If you encounter difficulties, please open an issue so that we can make this pro
 
 ## Setting up the Rsyslog Relp Extension
 
-**Important:** Make sure that your `KUBECONFIG` env variable is targetting the local Gardener cluster!
+**Important:** Make sure that your `KUBECONFIG` env variable is targeting the local Gardener cluster!
 
 ```bash
-make rsyslog-relp-up-kind
+make extension-up
 ```
 
 This will build the `shoot-rsyslog-relp`, `shoot-rsyslog-relp-admission` and `rsyslog-relp-echo-server` images and deploy the needed resources and configurations in the Garden cluster. The `rsyslog-relp-echo-server` will act as development replacement of a real rsyslog relp server.
@@ -56,5 +56,16 @@ kubectl -n rsyslog-relp-echo-server logs deployment/rsyslog-relp-echo-server
 Changes to the rsyslog relp extension can be applied to the local environment by repeatedly running the `make` recipe.
 
 ```bash
-make rsyslog-relp-up-kind
+make extension-up
 ```
+
+## Tearing down the dev environment
+
+To tear down the development environment delete the `Shoot` cluster or disable the `shoot-rsyslog-relp` extension in th `Shoot`'s spec. When the extension is not used by the `Shoot` anymore, you can run:
+
+```bash
+make extension-down
+```
+
+This will delete the `ControllerRegistration` and `ControllerDeployment` of the extension, the `shoot-rsyslog-relp-admission` deployment and the `rsyslog-relp-echo-server` deployment.
+

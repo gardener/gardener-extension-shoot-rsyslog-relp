@@ -7,11 +7,6 @@ image:
   tag: latest
   pullPolicy: IfNotPresent
 
-imagePullSecrets:
-  readOnly: ""
-
-usingKindSetup: false
-
 replicaCount: 1
 
 resources: {}

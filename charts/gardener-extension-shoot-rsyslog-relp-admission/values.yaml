@@ -20,9 +20,6 @@ runtime:
     tag: latest
     pullPolicy: IfNotPresent
 
-  imagePullSecrets:
-    readOnly: ""
-
   replicaCount: 1
 
   resources:
