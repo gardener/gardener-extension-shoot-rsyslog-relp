@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
 EXTENSION_PREFIX            := gardener-extension
 NAME_ADMISSION              := shoot-rsyslog-relp-admission
 NAME                        := shoot-rsyslog-relp
@@ -10,6 +14,11 @@ EFFECTIVE_VERSION           := $(VERSION)-$(shell git rev-parse HEAD)
 LEADER_ELECTION             := false
 IGNORE_OPERATION_ANNOTATION := true
 GOARCH                      ?= $(shell go env GOARCH)
+PARALLEL_E2E_TESTS          := 2
+
+ifndef ARTIFACTS
+	export ARTIFACTS=/tmp/artifacts
+endif
 
 ifneq ($(strip $(shell git status --porcelain 2>/dev/null)),)
 	EFFECTIVE_VERSION := $(EFFECTIVE_VERSION)-dirty
@@ -133,6 +142,12 @@ verify: check check-docforge format test
 
 .PHONY: verify-extended
 verify-extended: check-generate check check-docforge format test test-cov test-clean
+
+test-e2e-local: $(GINKGO)
+	./hack/test-e2e-local.sh --procs=$(PARALLEL_E2E_TESTS) ./test/e2e/...
+
+ci-e2e-kind: $(KIND)
+	./hack/ci-e2e-kind.sh
 
 # use static label for skaffold to prevent rolling all gardener components on every `skaffold` invocation
 extension-up extension-down: export SKAFFOLD_LABEL = skaffold.dev/run-id=extension-local
