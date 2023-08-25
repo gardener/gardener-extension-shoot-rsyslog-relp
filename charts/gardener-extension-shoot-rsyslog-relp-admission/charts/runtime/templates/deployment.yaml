@@ -47,6 +47,9 @@ spec:
         {{- if .Values.kubeconfig }}
         - --kubeconfig=/etc/gardener-extension-shoot-rsyslog-relp-admission/kubeconfig/kubeconfig
         {{- end }}
+        {{- if .Values.projectedKubeconfig }}
+        - --kubeconfig={{ required ".Values.projectedKubeconfig.baseMountPath is required" .Values.projectedKubeconfig.baseMountPath }}/kubeconfig
+        {{- end }}
         {{- if .Values.metricsPort }}
         - --metrics-bind-address=:{{ .Values.metricsPort }}
         {{- end }}
@@ -85,6 +88,11 @@ spec:
           mountPath: /var/run/secrets/projected/serviceaccount
           readOnly: true
         {{- end }}
+        {{- if .Values.projectedKubeconfig }}
+        - name: kubeconfig
+          mountPath: {{ required ".Values.projectedKubeconfig.baseMountPath is required" .Values.projectedKubeconfig.baseMountPath }}
+          readOnly: true
+        {{- end }}
       volumes:
       - name: {{ include "name" . }}-tls
         secret:
@@ -106,4 +114,22 @@ spec:
               {{- if .Values.serviceAccountTokenVolumeProjection.audience }}
               audience: {{ .Values.serviceAccountTokenVolumeProjection.audience }}
               {{- end }}
+      {{- end }}
+      {{- if .Values.projectedKubeconfig }}
+      - name: kubeconfig
+        projected:
+          defaultMode: 420
+          sources:
+          - secret:
+              items:
+              - key: kubeconfig
+                path: kubeconfig
+              name: {{ required ".Values.projectedKubeconfig.genericKubeconfigSecretName is required" .Values.projectedKubeconfig.genericKubeconfigSecretName }}
+              optional: false
+          - secret:
+              items:
+              - key: token
+                path: token
+              name: {{ required ".Values.projectedKubeconfig.tokenSecretName is required" .Values.projectedKubeconfig.tokenSecretName }}
+              optional: false
       {{- end }}
