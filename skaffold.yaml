@@ -1,0 +1,71 @@
+apiVersion: skaffold/v4beta3
+kind: Config
+metadata:
+  name: rsyslog-relp-echo-server
+build:
+  artifacts:
+  - image: eu.gcr.io/gardener-project/gardener/extensions/rsyslog-relp-echo-server
+    docker:
+      cacheFrom:
+      - eu.gcr.io/gardener-project/gardener/extensions/rsyslog-relp-echo-server
+  local: {}
+deploy:
+  helm:
+    releases:
+    - name: rsyslog-relp-echo-server
+      namespace: rsyslog-relp-echo-server
+      createNamespace: true
+      wait: true
+      chartPath: example/local/charts/rsyslog-relp-echo-server
+      setValueTemplates:
+        images.rsyslog: '{{.IMAGE_FULLY_QUALIFIED_eu_gcr_io_gardener_project_gardener_extensions_rsyslog_relp_echo_server}}'
+---
+apiVersion: skaffold/v4beta3
+kind: Config
+metadata:
+  name: extension
+build:
+  artifacts:
+  - image: eu.gcr.io/gardener-project/gardener/extensions/shoot-rsyslog-relp
+    ko:
+      main: ./cmd/gardener-extension-shoot-rsyslog-relp
+resourceSelector:
+  allow:
+  # instruct skaffold to inject the built image reference into the image field in our ControllerDeployment
+  - groupKind: ControllerDeployment.core.gardener.cloud
+    image: [".*"]
+manifests:
+  rawYaml:
+    - example/controller-registration.yaml
+deploy:
+  kubectl: {}
+---
+apiVersion: skaffold/v4beta3
+kind: Config
+metadata:
+  name: admission
+build:
+  artifacts:
+  - image: eu.gcr.io/gardener-project/gardener/extensions/shoot-rsyslog-relp-admission
+    ko:
+      main: ./cmd/gardener-extension-shoot-rsyslog-relp-admission
+deploy:
+  helm:
+    hooks:
+      before:
+      - host:
+          command:
+          - kubectl
+          - apply
+          - -f
+          - example/local/admission/networkpolicy.yaml
+    releases:
+    - name: shoot-rsyslog-relp-admission
+      namespace: garden
+      wait: true
+      chartPath: charts/gardener-extension-shoot-rsyslog-relp-admission
+      valuesFiles:
+        - "example/local/admission/values.yaml"
+      setValueTemplates:
+        runtime.image.repository: '{{.IMAGE_REPO_eu_gcr_io_gardener_project_gardener_extensions_shoot_rsyslog_relp_admission}}'
+        runtime.image.tag: '{{.IMAGE_TAG_eu_gcr_io_gardener_project_gardener_extensions_shoot_rsyslog_relp_admission}}@{{.IMAGE_DIGEST_eu_gcr_io_gardener_project_gardener_extensions_shoot_rsyslog_relp_admission}}'

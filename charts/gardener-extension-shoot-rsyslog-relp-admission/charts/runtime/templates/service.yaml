@@ -9,9 +9,6 @@ metadata:
   namespace: {{ .Release.Namespace }}
   annotations:
     networking.resources.gardener.cloud/from-all-webhook-targets-allowed-ports: '[{"protocol":"TCP","port":{{ .Values.webhookConfig.serverPort }}}]'
-    {{- if .Values.usingKindSetup }}
-    networking.resources.gardener.cloud/from-world-to-ports: '[{"protocol":"TCP","port":{{ .Values.webhookConfig.serverPort }}}]'
-    {{- end }}
   labels:
 {{ include "labels" . | indent 4 }}
 spec:

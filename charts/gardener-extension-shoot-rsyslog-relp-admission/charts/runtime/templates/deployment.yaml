@@ -34,10 +34,6 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       serviceAccountName: {{ include "name" . }}
-      {{- if .Values.imagePullSecrets.readOnly }}
-      imagePullSecrets:
-      - name: {{ include "name" . }}-image-pull
-      {{- end }}
       {{- if .Values.kubeconfig }}
       automountServiceAccountToken: false
       {{- end }}
@@ -45,8 +41,7 @@ spec:
       - name: {{ include "name" . }}
         image: {{ include "image" .Values.image }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        command:
-        - /gardener-extension-shoot-rsyslog-relp-admission
+        args:
         - --webhook-config-server-port={{ .Values.webhookConfig.serverPort }}
         - --webhook-config-cert-dir=/etc/gardener-extension-shoot-rsyslog-relp-admission/srv
         {{- if .Values.kubeconfig }}

@@ -128,15 +128,13 @@ data:
         tls.permittedpeer=[{{ .Values.rsyslogConfig.tls.permittedPeer }}]
         {{- end }}
       )
-    }
+    }{{ printf "\n" }}
 
-    ruleset(name="audit_ruleset") {
     {{- range .Values.rsyslogConfig.filters }}
-      if {{ . }} then {
-        call relp_action_ruleset
-        stop
-      }
-    {{- end}}
+    if {{ . }} then {
+      call relp_action_ruleset
+      stop
     }
+    {{- end}}
 
-    input(type="imuxsock" Socket="/run/systemd/journal/syslog" ruleset="audit_ruleset")
+    input(type="imuxsock" Socket="/run/systemd/journal/syslog")
