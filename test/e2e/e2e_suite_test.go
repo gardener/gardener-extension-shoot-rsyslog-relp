@@ -12,7 +12,6 @@ import (
 )
 
 func TestE2E(t *testing.T) {
-	// TODO (plkokanov): add e2e tests
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "E2E Test Suite")
 }
