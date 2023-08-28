@@ -5,6 +5,8 @@
 package e2e_test
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -25,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
-	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	rsyslogv1alpha1 "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog/v1alpha1"
@@ -81,24 +82,37 @@ func newVerifier(ctx context.Context, log logr.Logger, c kubernetes.Interface, s
 
 func (v *verifier) verifyThatLogsAreSentToEchoServer(ctx context.Context, programName, severity, logMessage string) {
 	EventuallyWithOffset(1, func(g Gomega) {
-		g.Expect(execInShootNode(ctx, v.client, v.log, v.shootSeedNamespace,
-			fmt.Sprintf("echo '%s' | systemd-cat -t %s -p %s", logMessage, programName, severity),
-		)).To(Succeed())
-		logs, err := kubernetes.GetPodLogs(ctx, v.rsyslogRelpEchoServerPodIf, v.rsyslogEchoServerPodName, &corev1.PodLogOptions{TailLines: pointer.Int64(1)})
-		g.Expect(err).ToNot(HaveOccurred())
-		g.Expect(string(logs)).To(MatchRegexp(v.constructRegex(programName, logMessage)))
+		logLines, err := v.generateAndGetLogs(ctx, programName, severity, logMessage)
+		g.Expect(err).NotTo(HaveOccurred())
+		g.Expect(logLines).To(ContainElement(MatchRegexp(v.constructRegex(programName, logMessage))))
 	}).Should(Succeed())
 }
 
 func (v *verifier) verifyThatLogsAreNotSentToEchoServer(ctx context.Context, programName, severity, logMessage string) {
 	ConsistentlyWithOffset(1, func(g Gomega) {
-		g.Expect(execInShootNode(ctx, v.client, v.log, v.shootSeedNamespace,
-			fmt.Sprintf("echo '%s' | systemd-cat -t %s -p %s", logMessage, programName, severity),
-		)).To(Succeed())
-		logs, err := kubernetes.GetPodLogs(ctx, v.rsyslogRelpEchoServerPodIf, v.rsyslogEchoServerPodName, &corev1.PodLogOptions{TailLines: pointer.Int64(1)})
-		g.Expect(err).ToNot(HaveOccurred())
-		g.Expect(string(logs)).NotTo(MatchRegexp(v.constructRegex(programName, logMessage)))
+		logLines, err := v.generateAndGetLogs(ctx, programName, severity, logMessage)
+		g.Expect(err).NotTo(HaveOccurred())
+		g.Expect(logLines).NotTo(ContainElement(MatchRegexp(v.constructRegex(programName, logMessage))))
 	}).Should(Succeed())
+}
+
+func (v *verifier) generateAndGetLogs(ctx context.Context, programName, severity, logMessage string) ([]string, error) {
+	timeBeforeLogGeneration := metav1.Now()
+	if err := execInShootNode(ctx, v.client, v.log, v.shootSeedNamespace, fmt.Sprintf("echo '%s' | systemd-cat -t %s -p %s", logMessage, programName, severity)); err != nil {
+		return nil, err
+	}
+
+	logs, err := kubernetes.GetPodLogs(ctx, v.rsyslogRelpEchoServerPodIf, v.rsyslogEchoServerPodName, &corev1.PodLogOptions{SinceTime: &timeBeforeLogGeneration})
+	if err != nil {
+		return nil, err
+	}
+
+	var logLines []string
+	scanner := bufio.NewScanner(bytes.NewReader(logs))
+	for scanner.Scan() {
+		logLines = append(logLines, scanner.Text())
+	}
+	return logLines, nil
 }
 
 func (v *verifier) constructRegex(programName, logMessage string) string {
