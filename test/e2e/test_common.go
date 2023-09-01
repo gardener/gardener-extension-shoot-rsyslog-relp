@@ -80,20 +80,20 @@ func newVerifier(ctx context.Context, log logr.Logger, c kubernetes.Interface, s
 	}, nil
 }
 
-func (v *verifier) verifyThatLogsAreSentToEchoServer(ctx context.Context, programName, severity, logMessage string) {
+func (v *verifier) verifyThatLogsAreSentToEchoServer(ctx context.Context, programName, severity, logMessage string, args ...interface{}) {
 	EventuallyWithOffset(1, func(g Gomega) {
 		logLines, err := v.generateAndGetLogs(ctx, programName, severity, logMessage)
 		g.Expect(err).NotTo(HaveOccurred())
 		g.Expect(logLines).To(ContainElement(MatchRegexp(v.constructRegex(programName, logMessage))))
-	}).Should(Succeed())
+	}, args...).Should(Succeed())
 }
 
-func (v *verifier) verifyThatLogsAreNotSentToEchoServer(ctx context.Context, programName, severity, logMessage string) {
+func (v *verifier) verifyThatLogsAreNotSentToEchoServer(ctx context.Context, programName, severity, logMessage string, args ...interface{}) {
 	ConsistentlyWithOffset(1, func(g Gomega) {
 		logLines, err := v.generateAndGetLogs(ctx, programName, severity, logMessage)
 		g.Expect(err).NotTo(HaveOccurred())
 		g.Expect(logLines).NotTo(ContainElement(MatchRegexp(v.constructRegex(programName, logMessage))))
-	}).Should(Succeed())
+	}, args...).Should(Succeed())
 }
 
 func (v *verifier) generateAndGetLogs(ctx context.Context, programName, severity, logMessage string) ([]string, error) {
