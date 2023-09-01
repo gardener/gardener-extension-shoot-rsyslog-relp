@@ -27,7 +27,7 @@ webhooks:
   - v1
   - v1beta1
   clientConfig:
-    {{- if .Values.virtualGarden.enabled }}
+    {{- if .Values.global.virtualGarden.enabled }}
     url: {{ printf "https://%s.%s/webhooks/validate" (include "name" .) (.Release.Namespace) }}
     {{- else }}
     service:
@@ -35,4 +35,4 @@ webhooks:
       name: {{ include "name" . }}
       path: /webhooks/validate
     {{- end }}
-    caBundle: {{ required ".Values.webhookConfig.caBundle is required" .Values.webhookConfig.caBundle | b64enc }}
+    caBundle: {{ required ".Values.global.webhookConfig.caBundle is required" .Values.global.webhookConfig.caBundle | b64enc }}

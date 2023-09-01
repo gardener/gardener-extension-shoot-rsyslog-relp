@@ -8,7 +8,7 @@ metadata:
   name: {{ include "name" . }}
   namespace: {{ .Release.Namespace }}
   annotations:
-    networking.resources.gardener.cloud/from-all-webhook-targets-allowed-ports: '[{"protocol":"TCP","port":{{ .Values.webhookConfig.serverPort }}}]'
+    networking.resources.gardener.cloud/from-all-webhook-targets-allowed-ports: '[{"protocol":"TCP","port":{{ .Values.global.webhookConfig.serverPort }}}]'
   labels:
 {{ include "labels" . | indent 4 }}
 spec:
@@ -18,4 +18,4 @@ spec:
   ports:
   - port: 443
     protocol: TCP
-    targetPort: {{ .Values.webhookConfig.serverPort }}
+    targetPort: {{ .Values.global.webhookConfig.serverPort }}
