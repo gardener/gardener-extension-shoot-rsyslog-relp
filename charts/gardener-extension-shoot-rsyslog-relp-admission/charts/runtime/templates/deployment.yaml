@@ -12,7 +12,7 @@ metadata:
     high-availability-config.resources.gardener.cloud/type: server
 spec:
   revisionHistoryLimit: 2
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.global.replicaCount }}
   selector:
     matchLabels:
 {{ include "labels" . | indent 6 }}
@@ -20,7 +20,7 @@ spec:
     metadata:
       annotations:
         checksum/gardener-extension-shoot-rsyslog-relp-admission-tls: {{ include (print $.Template.BasePath "/secret-tls.yaml") . | sha256sum }}
-        {{- if .Values.kubeconfig }}
+        {{- if .Values.global.kubeconfig }}
         checksum/gardener-extension-shoot-rsyslog-relp-admission-kubeconfig: {{ include (print $.Template.BasePath "/secret-kubeconfig.yaml") . | sha256sum }}
         {{- end }}
       labels:
@@ -34,63 +34,63 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       serviceAccountName: {{ include "name" . }}
-      {{- if .Values.kubeconfig }}
+      {{- if .Values.global.kubeconfig }}
       automountServiceAccountToken: false
       {{- end }}
       containers:
       - name: {{ include "name" . }}
-        image: {{ include "image" .Values.image }}
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        image: {{ include "image" .Values.global.image }}
+        imagePullPolicy: {{ .Values.global.image.pullPolicy }}
         args:
-        - --webhook-config-server-port={{ .Values.webhookConfig.serverPort }}
+        - --webhook-config-server-port={{ .Values.global.webhookConfig.serverPort }}
         - --webhook-config-cert-dir=/etc/gardener-extension-shoot-rsyslog-relp-admission/srv
-        {{- if .Values.kubeconfig }}
+        {{- if .Values.global.kubeconfig }}
         - --kubeconfig=/etc/gardener-extension-shoot-rsyslog-relp-admission/kubeconfig/kubeconfig
         {{- end }}
-        {{- if .Values.projectedKubeconfig }}
-        - --kubeconfig={{ required ".Values.projectedKubeconfig.baseMountPath is required" .Values.projectedKubeconfig.baseMountPath }}/kubeconfig
+        {{- if .Values.global.projectedKubeconfig }}
+        - --kubeconfig={{ required ".Values.global.projectedKubeconfig.baseMountPath is required" .Values.global.projectedKubeconfig.baseMountPath }}/kubeconfig
         {{- end }}
-        {{- if .Values.metricsPort }}
-        - --metrics-bind-address=:{{ .Values.metricsPort }}
+        {{- if .Values.global.metricsPort }}
+        - --metrics-bind-address=:{{ .Values.global.metricsPort }}
         {{- end }}
-        - --health-bind-address=:{{ .Values.healthPort }}
+        - --health-bind-address=:{{ .Values.global.healthPort }}
         livenessProbe:
           httpGet:
             path: /healthz
-            port: {{ .Values.healthPort }}
+            port: {{ .Values.global.healthPort }}
             scheme: HTTP
           initialDelaySeconds: 10
         readinessProbe:
           httpGet:
             path: /readyz
-            port: {{ .Values.healthPort }}
+            port: {{ .Values.global.healthPort }}
             scheme: HTTP
           initialDelaySeconds: 5
         ports:
         - name: webhook-server
-          containerPort: {{ .Values.webhookConfig.serverPort }}
+          containerPort: {{ .Values.global.webhookConfig.serverPort }}
           protocol: TCP
-{{- if .Values.resources }}
+{{- if .Values.global.resources }}
         resources:
-{{ toYaml .Values.resources | nindent 10 }}
+{{ toYaml .Values.global.resources | nindent 10 }}
 {{- end }}
         volumeMounts:
         - name: {{ include "name" . }}-tls
           mountPath: /etc/gardener-extension-shoot-rsyslog-relp-admission/srv
           readOnly: true
-        {{- if .Values.kubeconfig }}
+        {{- if .Values.global.kubeconfig }}
         - name: {{ include "name" . }}-kubeconfig
           mountPath: /etc/gardener-extension-shoot-rsyslog-relp-admission/kubeconfig
           readOnly: true
         {{- end }}
-        {{- if .Values.serviceAccountTokenVolumeProjection.enabled }}
+        {{- if .Values.global.serviceAccountTokenVolumeProjection.enabled }}
         - name: service-account-token
           mountPath: /var/run/secrets/projected/serviceaccount
           readOnly: true
         {{- end }}
-        {{- if .Values.projectedKubeconfig }}
+        {{- if .Values.global.projectedKubeconfig }}
         - name: kubeconfig
-          mountPath: {{ required ".Values.projectedKubeconfig.baseMountPath is required" .Values.projectedKubeconfig.baseMountPath }}
+          mountPath: {{ required ".Values.global.projectedKubeconfig.baseMountPath is required" .Values.global.projectedKubeconfig.baseMountPath }}
           readOnly: true
         {{- end }}
       volumes:
@@ -98,24 +98,24 @@ spec:
         secret:
           secretName: {{ include "name" . }}-tls
           defaultMode: 420
-      {{- if .Values.kubeconfig }}
+      {{- if .Values.global.kubeconfig }}
       - name: {{ include "name" . }}-kubeconfig
         secret:
           secretName: {{ include "name" . }}-kubeconfig
           defaultMode: 420
       {{- end }}
-      {{- if .Values.serviceAccountTokenVolumeProjection.enabled }}
+      {{- if .Values.global.serviceAccountTokenVolumeProjection.enabled }}
       - name: service-account-token
         projected:
           sources:
           - serviceAccountToken:
               path: token
-              expirationSeconds: {{ .Values.serviceAccountTokenVolumeProjection.expirationSeconds }}
-              {{- if .Values.serviceAccountTokenVolumeProjection.audience }}
-              audience: {{ .Values.serviceAccountTokenVolumeProjection.audience }}
+              expirationSeconds: {{ .Values.global.serviceAccountTokenVolumeProjection.expirationSeconds }}
+              {{- if .Values.global.serviceAccountTokenVolumeProjection.audience }}
+              audience: {{ .Values.global.serviceAccountTokenVolumeProjection.audience }}
               {{- end }}
       {{- end }}
-      {{- if .Values.projectedKubeconfig }}
+      {{- if .Values.global.projectedKubeconfig }}
       - name: kubeconfig
         projected:
           defaultMode: 420
@@ -124,12 +124,12 @@ spec:
               items:
               - key: kubeconfig
                 path: kubeconfig
-              name: {{ required ".Values.projectedKubeconfig.genericKubeconfigSecretName is required" .Values.projectedKubeconfig.genericKubeconfigSecretName }}
+              name: {{ required ".Values.global.projectedKubeconfig.genericKubeconfigSecretName is required" .Values.global.projectedKubeconfig.genericKubeconfigSecretName }}
               optional: false
           - secret:
               items:
               - key: token
                 path: token
-              name: {{ required ".Values.projectedKubeconfig.tokenSecretName is required" .Values.projectedKubeconfig.tokenSecretName }}
+              name: {{ required ".Values.global.projectedKubeconfig.tokenSecretName is required" .Values.global.projectedKubeconfig.tokenSecretName }}
               optional: false
       {{- end }}

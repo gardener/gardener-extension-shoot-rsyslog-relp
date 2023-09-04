@@ -1,37 +1,21 @@
-application:
-  enabled: true
-
+global:
   virtualGarden:
     enabled: false
     user:
       name: ""
-
-  webhookConfig:
-    caBundle: |
-      -----BEGIN CERTIFICATE-----
-      ...
-      -----END CERTIFICATE-----
-
-runtime:
-  enabled: true
-
   image:
     repository: eu.gcr.io/gardener-project/gardener/extensions/shoot-rsyslog-relp-admission
     tag: latest
     pullPolicy: IfNotPresent
-
   replicaCount: 1
-
   resources:
     requests:
       cpu: "50m"
       memory: "64Mi"
     limits:
       memory: "512Mi"
-
   metricsPort: 8080
   healthPort: 8081
-
   vpa:
     enabled: true
     resourcePolicy:
@@ -40,9 +24,12 @@ runtime:
         memory: 64Mi
     updatePolicy:
       updateMode: "Auto"
-
   webhookConfig:
     serverPort: 10250
+    caBundle: |
+      -----BEGIN CERTIFICATE-----
+      ...
+      -----END CERTIFICATE-----
     tls:
       crt: |
         -----BEGIN CERTIFICATE-----

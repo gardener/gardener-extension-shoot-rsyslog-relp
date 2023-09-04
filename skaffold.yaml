@@ -67,5 +67,5 @@ deploy:
       valuesFiles:
         - "example/local/admission/values.yaml"
       setValueTemplates:
-        runtime.image.repository: '{{.IMAGE_REPO_eu_gcr_io_gardener_project_gardener_extensions_shoot_rsyslog_relp_admission}}'
-        runtime.image.tag: '{{.IMAGE_TAG_eu_gcr_io_gardener_project_gardener_extensions_shoot_rsyslog_relp_admission}}@{{.IMAGE_DIGEST_eu_gcr_io_gardener_project_gardener_extensions_shoot_rsyslog_relp_admission}}'
+        global.image.repository: '{{.IMAGE_REPO_eu_gcr_io_gardener_project_gardener_extensions_shoot_rsyslog_relp_admission}}'
+        global.image.tag: '{{.IMAGE_TAG_eu_gcr_io_gardener_project_gardener_extensions_shoot_rsyslog_relp_admission}}@{{.IMAGE_DIGEST_eu_gcr_io_gardener_project_gardener_extensions_shoot_rsyslog_relp_admission}}'

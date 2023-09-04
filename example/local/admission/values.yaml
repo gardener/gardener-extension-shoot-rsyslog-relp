@@ -1,4 +1,4 @@
-application:
+global:
   webhookConfig:
     caBundle: |
       -----BEGIN CERTIFICATE-----
@@ -21,9 +21,6 @@ application:
       bouKVDcFQMoluZrCWWZZDRktjrd8zvRuF/gsTRBQNwrc4lUQ6Q0LgnKBcTPtKnwN
       8RXuztXkOHPc8Tk1qquviRrpKAkuTRScAdBzpiAT
       -----END CERTIFICATE-----
-
-runtime:
-  webhookConfig:
     tls:
       crt: |
         -----BEGIN CERTIFICATE-----
