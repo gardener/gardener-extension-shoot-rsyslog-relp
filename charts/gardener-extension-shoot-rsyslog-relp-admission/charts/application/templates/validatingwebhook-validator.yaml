@@ -20,7 +20,11 @@ webhooks:
     resources:
     - shoots
   failurePolicy: Fail
-  objectSelector: {}
+  objectSelector:
+    {{- if .Values.global.webhookConfig.useObjectSelector }}
+    matchLabels:
+      extensions.extensions.gardener.cloud/shoot-rsyslog-relp: "true"
+    {{- end }}
   namespaceSelector: {}
   sideEffects: None
   admissionReviewVersions:
