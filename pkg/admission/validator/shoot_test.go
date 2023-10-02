@@ -10,6 +10,8 @@ import (
 	extensionswebhook "github.com/gardener/gardener/extensions/pkg/webhook"
 	"github.com/gardener/gardener/pkg/apis/core"
 	"github.com/gardener/gardener/pkg/client/kubernetes"
+	mockmanager "github.com/gardener/gardener/pkg/mock/controller-runtime/manager"
+	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
@@ -22,7 +24,6 @@ import (
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 
 	. "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/admission/validator"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
@@ -33,6 +34,8 @@ var _ = Describe("Shoot", func() {
 	Describe("#Validate", func() {
 		var (
 			shoot            *core.Shoot
+			ctrl             *gomock.Controller
+			mgr              *mockmanager.MockManager
 			shootValidator   extensionswebhook.Validator
 			ctx              = context.Background()
 			fakeGardenClient client.Client
@@ -58,11 +61,14 @@ var _ = Describe("Shoot", func() {
 				},
 			}
 
-			shootValidator = NewShootValidator()
+			ctrl = gomock.NewController(GinkgoT())
+			mgr = mockmanager.NewMockManager(ctrl)
 
 			install.Install(kubernetes.GardenScheme)
-			Expect(shootValidator.(inject.Scheme).InjectScheme(kubernetes.GardenScheme)).To(Succeed())
-			Expect(shootValidator.(inject.Client).InjectClient(fakeGardenClient)).To(Succeed())
+			mgr.EXPECT().GetScheme().Return(kubernetes.GardenScheme)
+			mgr.EXPECT().GetClient().Return(fakeGardenClient)
+
+			shootValidator = NewShootValidator(mgr)
 		})
 
 		It("should not do anything because extension is disabled", func() {

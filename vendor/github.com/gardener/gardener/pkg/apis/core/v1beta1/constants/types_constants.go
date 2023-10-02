@@ -82,18 +82,28 @@ const (
 	// for the shoot API server instead the DNS name or load balancer address.
 	SecretNameGardenerInternal = "gardener-internal"
 
+	// SecretPrefixGeneratedBackupBucket is a constant for the prefix of a secret name in the garden cluster related to
+	// BackpuBuckets.
+	SecretPrefixGeneratedBackupBucket = "generated-bucket-"
+
 	// SecretNameGenericTokenKubeconfig is a constant for the name of the kubeconfig used by the shoot controlplane
 	// components to authenticate against the shoot Kubernetes API server.
 	// Use `pkg/extensions.GenericTokenKubeconfigSecretNameFromCluster` instead.
 	SecretNameGenericTokenKubeconfig = "generic-token-kubeconfig"
+	// SecretNameGenericGardenKubeconfig is a constant for the name of the kubeconfig used by the extension
+	// components to authenticate against the garden Kubernetes API server.
+	SecretNameGenericGardenKubeconfig = "generic-garden-kubeconfig"
 	// AnnotationKeyGenericTokenKubeconfigSecretName is a constant for the key of an annotation on
 	// extensions.gardener.cloud/v1alpha1.Cluster resources whose value contains the name of the generic token
 	// kubeconfig secret in the seed cluster.
 	AnnotationKeyGenericTokenKubeconfigSecretName = "generic-token-kubeconfig.secret.gardener.cloud/name"
 
-	// SecretPrefixGeneratedBackupBucket is a constant for the prefix of a secret name in the garden cluster related to
-	// BackpuBuckets.
-	SecretPrefixGeneratedBackupBucket = "generated-bucket-"
+	// ExtensionGardenServiceAccountPrefix is the prefix of the default garden ServiceAccount generated for each
+	// ControllerInstallation.
+	ExtensionGardenServiceAccountPrefix = "extension-"
+
+	// ReferenceProtectionFinalizerName is the name of the finalizer used for the reference protection.
+	ReferenceProtectionFinalizerName = "gardener.cloud/reference-protection"
 
 	// DeploymentNameClusterAutoscaler is a constant for the name of a Kubernetes deployment object that contains
 	// the cluster-autoscaler pod.
@@ -252,6 +262,8 @@ const (
 	GardenRoleKubeconfig = "kubeconfig"
 	// GardenRoleCACluster is the value of the GardenRole key indicating type 'ca-cluster'.
 	GardenRoleCACluster = "ca-cluster"
+	// GardenRoleCAClient is the value of the GardenRole key indicating type 'ca-client'.
+	GardenRoleCAClient = "ca-client"
 	// GardenRoleSSHKeyPair is the value of the GardenRole key indicating type 'ssh-keypair'.
 	GardenRoleSSHKeyPair = "ssh-keypair"
 	// GardenRoleDefaultDomain is the value of the GardenRole key indicating type 'default-domain'.
@@ -302,7 +314,6 @@ const (
 	// automatic scale-down shall be disabled for the etcd, kube-apiserver, kube-controller-manager.
 	// Note that this annotation is alpha and can be removed anytime without further notice. Only use it if you know
 	// what you do.
-	// TODO(shreyas-s-rao): Deprecate HA annotation with the stable release of zonal clusters feature.
 	ShootAlphaControlPlaneScaleDownDisabled = "alpha.control-plane.scaling.shoot.gardener.cloud/scale-down-disabled"
 
 	// ShootAlphaControlPlaneHAVPN is a constant for an annotation on the Shoot resource to enforce
@@ -382,6 +393,9 @@ const (
 	// OperationRotateETCDEncryptionKeyComplete is a constant for an annotation on a Shoot indicating that the
 	// rotation of the ETCD encryption key shall be completed.
 	OperationRotateETCDEncryptionKeyComplete = "rotate-etcd-encryption-key-complete"
+	// SeedOperationRenewGardenAccessSecrets is a constant for an annotation on a Seed indicating that the
+	// all garden access secrets on the seed shall be renewed.
+	SeedOperationRenewGardenAccessSecrets = "renew-garden-access-secrets"
 
 	// SeedResourceManagerClass is the resource-class managed by the Gardener-Resource-Manager
 	// instance in the garden namespace on the seeds.
@@ -406,7 +420,7 @@ const (
 	// LabelMonitoring is a constant for a label for monitoring stack configurations
 	LabelMonitoring = "monitoring"
 	// LabelKeyCustomLoggingResource is the key of the label which is used from the operator to select the CustomResources which will be imported in the FluentBit configuration.
-	// TODO(Kristian-ZH): the label key has to be migrated to "fluentbit.gardener.cloud/type".
+	// TODO(nickytd): the label key has to be migrated to "fluentbit.gardener.cloud/type".
 	LabelKeyCustomLoggingResource = "fluentbit.gardener/type"
 	// LabelValueCustomLoggingResource is the value of the label which is used from the operator to select the CustomResources which will be imported in the FluentBit configuration.
 	LabelValueCustomLoggingResource = "seed"
@@ -480,6 +494,9 @@ const (
 	// LabelNetworkPolicyShootNamespaceAlias is a constant for the alias for shoot namespaces used in NetworkPolicy
 	// labels.
 	LabelNetworkPolicyShootNamespaceAlias = "all-shoots"
+	// LabelNetworkPolicyExtensionsNamespaceAlias is a constant for the alias for extension namespaces used in
+	// NetworkPolicy labels.
+	LabelNetworkPolicyExtensionsNamespaceAlias = "extensions"
 	// LabelNetworkPolicyIstioIngressNamespaceAlias is a constant for the alias for shoot namespaces used in
 	// NetworkPolicy labels.
 	LabelNetworkPolicyIstioIngressNamespaceAlias = "all-istio-ingresses"
@@ -507,9 +524,13 @@ const (
 
 	// LabelAPIServerExposure is a constant for label key which gardener can add to various objects related
 	// to kube-apiserver exposure.
+	// Deprecated: This label key is deprecated and will be removed after Gardener v1.80 has been released.
+	// TODO(rfranzke): Drop this after v1.80 has been released.
 	LabelAPIServerExposure = "core.gardener.cloud/apiserver-exposure"
 	// LabelAPIServerExposureGardenerManaged is a constant for label value which gardener sets on the label key
 	// "core.gardener.cloud/apiserver-exposure" to indicate that it's responsible for apiserver exposure (via SNI).
+	// Deprecated: This label key is deprecated and will be removed after Gardener v1.80 has been released.
+	// TODO(rfranzke): Drop this after v1.80 has been released.
 	LabelAPIServerExposureGardenerManaged = "gardener-managed"
 	// LabelExposureClassHandlerName is the label key for exposure class handler names.
 	LabelExposureClassHandlerName = "handler.exposureclass.gardener.cloud/name"
@@ -570,22 +591,19 @@ const (
 	// delays will not recompute it.
 	AnnotationShootCloudConfigExecutionMaxDelaySeconds = "shoot.gardener.cloud/cloud-config-execution-max-delay-seconds"
 	// AnnotationNodeLocalDNS enables a per node dns cache on the shoot cluster.
+	// Deprecated: This annotation is deprecated and will be removed in a future version.
+	// Use field `.spec.systemComponents.nodeLocalDNS.enabled` in Shoot instead.
 	AnnotationNodeLocalDNS = "alpha.featuregates.shoot.gardener.cloud/node-local-dns"
 	// AnnotationNodeLocalDNSForceTcpToClusterDns enforces upgrade to tcp connections for communication between node local and cluster dns.
+	// Deprecated: This annotation is deprecated and will be removed in a future version.
+	// Use field `.spec.systemComponents.nodeLocalDNS.forceTCPToClusterDNS` in Shoot instead.
 	AnnotationNodeLocalDNSForceTcpToClusterDns = "alpha.featuregates.shoot.gardener.cloud/node-local-dns-force-tcp-to-cluster-dns"
 	// AnnotationNodeLocalDNSForceTcpToUpstreamDns enforces upgrade to tcp connections for communication between node local and upstream dns.
+	// Deprecated: This annotation is deprecated and will be removed in a future version.
+	// Use field `.spec.systemComponents.nodeLocalDNS.forceTCPToUpstreamDNS` in Shoot instead.
 	AnnotationNodeLocalDNSForceTcpToUpstreamDns = "alpha.featuregates.shoot.gardener.cloud/node-local-dns-force-tcp-to-upstream-dns"
 	// AnnotationCoreDNSRewritingDisabled disables core dns query rewriting even if the corresponding feature gate is enabled.
 	AnnotationCoreDNSRewritingDisabled = "alpha.featuregates.shoot.gardener.cloud/core-dns-rewriting-disabled"
-
-	// AnnotationShootAPIServerSNIPodInjector is the key for an annotation of a Shoot cluster whose value indicates
-	// if pod injection of 'KUBERNETES_SERVICE_HOST' environment variable should happen for clusters where APIServerSNI
-	// featuregate is enabled.
-	// Any value than 'disable' enables this feature.
-	AnnotationShootAPIServerSNIPodInjector = "alpha.featuregates.shoot.gardener.cloud/apiserver-sni-pod-injector"
-	// AnnotationShootAPIServerSNIPodInjectorDisableValue is the value of the
-	// `alpha.featuregates.shoot.gardener.cloud/apiserver-sni-pod-injector` annotation that disables the pod injection.
-	AnnotationShootAPIServerSNIPodInjectorDisableValue = "disable"
 
 	// AnnotationSeccompDefaultProfile is the key for an annotation applied to a PodSecurityPolicy which specifies
 	// which is the default seccomp profile to apply to containers.
@@ -595,6 +613,9 @@ const (
 	AnnotationSeccompAllowedProfiles = "seccomp.security.alpha.kubernetes.io/allowedProfileNames"
 	// AnnotationSeccompAllowedProfilesRuntimeDefaultValue is the value for the default container runtime profile.
 	AnnotationSeccompAllowedProfilesRuntimeDefaultValue = "runtime/default"
+	// AnnotationPodSecurityEnforce is a constant for an annotation on `ControllerRegistration`s and `ControllerInstallation`s. When set the
+	// `extension` namespace is created with "pod-security.kubernetes.io/enforce" label set to AnnotationPodSecurityEnforce's value.
+	AnnotationPodSecurityEnforce = "security.gardener.cloud/pod-security-enforce"
 	// OperatingSystemConfigUnitNameKubeletService is a constant for a unit in the operating system config that contains the kubelet service.
 	OperatingSystemConfigUnitNameKubeletService = "kubelet.service"
 	// OperatingSystemConfigUnitNameDockerService is a constant for a unit in the operating system config that contains the docker service.
@@ -658,13 +679,11 @@ const (
 	ClusterIdentityOriginShoot = "shoot"
 
 	// SeedNginxIngressClass defines the ingress class for the seed nginx ingress controller
-	SeedNginxIngressClass = "nginx-gardener"
-	// SeedNginxIngressClass122 defines the ingress class for the seed nginx ingress controller for K8s >= 1.22
-	SeedNginxIngressClass122 = "nginx-ingress-gardener"
+	SeedNginxIngressClass = "nginx-ingress-gardener"
+	// ShootNginxIngressClass defines the ingress class for the shoot nginx ingress controller addon.
+	ShootNginxIngressClass = "nginx"
 	// IngressKindNginx defines nginx as kind as managed Seed ingress
 	IngressKindNginx = "nginx"
-	// NginxIngressClass defines the ingress class for the seed nginx ingress controller if the seed cluster is a non Gardener managed cluster.
-	NginxIngressClass = "nginx"
 
 	// SeedsGroup is the identity group for gardenlets when authenticating to the API server.
 	SeedsGroup = "gardener.cloud:system:seeds"
@@ -705,13 +724,17 @@ const (
 	DNSRecordInternalName = "internal"
 	// DNSRecordExternalName is a constant for DNSRecord objects used for the external domain name.
 	DNSRecordExternalName = "external"
-	// DNSRecordOwnerName is a constant for DNSRecord objects used for the owner domain name.
-	DNSRecordOwnerName = "owner"
 
 	// ArchitectureAMD64 is a constant for the 'amd64' architecture.
 	ArchitectureAMD64 = "amd64"
 	// ArchitectureARM64 is a constant for the 'arm64' architecture.
 	ArchitectureARM64 = "arm64"
+
+	// EnvGenericGardenKubeconfig is a constant for the environment variable which holds the path to the generic garden kubeconfig.
+	EnvGenericGardenKubeconfig = "GARDEN_KUBECONFIG"
+	// EnvSeedName is a constant for the environment variable which holds the name of the Seed that the extension
+	// controller is running on.
+	EnvSeedName = "SEED_NAME"
 )
 
 var (

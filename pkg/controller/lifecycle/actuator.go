@@ -22,10 +22,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
-	kubernetes "k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/charts"
 	apisconfig "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/config"
@@ -45,8 +44,10 @@ const (
 )
 
 // NewActuator returns an actuator responsible for Extension resources.
-func NewActuator(config apisconfig.Configuration, chartRendererFactory extensionscontroller.ChartRendererFactory) extension.Actuator {
+func NewActuator(mgr manager.Manager, config apisconfig.Configuration, chartRendererFactory extensionscontroller.ChartRendererFactory) extension.Actuator {
 	return &actuator{
+		client:               mgr.GetClient(),
+		decoder:              serializer.NewCodecFactory(mgr.GetScheme(), serializer.EnableStrict).UniversalDecoder(),
 		config:               config,
 		chartRendererFactory: chartRendererFactory,
 	}
@@ -55,34 +56,9 @@ func NewActuator(config apisconfig.Configuration, chartRendererFactory extension
 type actuator struct {
 	chartRendererFactory extensionscontroller.ChartRendererFactory
 
-	client    client.Client
-	clientset kubernetes.Interface
-	decoder   runtime.Decoder
-	config    apisconfig.Configuration
-}
-
-// InjectConfig injects the rest config to this actuator.
-func (a *actuator) InjectConfig(config *rest.Config) error {
-	var err error
-
-	a.clientset, err = kubernetes.NewForConfig(config)
-	if err != nil {
-		return fmt.Errorf("could not create Kubernetes client: %w", err)
-	}
-
-	return nil
-}
-
-// InjectClient injects the controller runtime client into the reconciler.
-func (a *actuator) InjectClient(client client.Client) error {
-	a.client = client
-	return nil
-}
-
-// InjectScheme injects the given scheme into the reconciler.
-func (a *actuator) InjectScheme(scheme *runtime.Scheme) error {
-	a.decoder = serializer.NewCodecFactory(scheme, serializer.EnableStrict).UniversalDecoder()
-	return nil
+	client  client.Client
+	decoder runtime.Decoder
+	config  apisconfig.Configuration
 }
 
 // Reconcile reconciles the extension resource.

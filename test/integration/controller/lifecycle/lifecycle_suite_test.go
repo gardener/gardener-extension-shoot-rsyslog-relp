@@ -89,7 +89,7 @@ var _ = BeforeSuite(func() {
 	mgrClient = mgr.GetClient()
 
 	lifecyclectrl.DefaultAddOptions.IgnoreOperationAnnotation = true
-	Expect(lifecyclectrl.AddToManager(mgr)).To(Succeed())
+	Expect(lifecyclectrl.AddToManager(ctx, mgr)).To(Succeed())
 
 	By("Start manager")
 	mgrContext, mgrCancel := context.WithCancel(ctx)

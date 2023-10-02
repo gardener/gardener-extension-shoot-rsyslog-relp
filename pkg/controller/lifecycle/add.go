@@ -5,6 +5,7 @@
 package lifecycle
 
 import (
+	"context"
 	"time"
 
 	extensioncontroller "github.com/gardener/gardener/extensions/pkg/controller"
@@ -40,14 +41,14 @@ type AddOptions struct {
 }
 
 // AddToManager adds a Rsyslog Relp Lifecycle controller to the given Controller Manager.
-func AddToManager(mgr manager.Manager) error {
-	return extension.Add(mgr, extension.AddArgs{
-		Actuator:          NewActuator(DefaultAddOptions.ServiceConfig.Configuration, extensioncontroller.ChartRendererFactoryFunc(util.NewChartRendererForShoot)),
+func AddToManager(ctx context.Context, mgr manager.Manager) error {
+	return extension.Add(ctx, mgr, extension.AddArgs{
+		Actuator:          NewActuator(mgr, DefaultAddOptions.ServiceConfig.Configuration, extensioncontroller.ChartRendererFactoryFunc(util.NewChartRendererForShoot)),
 		ControllerOptions: DefaultAddOptions.ControllerOptions,
 		Name:              Name,
 		FinalizerSuffix:   FinalizerSuffix,
 		Resync:            60 * time.Minute,
-		Predicates:        extension.DefaultPredicates(DefaultAddOptions.IgnoreOperationAnnotation),
+		Predicates:        extension.DefaultPredicates(ctx, mgr, DefaultAddOptions.IgnoreOperationAnnotation),
 		Type:              constants.ExtensionType,
 	})
 }

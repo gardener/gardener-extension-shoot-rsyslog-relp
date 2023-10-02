@@ -31,7 +31,7 @@ func New(mgr manager.Manager) (*extensionswebhook.Webhook, error) {
 		Name:     Name,
 		Path:     "/webhooks/validate",
 		Validators: map[extensionswebhook.Validator][]extensionswebhook.Type{
-			NewShootValidator(): {{Obj: &core.Shoot{}}},
+			NewShootValidator(mgr): {{Obj: &core.Shoot{}}},
 		},
 	})
 }
