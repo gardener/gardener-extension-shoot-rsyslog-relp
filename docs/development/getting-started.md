@@ -29,7 +29,7 @@ kubectl apply -f ./example/local/01-shoot.yaml
 Once the shoot's namespace is created we can create a `networkpolicy` that will allow egress traffic from the `rsyslog` on the `Shoot`'s nodes to the `rsyslog-relp-echo-server` that serves as a fake rsyslog target server.
 
 ```bash
-kubectl apply -f ./example/local/02-allow-machine-to-rsyslog-relp-echo-server-netpol.yaml.yaml
+kubectl apply -f ./example/local/02-allow-machine-to-rsyslog-relp-echo-server-netpol.yaml
 ```
 
 Currently the shoot's nodes run Ubuntu which does not have the `rsyslog-relp` and `auditd` packages installed, so the configuration done by the extension has no effect.
