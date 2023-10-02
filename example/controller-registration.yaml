@@ -13,6 +13,8 @@ apiVersion: core.gardener.cloud/v1beta1
 kind: ControllerRegistration
 metadata:
   name: shoot-rsyslog-relp
+  annotations:
+    security.gardener.cloud/pod-security-enforce: baseline
 spec:
   deployment:
     deploymentRefs:
