@@ -62,7 +62,7 @@ type actuator struct {
 }
 
 // Reconcile reconciles the extension resource.
-func (a *actuator) Reconcile(ctx context.Context, log logr.Logger, ex *extensionsv1alpha1.Extension) error {
+func (a *actuator) Reconcile(ctx context.Context, _ logr.Logger, ex *extensionsv1alpha1.Extension) error {
 	namespace := ex.GetNamespace()
 
 	cluster, err := extensionscontroller.GetCluster(ctx, a.client, namespace)
@@ -180,7 +180,7 @@ func (a *actuator) Reconcile(ctx context.Context, log logr.Logger, ex *extension
 }
 
 // Delete deletes the extension resource.
-func (a *actuator) Delete(ctx context.Context, log logr.Logger, ex *extensionsv1alpha1.Extension) error {
+func (a *actuator) Delete(ctx context.Context, _ logr.Logger, ex *extensionsv1alpha1.Extension) error {
 	namespace := ex.GetNamespace()
 
 	cluster, err := extensionscontroller.GetCluster(ctx, a.client, namespace)
@@ -245,7 +245,7 @@ func (a *actuator) Restore(ctx context.Context, log logr.Logger, ex *extensionsv
 }
 
 // Migrate migrates the extension resource.
-func (a *actuator) Migrate(ctx context.Context, log logr.Logger, ex *extensionsv1alpha1.Extension) error {
+func (a *actuator) Migrate(ctx context.Context, _ logr.Logger, ex *extensionsv1alpha1.Extension) error {
 	namespace := ex.GetNamespace()
 
 	// Keep objects for shoot managed resources so that they are not deleted from the shoot during the migration
