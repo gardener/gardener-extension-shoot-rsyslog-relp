@@ -11,6 +11,7 @@ import (
 	extensioncontroller "github.com/gardener/gardener/extensions/pkg/controller"
 	"github.com/gardener/gardener/extensions/pkg/controller/extension"
 	"github.com/gardener/gardener/extensions/pkg/util"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
@@ -42,8 +43,10 @@ type AddOptions struct {
 
 // AddToManager adds a Rsyslog Relp Lifecycle controller to the given Controller Manager.
 func AddToManager(ctx context.Context, mgr manager.Manager) error {
+	decoder := serializer.NewCodecFactory(mgr.GetScheme(), serializer.EnableStrict).UniversalDecoder()
+
 	return extension.Add(ctx, mgr, extension.AddArgs{
-		Actuator:          NewActuator(mgr, DefaultAddOptions.ServiceConfig.Configuration, extensioncontroller.ChartRendererFactoryFunc(util.NewChartRendererForShoot)),
+		Actuator:          NewActuator(mgr.GetClient(), decoder, DefaultAddOptions.ServiceConfig.Configuration, extensioncontroller.ChartRendererFactoryFunc(util.NewChartRendererForShoot)),
 		ControllerOptions: DefaultAddOptions.ControllerOptions,
 		Name:              Name,
 		FinalizerSuffix:   FinalizerSuffix,

@@ -10,8 +10,6 @@ import (
 	extensionswebhook "github.com/gardener/gardener/extensions/pkg/webhook"
 	"github.com/gardener/gardener/pkg/apis/core"
 	"github.com/gardener/gardener/pkg/client/kubernetes"
-	mockmanager "github.com/gardener/gardener/pkg/mock/controller-runtime/manager"
-	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
@@ -20,6 +18,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -34,15 +33,17 @@ var _ = Describe("Shoot", func() {
 	Describe("#Validate", func() {
 		var (
 			shoot            *core.Shoot
-			ctrl             *gomock.Controller
-			mgr              *mockmanager.MockManager
 			shootValidator   extensionswebhook.Validator
 			ctx              = context.Background()
 			fakeGardenClient client.Client
 		)
 
 		BeforeEach(func() {
+			install.Install(kubernetes.GardenScheme)
 			fakeGardenClient = fakeclient.NewClientBuilder().WithScheme(kubernetes.GardenScheme).Build()
+			decoder := serializer.NewCodecFactory(kubernetes.GardenScheme, serializer.EnableStrict).UniversalDecoder()
+
+			shootValidator = NewShootValidator(fakeGardenClient, decoder)
 
 			shoot = &core.Shoot{
 				ObjectMeta: metav1.ObjectMeta{
@@ -60,15 +61,6 @@ var _ = Describe("Shoot", func() {
 					},
 				},
 			}
-
-			ctrl = gomock.NewController(GinkgoT())
-			mgr = mockmanager.NewMockManager(ctrl)
-
-			install.Install(kubernetes.GardenScheme)
-			mgr.EXPECT().GetScheme().Return(kubernetes.GardenScheme)
-			mgr.EXPECT().GetClient().Return(fakeGardenClient)
-
-			shootValidator = NewShootValidator(mgr)
 		})
 
 		It("should not do anything because extension is disabled", func() {

@@ -21,10 +21,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/charts"
 	apisconfig "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/config"
@@ -44,10 +42,10 @@ const (
 )
 
 // NewActuator returns an actuator responsible for Extension resources.
-func NewActuator(mgr manager.Manager, config apisconfig.Configuration, chartRendererFactory extensionscontroller.ChartRendererFactory) extension.Actuator {
+func NewActuator(client client.Client, decoder runtime.Decoder, config apisconfig.Configuration, chartRendererFactory extensionscontroller.ChartRendererFactory) extension.Actuator {
 	return &actuator{
-		client:               mgr.GetClient(),
-		decoder:              serializer.NewCodecFactory(mgr.GetScheme(), serializer.EnableStrict).UniversalDecoder(),
+		client:               client,
+		decoder:              decoder,
 		config:               config,
 		chartRendererFactory: chartRendererFactory,
 	}

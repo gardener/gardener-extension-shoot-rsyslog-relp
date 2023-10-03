@@ -14,10 +14,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog/validation"
@@ -32,10 +30,10 @@ type shoot struct {
 }
 
 // NewShootValidator returns a new instance of a shoot validator.
-func NewShootValidator(mgr manager.Manager) extensionswebhook.Validator {
+func NewShootValidator(client client.Client, decoder runtime.Decoder) extensionswebhook.Validator {
 	return &shoot{
-		client:  mgr.GetClient(),
-		decoder: serializer.NewCodecFactory(mgr.GetScheme(), serializer.EnableStrict).UniversalDecoder(),
+		client:  client,
+		decoder: decoder,
 	}
 }
 
