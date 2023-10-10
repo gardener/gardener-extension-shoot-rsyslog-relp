@@ -18,11 +18,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 
 	. "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/admission/validator"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
@@ -39,7 +39,11 @@ var _ = Describe("Shoot", func() {
 		)
 
 		BeforeEach(func() {
+			install.Install(kubernetes.GardenScheme)
 			fakeGardenClient = fakeclient.NewClientBuilder().WithScheme(kubernetes.GardenScheme).Build()
+			decoder := serializer.NewCodecFactory(kubernetes.GardenScheme, serializer.EnableStrict).UniversalDecoder()
+
+			shootValidator = NewShootValidator(fakeGardenClient, decoder)
 
 			shoot = &core.Shoot{
 				ObjectMeta: metav1.ObjectMeta{
@@ -57,12 +61,6 @@ var _ = Describe("Shoot", func() {
 					},
 				},
 			}
-
-			shootValidator = NewShootValidator()
-
-			install.Install(kubernetes.GardenScheme)
-			Expect(shootValidator.(inject.Scheme).InjectScheme(kubernetes.GardenScheme)).To(Succeed())
-			Expect(shootValidator.(inject.Client).InjectClient(fakeGardenClient)).To(Succeed())
 		})
 
 		It("should not do anything because extension is disabled", func() {

@@ -12,7 +12,7 @@ import (
 )
 
 // ValidateRsyslogRelpConfig validates the passed configuration instance.
-func ValidateRsyslogRelpConfig(config *rsyslog.RsyslogRelpConfig, fldPath *field.Path) field.ErrorList {
+func ValidateRsyslogRelpConfig(config *rsyslog.RsyslogRelpConfig, _ *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	allErrs = append(allErrs, validateTarget(config.Target, field.NewPath("target"))...)
