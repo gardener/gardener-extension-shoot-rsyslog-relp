@@ -19,6 +19,7 @@ spec:
       labels:
 {{ include "labels" . | indent 8 }}
     spec:
+      priorityClassName: gardener-shoot-system-700
       containers:
       - name: pause-container
         image: {{ .Values.images.pause }}
