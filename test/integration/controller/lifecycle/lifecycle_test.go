@@ -57,6 +57,7 @@ spec:
         app.kubernetes.io/name: rsyslog-relp-configuration-cleaner
         app.kubernetes.io/instance: rsyslog-relp-configuration-cleaner
     spec:
+      priorityClassName: gardener-shoot-system-700
       containers:
       - name: pause-container
         image: registry.k8s.io/pause:3.7
@@ -325,6 +326,7 @@ spec:
         app.kubernetes.io/name: rsyslog-relp-configurator
         app.kubernetes.io/instance: rsyslog-relp-configurator
     spec:
+      priorityClassName: gardener-shoot-system-700
       containers:
       - name: pause
         image: registry.k8s.io/pause:3.7
