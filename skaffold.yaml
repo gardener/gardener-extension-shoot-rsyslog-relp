@@ -28,6 +28,24 @@ build:
   artifacts:
   - image: eu.gcr.io/gardener-project/gardener/extensions/shoot-rsyslog-relp
     ko:
+      dependencies:
+        paths:
+        - charts
+        - cmd/gardener-extension-shoot-rsyslog-relp/app
+        - pkg/apis/config
+        - pkg/apis/config/v1alpha1
+        - pkg/apis/rsyslog
+        - pkg/apis/rsyslog/install
+        - pkg/apis/rsyslog/v1alpha1
+        - pkg/cmd/rsyslogrelp
+        - pkg/constants
+        - pkg/controller/config
+        - pkg/controller/healthcheck
+        - pkg/controller/lifecycle
+        - pkg/imagevector
+        - pkg/utils
+        - vendor
+        - VERSION
       main: ./cmd/gardener-extension-shoot-rsyslog-relp
 resourceSelector:
   allow:
@@ -48,6 +66,19 @@ build:
   artifacts:
   - image: eu.gcr.io/gardener-project/gardener/extensions/shoot-rsyslog-relp-admission
     ko:
+      dependencies:
+        paths:
+        - cmd/gardener-extension-shoot-rsyslog-relp-admission/app
+        - pkg/admission/cmd
+        - pkg/admission/validator
+        - pkg/apis/rsyslog
+        - pkg/apis/rsyslog/install
+        - pkg/apis/rsyslog/v1alpha1
+        - pkg/apis/rsyslog/validation
+        - pkg/constants
+        - pkg/utils
+        - vendor
+        - VERSION
       main: ./cmd/gardener-extension-shoot-rsyslog-relp-admission
 deploy:
   helm:
