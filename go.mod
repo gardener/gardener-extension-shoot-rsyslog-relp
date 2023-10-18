@@ -2,8 +2,6 @@ module github.com/gardener/gardener-extension-shoot-rsyslog-relp
 
 go 1.21
 
-toolchain go1.21.1
-
 require (
 	github.com/ahmetb/gen-crd-api-reference-docs v0.3.0
 	github.com/gardener/gardener v1.80.0

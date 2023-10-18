@@ -542,18 +542,21 @@ spec:
 					Namespace: shootSeedNamespace.Name,
 				},
 			}
-			managedResourceSecret := &corev1.Secret{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "managedresource-extension-shoot-rsyslog-relp-shoot",
-					Namespace: shootSeedNamespace.Name,
-				},
-			}
+			managedResourceSecret := &corev1.Secret{}
 
 			By("Verify that managed resource is created correctly")
 			rsyslogConfigMap := rsyslogConfigMapYaml(tlsEnabled, projectName, shootName, shootUID)
 			rsyslogTlsSecret := rsyslogTlsSecretYaml(tlsEnabled)
 			Eventually(func(g Gomega) {
 				g.Expect(mgrClient.Get(ctx, client.ObjectKeyFromObject(managedResource), managedResource)).To(Succeed())
+
+				managedResourceSecret = &corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      managedResource.Spec.SecretRefs[0].Name,
+						Namespace: managedResource.Namespace,
+					},
+				}
+
 				g.Expect(mgrClient.Get(ctx, client.ObjectKeyFromObject(managedResourceSecret), managedResourceSecret)).To(Succeed())
 				g.Expect(managedResourceSecret.Type).To(Equal(corev1.SecretTypeOpaque))
 				g.Expect(string(managedResourceSecret.Data["rsyslog-relp-configurator_templates_auditd-config.yaml"])).To(Equal(auditdConfigMapYaml))
@@ -577,16 +580,19 @@ spec:
 					Namespace: shootSeedNamespace.Name,
 				},
 			}
-			configCleanerResourceSecret := &corev1.Secret{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "managedresource-extension-shoot-rsyslog-relp-configuration-cleaner-shoot",
-					Namespace: shootSeedNamespace.Name,
-				},
-			}
+			configCleanerResourceSecret := &corev1.Secret{}
 
 			By("Verify that managed resource used for configuration cleanup gets created")
 			Eventually(func(g Gomega) {
 				g.Expect(testClient.Get(ctx, client.ObjectKeyFromObject(configCleanerManagedResource), configCleanerManagedResource)).To(Succeed())
+
+				configCleanerResourceSecret = &corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      configCleanerManagedResource.Spec.SecretRefs[0].Name,
+						Namespace: configCleanerManagedResource.Namespace,
+					},
+				}
+
 				g.Expect(testClient.Get(ctx, client.ObjectKeyFromObject(configCleanerResourceSecret), configCleanerResourceSecret)).To(Succeed())
 				g.Expect(configCleanerResourceSecret.Type).To(Equal(corev1.SecretTypeOpaque))
 				g.Expect(string(configCleanerResourceSecret.Data["rsyslog-relp-configuration-cleaner_templates_daemonset.yaml"])).To(Equal(rsyslogConfigurationCleanerDaemonsetYaml))
