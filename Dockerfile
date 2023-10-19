@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ############# builder
-FROM golang:1.20.6 AS builder
+FROM golang:1.21.3 AS builder
 
 WORKDIR /go/src/github.com/gardener/gardener-extension-shoot-rsyslog-relp
 COPY . .
