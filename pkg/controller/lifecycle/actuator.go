@@ -247,6 +247,25 @@ func (a *actuator) Delete(ctx context.Context, _ logr.Logger, ex *extensionsv1al
 	return managedresources.WaitUntilDeleted(timeoutCtx, a.client, namespace, constants.ManagedResourceNameConfigCleaner)
 }
 
+// ForceDelete deletes the extension resource.
+//
+// We don't need to wait for the ManagedResource deletion because ManagedResources are finalized by gardenlet
+// in later step in the Shoot force deletion flow.
+func (a *actuator) ForceDelete(ctx context.Context, _ logr.Logger, ex *extensionsv1alpha1.Extension) error {
+	namespace := ex.GetNamespace()
+
+	cluster, err := extensionscontroller.GetCluster(ctx, a.client, namespace)
+	if err != nil {
+		return err
+	}
+
+	if cluster.Shoot == nil {
+		return errors.New("cluster.shoot is not yet populated")
+	}
+
+	return managedresources.DeleteForShoot(ctx, a.client, namespace, constants.ManagedResourceName)
+}
+
 // Restore restores the extension resource.
 func (a *actuator) Restore(ctx context.Context, log logr.Logger, ex *extensionsv1alpha1.Extension) error {
 	return a.Reconcile(ctx, log, ex)
