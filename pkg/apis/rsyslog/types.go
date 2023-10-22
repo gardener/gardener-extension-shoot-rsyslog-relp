@@ -48,6 +48,10 @@ type TLS struct {
 	// AuthMode is the mode used for mutual authentication.
 	// Possible values are "fingerprint" or "name".
 	AuthMode *AuthMode
+	// TLSLib specifies the tls library that will be used by librelp on the shoot nodes.
+	// If the field is omitted, the librelp default is used.
+	// Possible values are "openssl" or "gnutls".
+	TLSLib *TLSLib
 }
 
 // LoggingRule contains options that determines which logs are sent to the target server.
@@ -66,4 +70,14 @@ const (
 	AuthModeName AuthMode = "name"
 	// AuthModeFingerPrint specifies the rsyslog fingerprint authentication mode.
 	AuthModeFingerPrint AuthMode = "fingerprint"
+)
+
+// TLSLib is the tls library that is used by the librelp library on the shoot's nodes.
+type TLSLib string
+
+const (
+	// TLSLibOpenSSL specifies the openssl tls library.
+	TLSLibOpenSSL = "openssl"
+	// TLSLibGnuTLS specifies the gnutls tls library.
+	TLSLibGnuTLS = "gnutls"
 )

@@ -19,6 +19,7 @@ spec:
       kind: RsyslogRelpConfig
       target: 10.2.64.54
       port: 80
+    # port: 443 # Use this port if you plan on enabling tls.
       loggingRules:
       # only forward logs from systemd that are at Info(6) syslog severity or below to the target server
       - severity: 6
@@ -34,8 +35,15 @@ spec:
     #   enabled: true
     #   secretReferenceName: rsyslog-tls-certificates
     #   authMode: name # {name, fingerprint}
+    #   tlsLib: openssl # {openssl, gnutls}
     #   permittedPeer:
-    #   - "10.2.64.54"
+    #   - "rsyslog-server"
+# resources:
+# - name: rsyslog-tls-certificates
+#   resourceRef:
+#     kind: Secret
+#     name: rsyslog-relp-tls
+#     apiVersion: v1
   seedName: local
   cloudProfileName: local
   secretBindingName: local # dummy, doesn't contain any credentials

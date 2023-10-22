@@ -131,12 +131,6 @@ func (a *actuator) Reconcile(ctx context.Context, _ logr.Logger, ex *extensionsv
 			return err
 		}
 
-		// var permittedPeer string
-		// if len(shootRsyslogRelpConfig.TLS.PermittedPeer) > 0 {
-		// 	permittedPeers :=
-		// 	permittedPeer = fmt.Sprintf("[%s]", strings.Join(shootRsyslogRelpConfig.TLS.PermittedPeer, ","))
-		// }
-
 		var permittedPeers []string
 		for _, permittedPeer := range shootRsyslogRelpConfig.TLS.PermittedPeer {
 			permittedPeers = append(permittedPeers, strconv.Quote(permittedPeer))
@@ -147,10 +141,16 @@ func (a *actuator) Reconcile(ctx context.Context, _ logr.Logger, ex *extensionsv
 			authMode = string(*shootRsyslogRelpConfig.TLS.AuthMode)
 		}
 
+		var tlsLib string
+		if shootRsyslogRelpConfig.TLS.TLSLib != nil {
+			tlsLib = string(*shootRsyslogRelpConfig.TLS.TLSLib)
+		}
+
 		rsyslogConfigValues["tls"] = map[string]interface{}{
 			"enabled":       shootRsyslogRelpConfig.TLS.Enabled,
 			"permittedPeer": strings.Join(permittedPeers, ","),
 			"authMode":      authMode,
+			"tlsLib":        tlsLib,
 			"ca":            refSecret.Data["ca"],
 			"crt":           refSecret.Data["crt"],
 			"key":           refSecret.Data["key"],
