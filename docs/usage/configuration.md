@@ -54,16 +54,19 @@ spec:
       # Configures rsyslog to report continuation of action suspension, e.g. when the connection to the target
       # server is broken.
       reportSuspensionContinuation: true
-      # Add tls settings if tls should be used to encrypt th connection to the target server.
+      # Add tls settings if tls should be used to encrypt the connection to the target server.
       tls:
         enabled: true
         # Use `name` authentication mode for the tls connection.
         authMode: name
         # Only allow connections if the server's name is `some.rsyslog-rlep.server`
-        permittedPeer: some.rsyslog-rlep.server
+        permittedPeer:
+        - "some.rsyslog-rlep.server"
         # Reference to the resource which contains certificates used for the tls connection.
         # It must be added to the `.spec.resources` field of the `Shoot`.
         secretReferenceName: rsyslog-relp-tls
+        # Instruct librelp on the shoot nodes to use the gnutls tls library.
+        tlsLib: gnutls
   resources:
     # Add the rsyslog-relp-tls secret in the resources field of the shoot spec.
     - name: rsyslog-relp-tls
@@ -170,6 +173,7 @@ spec:
 ...
 ```
 
-You can set two additional parameters for the TLS connection: `.tls.authMode` and `tls.permittedPeer`. Refer to the rsyslog documentation for more information on both:
+You can set a few additional parameters for the TLS connection: `.tls.authMode`, `tls.permittedPeer` and `tls.tlsLib`. Refer to the rsyslog documentation for more information on both:
 - `.tls.authMode`: https://www.rsyslog.com/doc/v8-stable/configuration/modules/omrelp.html#tls-authmode
 - `.tls.permittedPeer`: https://www.rsyslog.com/doc/v8-stable/configuration/modules/omrelp.html#tls-permittedpeer
+- `.tls.tlsLib`: https://www.rsyslog.com/doc/v8-stable/configuration/modules/imrelp.html#tls-tlslib
