@@ -173,8 +173,8 @@ func createNetworkPolicyForEchoServer(ctx context.Context, c kubernetes.Interfac
 	return c.Client().Create(ctx, networkPolicy)
 }
 
-func shootRsyslogRelpExtension(programName string, severity int) gardencorev1beta1.Extension {
-	providerConfig := &rsyslogv1alpha1.RsyslogRelpConfig{
+func shootRsyslogRelpExtension(opts ...func(rsyslogRelpConfig *rsyslogv1alpha1.RsyslogRelpConfig)) gardencorev1beta1.Extension {
+	defaultProviderConfig := &rsyslogv1alpha1.RsyslogRelpConfig{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: rsyslogv1alpha1.SchemeGroupVersion.String(),
 			Kind:       "RsyslogRelpConfig",
@@ -183,13 +183,17 @@ func shootRsyslogRelpExtension(programName string, severity int) gardencorev1bet
 		Port:   80,
 		LoggingRules: []rsyslogv1alpha1.LoggingRule{
 			{
-				ProgramNames: []string{programName},
-				Severity:     severity,
+				ProgramNames: []string{"test-program"},
+				Severity:     1,
 			},
 		},
 	}
 
-	providerConfigJSON, err := json.Marshal(&providerConfig)
+	for _, opt := range opts {
+		opt(defaultProviderConfig)
+	}
+
+	providerConfigJSON, err := json.Marshal(&defaultProviderConfig)
 	ExpectWithOffset(1, err).NotTo(HaveOccurred())
 
 	extension := gardencorev1beta1.Extension{
@@ -200,4 +204,27 @@ func shootRsyslogRelpExtension(programName string, severity int) gardencorev1bet
 	}
 
 	return extension
+}
+
+func withPort(port int) func(rsyslogRelpConfig *rsyslogv1alpha1.RsyslogRelpConfig) {
+	return func(rsyslogRelpConfig *rsyslogv1alpha1.RsyslogRelpConfig) {
+		rsyslogRelpConfig.Port = port
+	}
+}
+
+func withTLSWithSecretRefName(secretRefName string) func(rsyslogRelpConfig *rsyslogv1alpha1.RsyslogRelpConfig) {
+	return func(rsyslogRelpConfig *rsyslogv1alpha1.RsyslogRelpConfig) {
+		var (
+			authModeName  = rsyslogv1alpha1.AuthMode("name")
+			tlsLibOpenSSL = rsyslogv1alpha1.TLSLib("openssl")
+		)
+
+		rsyslogRelpConfig.TLS = &rsyslogv1alpha1.TLS{
+			Enabled:             true,
+			SecretReferenceName: &secretRefName,
+			PermittedPeer:       []string{"rsyslog-server"},
+			AuthMode:            &authModeName,
+			TLSLib:              &tlsLibOpenSSL,
+		}
+	}
 }

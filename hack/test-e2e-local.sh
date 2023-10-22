@@ -16,7 +16,8 @@ ginkgo_flags=
 seed_name="local"
 
 shoot_names=(
-  e2e-rsyslog-relp.local
+  e2e-rslog-relp.local
+  e2e-rslog-tls.local
   e2e-rslog-hib.local
 )
 
