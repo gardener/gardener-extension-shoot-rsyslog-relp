@@ -264,8 +264,33 @@ AuthMode
 Possible values are &ldquo;fingerprint&rdquo; or &ldquo;name&rdquo;.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>tlsLib</code></br>
+<em>
+<a href="#rsyslog-relp.extensions.gardener.cloud/v1alpha1.TLSLib">
+TLSLib
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TLSLib specifies the tls library that will be used by librelp on the shoot nodes.
+If the field is omitted, the librelp default is used.
+Possible values are &ldquo;openssl&rdquo; or &ldquo;gnutls&rdquo;.</p>
+</td>
+</tr>
 </tbody>
 </table>
+<h3 id="rsyslog-relp.extensions.gardener.cloud/v1alpha1.TLSLib">TLSLib
+(<code>string</code> alias)</p></h3>
+<p>
+(<em>Appears on:</em>
+<a href="#rsyslog-relp.extensions.gardener.cloud/v1alpha1.TLS">TLS</a>)
+</p>
+<p>
+<p>TLSLib is the tls library that is used by the librelp library on the shoot&rsquo;s nodes.</p>
+</p>
 <hr/>
 <p><em>
 Generated with <a href="https://github.com/ahmetb/gen-crd-api-reference-docs">gen-crd-api-reference-docs</a>

@@ -108,6 +108,11 @@ func (in *TLS) DeepCopyInto(out *TLS) {
 		*out = new(AuthMode)
 		**out = **in
 	}
+	if in.TLSLib != nil {
+		in, out := &in.TLSLib, &out.TLSLib
+		*out = new(TLSLib)
+		**out = **in
+	}
 	return
 }
 
