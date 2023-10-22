@@ -41,9 +41,15 @@ func validatePort(port int, fldPath *field.Path) field.ErrorList {
 	return allErrs
 }
 
-var availableAuthModes = sets.New(
-	string(rsyslog.AuthModeName),
-	string(rsyslog.AuthModeFingerPrint),
+var (
+	availableAuthModes = sets.New(
+		string(rsyslog.AuthModeName),
+		string(rsyslog.AuthModeFingerPrint),
+	)
+	availableTLSLibs = sets.New(
+		string(rsyslog.TLSLibOpenSSL),
+		string(rsyslog.TLSLibGnuTLS),
+	)
 )
 
 func validateTLS(tls *rsyslog.TLS, fldPath *field.Path) field.ErrorList {
@@ -61,6 +67,10 @@ func validateTLS(tls *rsyslog.TLS, fldPath *field.Path) field.ErrorList {
 
 	if tls.AuthMode != nil && !availableAuthModes.Has(string(*tls.AuthMode)) {
 		allErrs = append(allErrs, field.NotSupported(fldPath.Child("authMode"), tls.AuthMode, sets.List(availableAuthModes)))
+	}
+
+	if tls.TLSLib != nil && !availableTLSLibs.Has(string(*tls.TLSLib)) {
+		allErrs = append(allErrs, field.NotSupported(fldPath.Child("tlsLib"), tls.TLSLib, sets.List(availableTLSLibs)))
 	}
 
 	for i, permittedPeer := range tls.PermittedPeer {
