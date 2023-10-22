@@ -31,7 +31,8 @@ import (
 
 var _ = Describe("Lifecycle controller tests", func() {
 	var (
-		authModeName rsyslog.AuthMode = "name"
+		authModeName  rsyslog.AuthMode = "name"
+		tlsLibOpenSSL rsyslog.TLSLib   = "openssl"
 
 		rsyslogConfigurationCleanerDaemonsetYaml = `# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
 #
@@ -236,13 +237,17 @@ data:
       constant(value=" ")
     }
 
-    module(load="omrelp")
+    module(
+      load="omrelp"` + stringBasedOnCondition(tlsEnabled, `
+      tls.tlslib="openssl"`, "") + `
+    )
 
-    module(load="impstats"
-       interval="600"
-       severity="7"
-       log.syslog="off"
-       log.file="/var/log/rsyslog-stats.log"
+    module(
+      load="impstats"
+      interval="600"
+      severity="7"
+      log.syslog="off"
+      log.file="/var/log/rsyslog-stats.log"
     )
 
     ruleset(name="relp_action_ruleset") {
@@ -504,6 +509,7 @@ spec:
 					Enabled:             true,
 					SecretReferenceName: pointer.String("rsyslog-tls"),
 					AuthMode:            &authModeName,
+					TLSLib:              &tlsLibOpenSSL,
 					PermittedPeer:       []string{"rsyslog-server.foo", "rsyslog-server.foo.bar"},
 				}
 				rsyslogSecret := &corev1.Secret{
