@@ -13,12 +13,26 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
 data:
   60-relp.conf: |
-    module(load="imrelp")
+    module(
+      load="imrelp"
+      tls.tlslib="openssl"
+    )
+
     input(
       type="imrelp"
       port="10250"
       maxDataSize="10k"
       tls="off"
+    )
+
+    input(
+      type="imrelp"
+      port="10350"
+      maxDataSize="10k"
+      tls="on"
+      tls.caCert="/var/lib/rsyslog-relp/tls/ca"
+      tls.myCert="/var/lib/rsyslog-relp/tls/crt"
+      tls.myPrivKey="/var/lib/rsyslog-relp/tls/key"
     )
 
     template(name="OutFmt" type="list") {
