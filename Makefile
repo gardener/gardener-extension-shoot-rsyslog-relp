@@ -113,7 +113,7 @@ generate: $(CONTROLLER_GEN) $(GEN_CRD_API_REFERENCE_DOCS) $(HELM) $(YQ)
 
 .PHONY: generate-controller-registration
 generate-controller-registration:
-	@$(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/generate.sh ./charts/...
+	@$(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/generate-sequential.sh ./charts/...
 
 .PHONY: format
 format: $(GOIMPORTS) $(GOIMPORTSREVISER)
