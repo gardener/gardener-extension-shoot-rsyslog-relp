@@ -21,7 +21,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	rsysloginstall "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog/install"
-	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/controller/healthcheck"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/controller/lifecycle"
 )
 
@@ -87,10 +86,9 @@ func (o *Options) run(ctx context.Context) error {
 	}
 
 	ctrlConfig := o.rsyslogRelpOptions.Completed()
-	ctrlConfig.ApplyHealthCheckConfig(&healthcheck.DefaultAddOptions.HealthCheckConfig)
+	ctrlConfig.Apply(&lifecycle.DefaultAddOptions.Config)
 	o.controllerOptions.Completed().Apply(&lifecycle.DefaultAddOptions.ControllerOptions)
 	o.lifecycleOptions.Completed().Apply(&lifecycle.DefaultAddOptions.ControllerOptions)
-	o.healthOptions.Completed().Apply(&healthcheck.DefaultAddOptions.Controller)
 	o.heartbeatOptions.Completed().Apply(&heartbeat.DefaultAddOptions)
 
 	if err := o.controllerSwitches.Completed().AddToManager(ctx, mgr); err != nil {

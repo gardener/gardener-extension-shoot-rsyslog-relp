@@ -8,9 +8,7 @@ import (
 	"errors"
 	"os"
 
-	healthcheckconfig "github.com/gardener/gardener/extensions/pkg/apis/config"
 	"github.com/gardener/gardener/extensions/pkg/controller/cmd"
-	extensionshealthcheckcontroller "github.com/gardener/gardener/extensions/pkg/controller/healthcheck"
 	extensionsheartbeatcontroller "github.com/gardener/gardener/extensions/pkg/controller/heartbeat"
 	"github.com/spf13/pflag"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -20,7 +18,6 @@ import (
 	apisconfig "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/config"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/config/v1alpha1"
 	controllerconfig "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/controller/config"
-	healthcheckcontroller "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/controller/healthcheck"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/controller/lifecycle"
 )
 
@@ -40,7 +37,7 @@ func init() {
 // Options holds options related to the rsyslog relp extension.
 type Options struct {
 	ConfigLocation string
-	config         *Config
+	config         *RsyslogRelpServiceConfig
 }
 
 // AddFlags implements Flagger.AddFlags.
@@ -65,40 +62,32 @@ func (o *Options) Complete() error {
 		return err
 	}
 
-	o.config = &Config{
-		configuration: configuration,
+	o.config = &RsyslogRelpServiceConfig{
+		config: configuration,
 	}
 
 	return nil
 }
 
 // Completed returns the decoded Configuration instance. Only call this if `Complete` was successful.
-func (o *Options) Completed() *Config {
+func (o *Options) Completed() *RsyslogRelpServiceConfig {
 	return o.config
 }
 
-// Config contains configuration information about the rsyslog relp extension.
-type Config struct {
-	configuration apisconfig.Configuration
+// RsyslogRelpServiceConfig contains configuration information about the rsyslog relp service.
+type RsyslogRelpServiceConfig struct {
+	config apisconfig.Configuration
 }
 
 // Apply applies the Options to the passed ControllerOptions instance.
-func (c *Config) Apply(config *controllerconfig.Config) {
-	config.Configuration = c.configuration
-}
-
-// ApplyHealthCheckConfig applies the HealthCheckConfig to the config.
-func (c *Config) ApplyHealthCheckConfig(healthCheckConfig *healthcheckconfig.HealthCheckConfig) {
-	if c.configuration.HealthCheckConfig != nil {
-		*healthCheckConfig = *c.configuration.HealthCheckConfig
-	}
+func (c *RsyslogRelpServiceConfig) Apply(config *controllerconfig.Config) {
+	config.Configuration = c.config
 }
 
 // ControllerSwitches are the cmd.ControllerSwitches for the extension controllers.
 func ControllerSwitches() *cmd.SwitchOptions {
 	return cmd.NewSwitchOptions(
 		cmd.Switch(lifecycle.Name, lifecycle.AddToManager),
-		cmd.Switch(extensionshealthcheckcontroller.ControllerName, healthcheckcontroller.AddToManager),
 		cmd.Switch(extensionsheartbeatcontroller.ControllerName, extensionsheartbeatcontroller.AddToManager),
 	)
 }

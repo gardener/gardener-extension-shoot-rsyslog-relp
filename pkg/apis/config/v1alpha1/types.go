@@ -5,7 +5,6 @@
 package v1alpha1
 
 import (
-	healthcheckconfigv1alpha1 "github.com/gardener/gardener/extensions/pkg/apis/config/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -15,8 +14,4 @@ import (
 // Configuration contains information about the rsyslog relp extension configuration.
 type Configuration struct {
 	metav1.TypeMeta `json:",inline"`
-
-	// HealthCheckConfig is the config for the health check controller.
-	// +optional
-	HealthCheckConfig *healthcheckconfigv1alpha1.HealthCheckConfig `json:"healthCheckConfig,omitempty"`
 }

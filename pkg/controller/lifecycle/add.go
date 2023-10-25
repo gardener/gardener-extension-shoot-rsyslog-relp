@@ -35,8 +35,8 @@ var DefaultAddOptions = AddOptions{}
 type AddOptions struct {
 	// ControllerOptions contains options for the controller.
 	ControllerOptions controller.Options
-	// ServiceConfig contains configuration for the shoot rsyslog-relp controller.
-	ServiceConfig controllerconfig.Config
+	// Config contains configuration for the shoot rsyslog-relp controller.
+	Config controllerconfig.Config
 	// IgnoreOperationAnnotation specifies whether to ignore the operation annotation or not.
 	IgnoreOperationAnnotation bool
 }
@@ -46,7 +46,7 @@ func AddToManager(ctx context.Context, mgr manager.Manager) error {
 	decoder := serializer.NewCodecFactory(mgr.GetScheme(), serializer.EnableStrict).UniversalDecoder()
 
 	return extension.Add(ctx, mgr, extension.AddArgs{
-		Actuator:          NewActuator(mgr.GetClient(), decoder, DefaultAddOptions.ServiceConfig.Configuration, extensioncontroller.ChartRendererFactoryFunc(util.NewChartRendererForShoot)),
+		Actuator:          NewActuator(mgr.GetClient(), decoder, DefaultAddOptions.Config.Configuration, extensioncontroller.ChartRendererFactoryFunc(util.NewChartRendererForShoot)),
 		ControllerOptions: DefaultAddOptions.ControllerOptions,
 		Name:              Name,
 		FinalizerSuffix:   FinalizerSuffix,
