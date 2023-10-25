@@ -42,20 +42,6 @@ string
 </td>
 <td><code>Configuration</code></td>
 </tr>
-<tr>
-<td>
-<code>healthCheckConfig</code></br>
-<em>
-<a href="https://github.com/gardener/gardener/extensions/pkg/apis/config/v1alpha1">
-github.com/gardener/gardener/extensions/pkg/apis/config/v1alpha1.HealthCheckConfig
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>HealthCheckConfig is the config for the health check controller.</p>
-</td>
-</tr>
 </tbody>
 </table>
 <hr/>
