@@ -53,9 +53,7 @@ Please note, this extension controller relies on the [Gardener-Resource-Manager]
 
 ## How to start using or developing this extension controller locally
 
-You can run the controller locally on your machine by executing `make start`.
-
-We are using Go modules for Golang package dependency management and [Ginkgo](https://github.com/onsi/ginkgo)/[Gomega](https://github.com/onsi/gomega) for testing.
+Check the [Running Rsyslog Relp Extension Locally](./docs/development/getting-started.md) to get started.
 
 ## Feedback and Support
 

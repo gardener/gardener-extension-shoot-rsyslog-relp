@@ -1,4 +1,4 @@
-# Running Rsyslog Relp Extension locally
+# Running Rsyslog Relp Extension Locally
 
 This document will walk you through running the Rsyslog Relp extension and a fake rsyslog relp service on your local machine for development purposes. This guide uses the Gardener's local development setup and builds on top of it.
 If you encounter difficulties, please open an issue so that we can make this process easier.

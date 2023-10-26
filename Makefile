@@ -11,8 +11,6 @@ REPO_ROOT                   := $(shell dirname $(realpath $(lastword $(MAKEFILE_
 HACK_DIR                    := $(REPO_ROOT)/hack
 VERSION                     := $(shell cat "$(REPO_ROOT)/VERSION")
 EFFECTIVE_VERSION           := $(VERSION)-$(shell git rev-parse HEAD)
-LEADER_ELECTION             := false
-IGNORE_OPERATION_ANNOTATION := true
 GOARCH                      ?= $(shell go env GOARCH)
 PARALLEL_E2E_TESTS          := 2
 
@@ -24,42 +22,12 @@ ifneq ($(strip $(shell git status --porcelain 2>/dev/null)),)
 	EFFECTIVE_VERSION := $(EFFECTIVE_VERSION)-dirty
 endif
 
-LD_FLAGS := "-w $(shell EFFECTIVE_VERSION=$(EFFECTIVE_VERSION) $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/get-build-ld-flags.sh k8s.io/component-base $(REPO_ROOT)/VERSION $(EXTENSION_PREFIX)-$(NAME))"
-
-EXTENSION_NAMESPACE	:=
-
-WEBHOOK_PARAM := --webhook-config-url=$(WEBHOOK_CONFIG_URL)
-ifeq ($(WEBHOOK_CONFIG_MODE), service)
-  WEBHOOK_PARAM := --webhook-config-namespace=$(EXTENSION_NAMESPACE)
-endif
+#########################################
+# Tools                                 #
+#########################################
 
 TOOLS_DIR := $(REPO_ROOT)/hack/tools
 include $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/tools.mk
-
-#########################################
-# Rules for local development scenarios #
-#########################################
-
-.PHONY: start
-start:
-	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
-		-mod=vendor \
-		-ldflags $(LD_FLAGS) \
-		./cmd/$(EXTENSION_PREFIX)-$(NAME) \
-		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
-		--leader-election=$(LEADER_ELECTION) \
-		--config=./example/00-config.yaml \
-		--gardener-version="v1.71.2" \
-
-.PHONY: start-admission
-start-admission:
-	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
-		-mod=vendor \
-		-ldflags $(LD_FLAGS) \
-		./cmd/$(EXTENSION_PREFIX)-$(NAME_ADMISSION) \
-		--webhook-config-server-host=0.0.0.0 \
-		--webhook-config-server-port=9443 \
-		--webhook-config-cert-dir=./example/shoot-rsyslog-relp-admission-certs
 
 #################################################################
 # Rules related to binary build, Docker image build and release #
@@ -67,7 +35,8 @@ start-admission:
 
 .PHONY: install
 install:
-	@LD_FLAGS=$(LD_FLAGS) $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/install.sh ./...
+	@LD_FLAGS="-w $(shell EFFECTIVE_VERSION=$(EFFECTIVE_VERSION) $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/get-build-ld-flags.sh k8s.io/component-base $(REPO_ROOT)/VERSION $(EXTENSION_PREFIX)-$(NAME))" \
+	$(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/install.sh ./...
 
 .PHONY: docker-login
 docker-login:
