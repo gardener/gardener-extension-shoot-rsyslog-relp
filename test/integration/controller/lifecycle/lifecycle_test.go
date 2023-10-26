@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Masterminds/semver"
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	resourcesv1alpha1 "github.com/gardener/gardener/pkg/apis/resources/v1alpha1"
@@ -15,6 +16,7 @@ import (
 	"github.com/gardener/gardener/pkg/utils/managedresources"
 	"github.com/gardener/gardener/pkg/utils/test"
 	. "github.com/gardener/gardener/pkg/utils/test/matchers"
+	versionutils "github.com/gardener/gardener/pkg/utils/version"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/autoscaling/v1"
@@ -34,7 +36,8 @@ var _ = Describe("Lifecycle controller tests", func() {
 		authModeName  rsyslog.AuthMode = "name"
 		tlsLibOpenSSL rsyslog.TLSLib   = "openssl"
 
-		rsyslogConfigurationCleanerDaemonsetYaml = `# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+		rsyslogConfigurationCleanerDaemonsetYaml = func(pspDisabled bool) string {
+			return `# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -107,12 +110,14 @@ spec:
         volumeMounts:
         - name: host-root-volume
           mountPath: /host
-          readOnly: false
+          readOnly: false` + stringBasedOnCondition(!pspDisabled, `
+      serviceAccountName: rsyslog-relp-configuration-cleaner`, ``) + `
       hostPID: true
       volumes:
       - name: host-root-volume
         hostPath:
           path: /`
+		}
 
 		auditdConfigMapYaml = `# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
 #
@@ -309,7 +314,7 @@ data:
   tls.key: ` + utils.EncodeBase64([]byte("key"))
 		}
 
-		rsyslogConfiguratorDaemonsetYaml = func(tlsEnabled bool, rsyslogConfigMap, auditdConfigMap, tlsSecret string) string {
+		rsyslogConfiguratorDaemonsetYaml = func(tlsEnabled, pspDisabled bool, rsyslogConfigMap, auditdConfigMap, tlsSecret string) string {
 			return `# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -379,7 +384,8 @@ spec:
           mountPath: /var/lib/rsyslog-relp-configurator/audit/rules.d
         - name: host-root-volume
           mountPath: /host
-          readOnly: false
+          readOnly: false` + stringBasedOnCondition(!pspDisabled, `
+      serviceAccountName: rsyslog-relp-configurator`, ``) + `
       hostPID: true
       tolerations:
       - effect: NoSchedule
@@ -402,8 +408,120 @@ spec:
           path: /`
 		}
 
+		rsyslogRelpPSPYaml = func(pspDisabled bool, name string) string {
+			return stringBasedOnCondition(
+				pspDisabled,
+				`# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+#
+# SPDX-License-Identifier: Apache-2.0`,
+				`# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  annotations:
+    seccomp.security.alpha.kubernetes.io/defaultProfileName: 'runtime/default'
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: 'runtime/default'
+  name: gardener.kube-system.`+name+`
+spec:
+  hostPID: true
+  volumes:
+  - hostPath`+stringBasedOnCondition(name == "rsyslog-relp-configurator", `
+  - secret
+  - configMap`, ``)+`
+  allowedHostPaths:
+  - pathPrefix: /
+  readOnlyRootFilesystem: true
+  runAsUser:
+    rule: RunAsAny
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  fsGroup:
+    rule: RunAsAny`)
+		}
+
+		rsyslogRelpPSPClusterRoleYaml = func(pspDisabled bool, name string) string {
+			return stringBasedOnCondition(
+				pspDisabled,
+				`# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+#
+# SPDX-License-Identifier: Apache-2.0`,
+				`# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: gardener.cloud:psp:kube-system:`+name+`
+rules:
+- apiGroups:
+  - policy
+  - extensions
+  resourceNames:
+  - gardener.kube-system.`+name+`
+  resources:
+  - podsecuritypolicies
+  verbs:
+  - use`)
+		}
+
+		rsyslogRelpPSPServiceAccountYaml = func(pspDisabled bool, name string) string {
+			return stringBasedOnCondition(
+				pspDisabled,
+				`# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+#
+# SPDX-License-Identifier: Apache-2.0`,
+				`# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: `+name+`
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: `+name+`
+    app.kubernetes.io/instance: `+name+`
+automountServiceAccountToken: false`)
+		}
+
+		rsyslogRelpPSPRoleBindingYaml = func(pspDisabled bool, name string) string {
+			return stringBasedOnCondition(
+				pspDisabled,
+				`# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+#
+# SPDX-License-Identifier: Apache-2.0`,
+				`# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: gardener.cloud:psp:`+name+`
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: gardener.cloud:psp:kube-system:`+name+`
+subjects:
+- kind: ServiceAccount
+  name: `+name+`
+  namespace: kube-system`)
+		}
+
 		cluster  *extensionsv1alpha1.Cluster
+		shoot    *gardencorev1beta1.Shoot
 		shootUID types.UID
+
+		extensionProviderConfig *rsyslog.RsyslogRelpConfig
+		extensionResource       *extensionsv1alpha1.Extension
 	)
 
 	BeforeEach(func() {
@@ -426,6 +544,51 @@ spec:
 			Expect(client.IgnoreNotFound(testClient.Delete(ctx, shootSeedNamespace))).To(Succeed())
 		})
 
+		shoot = &gardencorev1beta1.Shoot{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      shootName,
+				Namespace: fmt.Sprintf("garden-%s", projectName),
+				UID:       shootUID,
+			},
+			Spec: gardencorev1beta1.ShootSpec{
+				Provider: gardencorev1beta1.Provider{
+					Workers: []gardencorev1beta1.Worker{{Name: "worker"}},
+				},
+				Kubernetes: gardencorev1beta1.Kubernetes{
+					Version: "1.27.2",
+				},
+				Resources: []gardencorev1beta1.NamedResourceReference{
+					{
+						Name: "rsyslog-tls",
+						ResourceRef: v1.CrossVersionObjectReference{
+							Kind: "Secret",
+							Name: "rsyslog-tls",
+						},
+					},
+				},
+			},
+		}
+
+		extensionProviderConfig = &rsyslog.RsyslogRelpConfig{
+			Target: "localhost",
+			Port:   10250,
+			LoggingRules: []rsyslog.LoggingRule{
+				{
+					Severity:     5,
+					ProgramNames: []string{"systemd", "audisp-syslog"},
+				},
+				{
+					Severity:     7,
+					ProgramNames: []string{"kubelet"},
+				},
+				{
+					Severity: 2,
+				},
+			},
+		}
+	})
+
+	JustBeforeEach(func() {
 		By("Create Cluster")
 		cluster = &extensionsv1alpha1.Cluster{
 			ObjectMeta: metav1.ObjectMeta{
@@ -433,27 +596,7 @@ spec:
 			},
 			Spec: extensionsv1alpha1.ClusterSpec{
 				Shoot: runtime.RawExtension{
-					Object: &gardencorev1beta1.Shoot{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      shootName,
-							Namespace: fmt.Sprintf("garden-%s", projectName),
-							UID:       shootUID,
-						},
-						Spec: gardencorev1beta1.ShootSpec{
-							Kubernetes: gardencorev1beta1.Kubernetes{
-								Version: "1.27.2",
-							},
-							Resources: []gardencorev1beta1.NamedResourceReference{
-								{
-									Name: "rsyslog-tls",
-									ResourceRef: v1.CrossVersionObjectReference{
-										Kind: "Secret",
-										Name: "rsyslog-tls",
-									},
-								},
-							},
-						},
-					},
+					Object: shoot,
 				},
 				Seed: runtime.RawExtension{
 					Object: &gardencorev1beta1.Seed{},
@@ -476,83 +619,40 @@ spec:
 			By("Delete Cluster")
 			Expect(client.IgnoreNotFound(testClient.Delete(ctx, cluster))).To(Succeed())
 		})
+
+		extensionResource = &extensionsv1alpha1.Extension{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "shoot-rsyslog-relp",
+				Namespace: shootSeedNamespace.Name,
+			},
+			Spec: extensionsv1alpha1.ExtensionSpec{
+				DefaultSpec: extensionsv1alpha1.DefaultSpec{
+					ProviderConfig: &runtime.RawExtension{
+						Object: extensionProviderConfig,
+					},
+					Type: "shoot-rsyslog-relp",
+				},
+			},
+		}
+
+		By("Create shoot-rsyslog-relp Extension Resource")
+		Expect(testClient.Create(ctx, extensionResource)).To(Succeed())
+		log.Info("Created shoot-rsyslog-tls extension resource", "extension", client.ObjectKeyFromObject(extensionResource))
+
+		DeferCleanup(func() {
+			By("Delete shoot-rsyslog-relp Extension Resource")
+			Expect(testClient.Delete(ctx, extensionResource)).To(Or(Succeed(), BeNotFoundError()))
+		})
 	})
 
-	var test = func(tlsEnabled bool) {
+	var test = func() {
 		It("should properly reconcile the extension resource", func() {
 			DeferCleanup(test.WithVars(
 				&managedresources.IntervalWait, time.Millisecond,
 			))
 
-			extensionResource := &extensionsv1alpha1.Extension{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "shoot-rsyslog-relp",
-					Namespace: shootSeedNamespace.Name,
-				},
-				Spec: extensionsv1alpha1.ExtensionSpec{
-					DefaultSpec: extensionsv1alpha1.DefaultSpec{
-						ProviderConfig: &runtime.RawExtension{
-							Object: &rsyslog.RsyslogRelpConfig{
-								Target: "localhost",
-								Port:   10250,
-								LoggingRules: []rsyslog.LoggingRule{
-									{
-										Severity:     5,
-										ProgramNames: []string{"systemd", "audisp-syslog"},
-									},
-									{
-										Severity:     7,
-										ProgramNames: []string{"kubelet"},
-									},
-									{
-										Severity: 2,
-									},
-								},
-							},
-						},
-						Type: "shoot-rsyslog-relp",
-					},
-				},
-			}
-
-			if tlsEnabled {
-				extensionConfig := extensionResource.Spec.ProviderConfig.Object.(*rsyslog.RsyslogRelpConfig)
-				extensionConfig.TLS = &rsyslog.TLS{
-					Enabled:             true,
-					SecretReferenceName: pointer.String("rsyslog-tls"),
-					AuthMode:            &authModeName,
-					TLSLib:              &tlsLibOpenSSL,
-					PermittedPeer:       []string{"rsyslog-server.foo", "rsyslog-server.foo.bar"},
-				}
-				rsyslogSecret := &corev1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "ref-rsyslog-tls",
-						Namespace: shootSeedNamespace.Name,
-					},
-					Data: map[string][]byte{
-						"ca":  []byte("ca"),
-						"crt": []byte("crt"),
-						"key": []byte("key"),
-					},
-				}
-				By("Create rsyslog-tls secret")
-				Expect(testClient.Create(ctx, rsyslogSecret)).To(Succeed())
-				log.Info("Created rsyslog-tls secret", "secret", client.ObjectKeyFromObject(rsyslogSecret))
-
-				DeferCleanup(func() {
-					By("Delete rsyslog-tls Secret")
-					Expect(testClient.Delete(ctx, rsyslogSecret)).To(Or(Succeed(), BeNotFoundError()))
-				})
-			}
-
-			By("Create shoot-rsyslog-relp Extension Resource")
-			Expect(testClient.Create(ctx, extensionResource)).To(Succeed())
-			log.Info("Created shoot-rsyslog-tls extension resource", "extension", client.ObjectKeyFromObject(extensionResource))
-
-			DeferCleanup(func() {
-				By("Delete shoot-rsyslog-relp Extension Resource")
-				Expect(testClient.Delete(ctx, extensionResource)).To(Or(Succeed(), BeNotFoundError()))
-			})
+			tlsEnabled := extensionProviderConfig.TLS != nil && extensionProviderConfig.TLS.Enabled
+			pspDisabled := versionutils.ConstraintK8sGreaterEqual125.Check(semver.MustParse(shoot.Spec.Kubernetes.Version))
 
 			managedResource := &resourcesv1alpha1.ManagedResource{
 				ObjectMeta: metav1.ObjectMeta{
@@ -580,7 +680,11 @@ spec:
 				g.Expect(string(managedResourceSecret.Data["rsyslog-relp-configurator_templates_auditd-config.yaml"])).To(Equal(auditdConfigMapYaml))
 				g.Expect(string(managedResourceSecret.Data["rsyslog-relp-configurator_templates_configmap.yaml"])).To(Equal(rsyslogConfigMap))
 				g.Expect(string(managedResourceSecret.Data["rsyslog-relp-configurator_templates_tls.yaml"])).To(Equal(rsyslogTlsSecret))
-				g.Expect(string(managedResourceSecret.Data["rsyslog-relp-configurator_templates_daemonset.yaml"])).To(Equal(rsyslogConfiguratorDaemonsetYaml(tlsEnabled, rsyslogConfigMap, auditdConfigMapYaml, rsyslogTlsSecret)))
+				g.Expect(string(managedResourceSecret.Data["rsyslog-relp-configurator_templates_daemonset.yaml"])).To(Equal(rsyslogConfiguratorDaemonsetYaml(tlsEnabled, pspDisabled, rsyslogConfigMap, auditdConfigMapYaml, rsyslogTlsSecret)))
+				g.Expect(string(managedResourceSecret.Data["rsyslog-relp-configurator_templates_clusterrole-psp.yaml"])).To(Equal(rsyslogRelpPSPClusterRoleYaml(pspDisabled, "rsyslog-relp-configurator")))
+				g.Expect(string(managedResourceSecret.Data["rsyslog-relp-configurator_templates_psp.yaml"])).To(Equal(rsyslogRelpPSPYaml(pspDisabled, "rsyslog-relp-configurator")))
+				g.Expect(string(managedResourceSecret.Data["rsyslog-relp-configurator_templates_rolebinding-psp.yaml"])).To(Equal(rsyslogRelpPSPRoleBindingYaml(pspDisabled, "rsyslog-relp-configurator")))
+				g.Expect(string(managedResourceSecret.Data["rsyslog-relp-configurator_templates_serviceaccount.yaml"])).To(Equal(rsyslogRelpPSPServiceAccountYaml(pspDisabled, "rsyslog-relp-configurator")))
 			}).Should(Succeed())
 
 			By("Delete shoot-rsyslog-relp Extension Resource")
@@ -613,7 +717,11 @@ spec:
 
 				g.Expect(testClient.Get(ctx, client.ObjectKeyFromObject(configCleanerResourceSecret), configCleanerResourceSecret)).To(Succeed())
 				g.Expect(configCleanerResourceSecret.Type).To(Equal(corev1.SecretTypeOpaque))
-				g.Expect(string(configCleanerResourceSecret.Data["rsyslog-relp-configuration-cleaner_templates_daemonset.yaml"])).To(Equal(rsyslogConfigurationCleanerDaemonsetYaml))
+				g.Expect(string(configCleanerResourceSecret.Data["rsyslog-relp-configuration-cleaner_templates_daemonset.yaml"])).To(Equal(rsyslogConfigurationCleanerDaemonsetYaml(pspDisabled)))
+				g.Expect(string(configCleanerResourceSecret.Data["rsyslog-relp-configuration-cleaner_templates_clusterrole-psp.yaml"])).To(Equal(rsyslogRelpPSPClusterRoleYaml(pspDisabled, "rsyslog-relp-configuration-cleaner")))
+				g.Expect(string(configCleanerResourceSecret.Data["rsyslog-relp-configuration-cleaner_templates_psp.yaml"])).To(Equal(rsyslogRelpPSPYaml(pspDisabled, "rsyslog-relp-configuration-cleaner")))
+				g.Expect(string(configCleanerResourceSecret.Data["rsyslog-relp-configuration-cleaner_templates_rolebinding-psp.yaml"])).To(Equal(rsyslogRelpPSPRoleBindingYaml(pspDisabled, "rsyslog-relp-configuration-cleaner")))
+				g.Expect(string(configCleanerResourceSecret.Data["rsyslog-relp-configuration-cleaner_templates_serviceaccount.yaml"])).To(Equal(rsyslogRelpPSPServiceAccountYaml(pspDisabled, "rsyslog-relp-configuration-cleaner")))
 			}).Should(Succeed())
 
 			By("Ensure that managed resource used for configuration cleanup does not get deleted immediately")
@@ -650,11 +758,49 @@ spec:
 	}
 
 	Context("when TLS is not enabled", func() {
-		test(false)
+		test()
+	})
+
+	Context("when PSP is enabled", func() {
+		BeforeEach(func() {
+			shoot.Spec.Kubernetes.Version = "1.24.8"
+		})
+		test()
 	})
 
 	Context("when TLS is enabled", func() {
-		test(true)
+		BeforeEach(func() {
+			extensionProviderConfig.TLS = &rsyslog.TLS{
+				Enabled:             true,
+				SecretReferenceName: pointer.String("rsyslog-tls"),
+				AuthMode:            &authModeName,
+				TLSLib:              &tlsLibOpenSSL,
+				PermittedPeer:       []string{"rsyslog-server.foo", "rsyslog-server.foo.bar"},
+			}
+
+			rsyslogSecret := &corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "ref-rsyslog-tls",
+					Namespace: shootSeedNamespace.Name,
+				},
+				Data: map[string][]byte{
+					"ca":  []byte("ca"),
+					"crt": []byte("crt"),
+					"key": []byte("key"),
+				},
+			}
+
+			By("Create rsyslog-tls Secret")
+			Expect(testClient.Create(ctx, rsyslogSecret)).To(Succeed())
+			log.Info("Created rsyslog-tls secret", "secret", client.ObjectKeyFromObject(rsyslogSecret))
+
+			DeferCleanup(func() {
+				By("Delete rsyslog-tls Secret")
+				Expect(testClient.Delete(ctx, rsyslogSecret)).To(Or(Succeed(), BeNotFoundError()))
+			})
+		})
+
+		test()
 	})
 })
 
