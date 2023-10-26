@@ -30,7 +30,7 @@ bash "${PROJECT_ROOT}"/vendor/k8s.io/code-generator/generate-internal-groups.sh 
   github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis \
   github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis \
   "config:v1alpha1" \
-  --extra-peer-dirs=github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/config,github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/config/v1alpha1,k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/apimachinery/pkg/conversion,k8s.io/apimachinery/pkg/runtime,github.com/gardener/gardener/extensions/pkg/apis/config/v1alpha1 \
+  --extra-peer-dirs=github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/config,github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/config/v1alpha1,k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/apimachinery/pkg/conversion,k8s.io/apimachinery/pkg/runtime \
   --go-header-file "${PROJECT_ROOT}/hack/LICENSE_BOILERPLATE.txt"
 
 bash "${PROJECT_ROOT}"/vendor/k8s.io/code-generator/generate-internal-groups.sh \

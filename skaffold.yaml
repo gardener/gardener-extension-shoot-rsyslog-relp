@@ -40,7 +40,6 @@ build:
         - pkg/cmd/rsyslogrelp
         - pkg/constants
         - pkg/controller/config
-        - pkg/controller/healthcheck
         - pkg/controller/lifecycle
         - pkg/imagevector
         - pkg/utils
