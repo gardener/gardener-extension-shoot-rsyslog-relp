@@ -9,3 +9,5 @@ images:
   pullPolicy: IfNotPresent
 
 certificatePath: etc/rsyslog/tls
+
+pspDisabled: true

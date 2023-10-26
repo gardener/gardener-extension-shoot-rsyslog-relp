@@ -70,6 +70,9 @@ spec:
         - name: host-root-volume
           mountPath: /host
           readOnly: false
+      {{- if not .Values.pspDisabled }}
+      serviceAccountName: {{ include "name" . }}
+      {{- end }}
       hostPID: true
       tolerations:
       - effect: NoSchedule
