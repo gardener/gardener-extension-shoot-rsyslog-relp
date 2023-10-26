@@ -52,6 +52,12 @@ spec:
           chmod +x /host/var/lib/rsyslog-relp-configurator/configure-rsyslog.sh
           cp -fL /var/lib/rsyslog-relp-configurator/config/rsyslog-configurator.service /host/etc/systemd/system/rsyslog-configurator.service
           chroot /host /bin/bash -c "systemctl enable rsyslog-configurator; systemctl start rsyslog-configurator"
+        resources:
+          requests:
+            memory: 4Mi
+            cpu: 2m
+          limits:
+            memory: 8Mi
         volumeMounts:
         {{- if .Values.rsyslogConfig.tls.enabled }}
         - name: rsyslog-relp-configurator-tls-volume

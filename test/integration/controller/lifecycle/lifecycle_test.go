@@ -98,6 +98,12 @@ spec:
           if [[ -d /host/var/lib/rsyslog-relp-configurator ]]; then
             rm -rf /host/var/lib/rsyslog-relp-configurator
           fi
+        resources:
+          requests:
+            memory: 4Mi
+            cpu: 2m
+          limits:
+            memory: 8Mi
         volumeMounts:
         - name: host-root-volume
           mountPath: /host
@@ -357,6 +363,12 @@ spec:
           chmod +x /host/var/lib/rsyslog-relp-configurator/configure-rsyslog.sh
           cp -fL /var/lib/rsyslog-relp-configurator/config/rsyslog-configurator.service /host/etc/systemd/system/rsyslog-configurator.service
           chroot /host /bin/bash -c "systemctl enable rsyslog-configurator; systemctl start rsyslog-configurator"
+        resources:
+          requests:
+            memory: 4Mi
+            cpu: 2m
+          limits:
+            memory: 8Mi
         volumeMounts:` + stringBasedOnCondition(tlsEnabled, `
         - name: rsyslog-relp-configurator-tls-volume
           mountPath: /var/lib/rsyslog-relp-configurator/tls`,
