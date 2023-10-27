@@ -14,7 +14,6 @@
 .DS_Store
 *~
 
-testdata
 /gardener
 
 .cache_concourse
