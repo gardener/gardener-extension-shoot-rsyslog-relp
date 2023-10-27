@@ -6,29 +6,10 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: gardener-extension-shoot-auditlog-service
+  name: extensions.gardener.cloud:shoot-rsyslog-relp
   labels:
-    app.kubernetes.io/name: gardener-extension-shoot-auditlog-service
+    app.kubernetes.io/name: gardener-extension-shoot-rsyslog-relp
 rules:
-- apiGroups:
-  - apps
-  resources:
-  - deployments
-  resourceNames:
-  - kube-apiserver
-  verbs:
-  - get
-  - list
-  - watch
-  - patch
-- apiGroups:
-  - apps
-  resources:
-  - deployments
-  verbs:
-  - get
-  - list
-  - watch
 - apiGroups:
   - extensions.gardener.cloud
   resources:
@@ -37,17 +18,6 @@ rules:
   - get
   - list
   - watch
-- apiGroups:
-  - admissionregistration.k8s.io
-  resources:
-  - mutatingwebhookconfigurations
-  verbs:
-  - get
-  - list
-  - watch
-  - update
-  - create
-  - patch
 - apiGroups:
   - resources.gardener.cloud
   resources:
@@ -76,9 +46,7 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - configmaps
   - secrets
-  - events
   verbs:
   - "*"
 - apiGroups:
@@ -87,13 +55,15 @@ rules:
   - leases
   verbs:
   - create
+  - list
+  - watch
 - apiGroups:
   - coordination.k8s.io
   resources:
   - leases
   resourceNames:
-  - extension-shoot-auditlog-service-leader-election
+  - extension-shoot-rsyslog-relp-leader-election
+  - gardener-extension-heartbeat
   verbs:
   - update
   - get
-  - watch

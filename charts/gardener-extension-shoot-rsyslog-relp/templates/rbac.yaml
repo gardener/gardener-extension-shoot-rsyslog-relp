@@ -12,47 +12,9 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
 rules:
 - apiGroups:
-  - apps
-  resources:
-  - deployments
-  resourceNames:
-  - kube-apiserver
-  verbs:
-  - get
-  - list
-  - watch
-  - patch
-- apiGroups:
-  - apps
-  resources:
-  - deployments
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
   - extensions.gardener.cloud
   resources:
   - clusters
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - admissionregistration.k8s.io
-  resources:
-  - mutatingwebhookconfigurations
-  verbs:
-  - get
-  - list
-  - watch
-  - update
-  - create
-  - patch
-- apiGroups:
-  - extensions.gardener.cloud
-  resources:
-  - dnsrecords
   verbs:
   - get
   - list
@@ -85,9 +47,7 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - configmaps
   - secrets
-  - events
   verbs:
   - "*"
 - apiGroups:
