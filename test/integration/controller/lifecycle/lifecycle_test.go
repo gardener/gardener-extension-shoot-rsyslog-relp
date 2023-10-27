@@ -70,8 +70,6 @@ spec:
       - name: rsyslog-configuration-cleaner
         image: eu.gcr.io/gardener-project/3rd/alpine:3.15.8
         imagePullPolicy: IfNotPresent
-        securityContext:
-          privileged: true
         command:
         - "sh"
         - "-c"
@@ -104,7 +102,6 @@ spec:
         - name: host-root-volume
           mountPath: /host
           readOnly: false
-          mountPropagation: HostToContainer
       hostPID: true
       volumes:
       - name: host-root-volume
@@ -346,8 +343,6 @@ spec:
       - name: rsyslog-relp-configurator
         image: eu.gcr.io/gardener-project/3rd/alpine:3.15.8
         imagePullPolicy: IfNotPresent
-        securityContext:
-          privileged: true
         command:
         - "sh"
         - "-c"
@@ -373,7 +368,6 @@ spec:
         - name: host-root-volume
           mountPath: /host
           readOnly: false
-          mountPropagation: HostToContainer
       hostPID: true
       tolerations:
       - effect: NoSchedule

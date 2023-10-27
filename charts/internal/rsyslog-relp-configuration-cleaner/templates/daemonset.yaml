@@ -31,8 +31,6 @@ spec:
       - name: rsyslog-configuration-cleaner
         image: {{ .Values.images.alpine }}
         imagePullPolicy: {{ .Values.images.pullPolicy }}
-        securityContext:
-          privileged: true
         command:
         - "sh"
         - "-c"
@@ -65,7 +63,6 @@ spec:
         - name: host-root-volume
           mountPath: /host
           readOnly: false
-          mountPropagation: HostToContainer
       hostPID: true
       volumes:
       - name: host-root-volume
