@@ -24,6 +24,9 @@ spec:
       labels:
 {{ include "labels" . | indent 8 }}
     spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       priorityClassName: gardener-shoot-system-700
       containers:
       - name: pause
