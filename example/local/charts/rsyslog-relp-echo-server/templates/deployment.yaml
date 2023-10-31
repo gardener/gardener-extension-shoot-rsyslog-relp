@@ -32,10 +32,16 @@ spec:
         imagePullPolicy: {{ .Values.images.pullPolicy }}
         ports:
         - containerPort: 10250
+        - containerPort: 10350
         volumeMounts:
         - name: rsyslog-relp-echo-server
           mountPath: /etc/rsyslog.d
+        - name: rsyslog-relp-tls
+          mountPath: /var/lib/rsyslog-relp/tls
       volumes:
       - name: rsyslog-relp-echo-server
         configMap:
           name: rsyslog-relp-echo-server
+      - name: rsyslog-relp-tls
+        secret:
+          secretName: rsyslog-relp-tls

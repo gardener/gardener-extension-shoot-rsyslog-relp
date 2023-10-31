@@ -18,6 +18,11 @@ spec:
   clusterIPs:
     - 10.2.64.54
   ports:
-    - protocol: TCP
+    - name: plain
+      protocol: TCP
       port: 80
       targetPort: 10250
+    - name: tls
+      protocol: TCP
+      port: 443
+      targetPort: 10350

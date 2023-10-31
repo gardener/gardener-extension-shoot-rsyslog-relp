@@ -88,13 +88,19 @@ data:
       constant(value=" ")
     }
 
-    module(load="omrelp")
+    module(
+      load="omrelp"
+      {{- if .Values.rsyslogConfig.tls.tlsLib }}
+      tls.tlslib="{{ .Values.rsyslogConfig.tls.tlsLib }}"
+      {{- end }}
+    )
 
-    module(load="impstats"
-       interval="600"
-       severity="7"
-       log.syslog="off"
-       log.file="/var/log/rsyslog-stats.log"
+    module(
+      load="impstats"
+      interval="600"
+      severity="7"
+      log.syslog="off"
+      log.file="/var/log/rsyslog-stats.log"
     )
 
     ruleset(name="relp_action_ruleset") {

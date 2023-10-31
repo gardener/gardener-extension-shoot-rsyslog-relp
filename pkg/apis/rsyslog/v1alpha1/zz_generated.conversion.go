@@ -117,6 +117,7 @@ func autoConvert_v1alpha1_TLS_To_rsyslog_TLS(in *TLS, out *rsyslog.TLS, s conver
 	out.SecretReferenceName = (*string)(unsafe.Pointer(in.SecretReferenceName))
 	out.PermittedPeer = *(*[]string)(unsafe.Pointer(&in.PermittedPeer))
 	out.AuthMode = (*rsyslog.AuthMode)(unsafe.Pointer(in.AuthMode))
+	out.TLSLib = (*rsyslog.TLSLib)(unsafe.Pointer(in.TLSLib))
 	return nil
 }
 
@@ -130,6 +131,7 @@ func autoConvert_rsyslog_TLS_To_v1alpha1_TLS(in *rsyslog.TLS, out *TLS, s conver
 	out.SecretReferenceName = (*string)(unsafe.Pointer(in.SecretReferenceName))
 	out.PermittedPeer = *(*[]string)(unsafe.Pointer(&in.PermittedPeer))
 	out.AuthMode = (*AuthMode)(unsafe.Pointer(in.AuthMode))
+	out.TLSLib = (*TLSLib)(unsafe.Pointer(in.TLSLib))
 	return nil
 }
 

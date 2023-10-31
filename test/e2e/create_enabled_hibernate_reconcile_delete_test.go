@@ -17,18 +17,17 @@ import (
 var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 	f := defaultShootCreationFramework()
 	f.Shoot = e2e.DefaultShoot("e2e-rslog-hib")
-	extension := shootRsyslogRelpExtension("test-program", 1)
-	f.Shoot.Spec.Extensions = []gardencorev1beta1.Extension{extension}
+	f.Shoot.Spec.Extensions = []gardencorev1beta1.Extension{shootRsyslogRelpExtension()}
 
 	It("Create Shoot with shoot-rsyslog-relp extension enabled, hibernate Shoot, reconcile Shoot, wake up Shoot, delete Shoot", Label("hibernation"), func() {
 		By("Create Shoot")
 		ctx, cancel := context.WithTimeout(parentCtx, 20*time.Minute)
-		defer cancel()
+		DeferCleanup(cancel)
 		Expect(f.CreateShootAndWaitForCreation(ctx, false)).To(Succeed())
 		f.Verify()
 
 		ctx, cancel = context.WithTimeout(parentCtx, 2*time.Minute)
-		defer cancel()
+		DeferCleanup(cancel)
 
 		By("Create NetworkPolicy to allow traffic from Shoot nodes to the rsyslog-relp echo server")
 		Expect(createNetworkPolicyForEchoServer(ctx, f.ShootFramework.SeedClient, f.ShootFramework.ShootSeedNamespace())).To(Succeed())
@@ -38,7 +37,7 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 
 		By("Verify shoot-rsyslog-relp works")
 		ctx, cancel = context.WithTimeout(parentCtx, 5*time.Minute)
-		defer cancel()
+		DeferCleanup(cancel)
 		verifier, err := newVerifier(ctx, f.Logger, f.ShootFramework.SeedClient, f.ShootFramework.ShootSeedNamespace(), "local", f.Shoot.Name, string(f.Shoot.UID))
 		Expect(err).NotTo(HaveOccurred())
 		verifier.verifyThatLogsAreSentToEchoServer(ctx, "test-program", "1", "this should get sent to echo server", 20*time.Second)
@@ -47,30 +46,30 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 
 		By("Hibernate Shoot")
 		ctx, cancel = context.WithTimeout(parentCtx, 10*time.Minute)
-		defer cancel()
+		DeferCleanup(cancel)
 		Expect(f.HibernateShoot(ctx, f.Shoot)).To(Succeed())
 
 		By("Wake up Shoot")
 		ctx, cancel = context.WithTimeout(parentCtx, 10*time.Minute)
-		defer cancel()
+		DeferCleanup(cancel)
 		Expect(f.WakeUpShoot(ctx, f.Shoot)).To(Succeed())
 
 		ctx, cancel = context.WithTimeout(parentCtx, 2*time.Minute)
-		defer cancel()
+		DeferCleanup(cancel)
 
 		By("Install rsyslog-relp unit on Shoot nodes")
 		Expect(execInShootNode(ctx, f.ShootFramework.SeedClient, f.Logger, f.ShootFramework.ShootSeedNamespace(), "apt-get update && apt-get install -y rsyslog-relp")).To(Succeed())
 
 		By("Verify that shoot-rsyslog-relp works after wake up")
 		ctx, cancel = context.WithTimeout(parentCtx, 5*time.Minute)
-		defer cancel()
+		DeferCleanup(cancel)
 		verifier.verifyThatLogsAreSentToEchoServer(ctx, "test-program", "1", "this should get sent to echo server", 20*time.Second)
 		verifier.verifyThatLogsAreNotSentToEchoServer(ctx, "other-program", "1", "this should not get sent to echo server")
 		verifier.verifyThatLogsAreNotSentToEchoServer(ctx, "test-program", "3", "this should not get sent to echo server")
 
 		By("Delete Shoot")
 		ctx, cancel = context.WithTimeout(parentCtx, 15*time.Minute)
-		defer cancel()
+		DeferCleanup(cancel)
 		Expect(f.DeleteShootAndWaitForDeletion(ctx, f.Shoot)).To(Succeed())
 	})
 })

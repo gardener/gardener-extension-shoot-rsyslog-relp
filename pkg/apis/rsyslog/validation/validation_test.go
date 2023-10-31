@@ -28,6 +28,10 @@ var _ = Describe("Validation", func() {
 			authModeFingerPrint rsyslog.AuthMode = "fingerprint"
 			authModeInvalid     rsyslog.AuthMode = "invalid"
 
+			tlsLibOpenSSL rsyslog.TLSLib = "openssl"
+			tlsLibGnuTLS  rsyslog.TLSLib = "gnutls"
+			tlsLibInvalid rsyslog.TLSLib = "invalid"
+
 			path         = field.NewPath("")
 			loggingRules = []rsyslog.LoggingRule{
 				{
@@ -170,7 +174,29 @@ var _ = Describe("Validation", func() {
 							"Type":     Equal(field.ErrorTypeNotSupported),
 							"Field":    Equal("tls.authMode"),
 							"BadValue": Equal(&authModeInvalid),
-							"Detail":   Equal("supported values: \"fingerprint\", \"name\""),
+							"Detail":   Equal(`supported values: "fingerprint", "name"`),
+						})),
+					),
+				),
+
+				Entry("should allow config when tls lib is openssl",
+					rsyslog.TLS{Enabled: true, SecretReferenceName: pointer.String("secret-name"), TLSLib: &tlsLibOpenSSL},
+					BeEmpty(),
+				),
+
+				Entry("should allow config when tls lib is gnutls",
+					rsyslog.TLS{Enabled: true, SecretReferenceName: pointer.String("secret-name"), TLSLib: &tlsLibGnuTLS},
+					BeEmpty(),
+				),
+
+				Entry("should forbid config when tls lib is invalid",
+					rsyslog.TLS{Enabled: true, SecretReferenceName: pointer.String("secret-name"), TLSLib: &tlsLibInvalid},
+					ConsistOf(
+						PointTo(MatchFields(IgnoreExtras, Fields{
+							"Type":     Equal(field.ErrorTypeNotSupported),
+							"Field":    Equal("tls.tlsLib"),
+							"BadValue": Equal(&tlsLibInvalid),
+							"Detail":   Equal(`supported values: "gnutls", "openssl"`),
 						})),
 					),
 				),

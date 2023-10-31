@@ -28,7 +28,8 @@ port: 1520
 tls:
   enabled: true
   authMode: name
-  permittedPeer: rsyslog-server-peer
+  permittedPeer:
+  - "some.rsyslog-rlep.server"
   secretReferenceName: rsyslog-relep-tls
 ```
 
