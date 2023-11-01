@@ -93,7 +93,7 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 	Context("shoot-rsyslog-relp extension with tls enabled", Label("tls-enabled"), func() {
 		var createdResources []client.Object
 		f := defaultShootCreationFramework()
-		f.Shoot = e2e.DefaultShoot("e2e-rslog-relp")
+		f.Shoot = e2e.DefaultShoot("e2e-rslog-tls")
 
 		enableExtensionFunc := func(shoot *gardencorev1beta1.Shoot) error {
 			shoot.Spec.Extensions = append(shoot.Spec.Extensions, shootRsyslogRelpExtension(withPort(443), withTLSWithSecretRefName("rsyslog-relp-tls")))
