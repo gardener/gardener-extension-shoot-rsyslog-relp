@@ -200,6 +200,13 @@ func (a *actuator) Delete(ctx context.Context, _ logr.Logger, ex *extensionsv1al
 		return err
 	}
 
+	// If the Shoot is in deletion, then there is no need to clean up the rsyslog configuration from Nodes.
+	// The Shoot deletion flows ensures that the Worker is deleted before the Extension deletion.
+	// Hence, there are no Nodes, no need to clean up rsyslog configuration.
+	if cluster.Shoot.DeletionTimestamp != nil {
+		return nil
+	}
+
 	chartRenderer, err := a.chartRendererFactory.NewChartRendererForShoot(cluster.Shoot.Spec.Kubernetes.Version)
 	if err != nil {
 		return fmt.Errorf("could not create chart renderer for shoot '%s', %w", namespace, err)
