@@ -15,6 +15,7 @@ metadata:
   labels:
     app.kubernetes.io/name: gardener-extension-{{ .Values.serviceName }}
     app.kubernetes.io/instance: {{ .Release.Name }}
+    high-availability-config.resources.gardener.cloud/type: controller
 spec:
   revisionHistoryLimit: 2
   replicas: {{ .Values.replicaCount }}
@@ -36,27 +37,10 @@ spec:
       labels:
         app.kubernetes.io/name: gardener-extension-{{ .Values.serviceName }}
         app.kubernetes.io/instance: {{ .Release.Name }}
-        high-availability-config.resources.gardener.cloud/type: server
         networking.resources.gardener.cloud/to-all-shoots-kube-apiserver-tcp-443: allowed
         networking.gardener.cloud/to-runtime-apiserver: allowed
         networking.gardener.cloud/to-dns: allowed
     spec:
-      {{- if gt (int .Values.replicaCount) 1 }}
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-              - key: app.kubernetes.io/name
-                operator: In
-                values:
-                - gardener-extension-{{ .Values.serviceName }}
-              - key: app.kubernetes.io/instance
-                operator: In
-                values:
-                - {{ .Release.Name }}
-            topologyKey: "kubernetes.io/hostname"
-      {{- end }}
       priorityClassName: gardener-system-500
       serviceAccountName: gardener-extension-{{ .Values.serviceName }}
       containers:

@@ -3,17 +3,20 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ---
-apiVersion: policy/v1
-kind: PodDisruptionBudget
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
 metadata:
   name: gardener-extension-{{ .Values.serviceName }}
   namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/name: gardener-extension-{{ .Values.serviceName }}
+    helm.sh/chart: gardener-extension-{{ .Values.serviceName }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-spec:
-  maxUnavailable: 1
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: gardener-extension-{{ .Values.serviceName }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: gardener-extension-{{ .Values.serviceName }}
+subjects:
+- kind: ServiceAccount
+  name: gardener-extension-{{ .Values.serviceName }}
+  namespace: {{ .Release.Namespace }}

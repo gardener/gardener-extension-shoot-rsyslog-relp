@@ -6,9 +6,10 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: extensions.gardener.cloud:shoot-rsyslog-relp
+  name: extensions.gardener.cloud:{{ .Values.serviceName }}
   labels:
-    app.kubernetes.io/name: gardener-extension-shoot-rsyslog-relp
+    app.kubernetes.io/name: gardener-extension-{{ .Values.serviceName }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
 rules:
 - apiGroups:
   - extensions.gardener.cloud
@@ -57,13 +58,3 @@ rules:
   - create
   - list
   - watch
-- apiGroups:
-  - coordination.k8s.io
-  resources:
-  - leases
-  resourceNames:
-  - extension-shoot-rsyslog-relp-leader-election
-  - gardener-extension-heartbeat
-  verbs:
-  - update
-  - get

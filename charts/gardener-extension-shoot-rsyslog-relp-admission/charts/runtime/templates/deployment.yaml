@@ -29,10 +29,6 @@ spec:
         networking.gardener.cloud/to-runtime-apiserver: allowed
 {{ include "labels" . | indent 8 }}
     spec:
-      securityContext:
-        runAsNonRoot: true
-        seccompProfile:
-          type: RuntimeDefault
       serviceAccountName: {{ include "name" . }}
       {{- if .Values.global.kubeconfig }}
       automountServiceAccountToken: false

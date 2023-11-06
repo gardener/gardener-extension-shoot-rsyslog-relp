@@ -19,6 +19,9 @@ spec:
       labels:
 {{ include "labels" . | indent 8 }}
     spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       priorityClassName: gardener-shoot-system-700
       containers:
       - name: pause-container
@@ -28,8 +31,6 @@ spec:
       - name: rsyslog-configuration-cleaner
         image: {{ .Values.images.alpine }}
         imagePullPolicy: {{ .Values.images.pullPolicy }}
-        securityContext:
-          privileged: true
         command:
         - "sh"
         - "-c"
@@ -58,11 +59,19 @@ spec:
           if [[ -d /host/var/lib/rsyslog-relp-configurator ]]; then
             rm -rf /host/var/lib/rsyslog-relp-configurator
           fi
+        resources:
+          requests:
+            memory: 4Mi
+            cpu: 2m
+          limits:
+            memory: 8Mi
         volumeMounts:
         - name: host-root-volume
           mountPath: /host
           readOnly: false
-          mountPropagation: HostToContainer
+      {{- if not .Values.pspDisabled }}
+      serviceAccountName: {{ include "name" . }}
+      {{- end }}
       hostPID: true
       volumes:
       - name: host-root-volume
