@@ -19,6 +19,7 @@ shoot_names=(
   e2e-rslog-relp.local
   e2e-rslog-tls.local
   e2e-rslog-hib.local
+  e2e-rslog-fd.local
 )
 
 if [ -n "${CI:-}" -a -n "${ARTIFACTS:-}" ]; then
