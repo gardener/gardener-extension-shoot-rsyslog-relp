@@ -18,6 +18,8 @@ rsyslogConfig:
   projectName: foo
   shootName: bar
   shootUID: 1234
+  metrics:
+    textfileDir: /var/lib/rsyslog-relp-configurator
 
 auditdConfig:
   enabled: true

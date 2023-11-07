@@ -52,6 +52,8 @@ spec:
           chmod +x /host/var/lib/rsyslog-relp-configurator/configure-rsyslog.sh
           cp -fL /var/lib/rsyslog-relp-configurator/config/rsyslog-configurator.service /host/etc/systemd/system/rsyslog-configurator.service
           chroot /host /bin/bash -c "systemctl enable rsyslog-configurator; systemctl start rsyslog-configurator"
+          cp -fL /var/lib/rsyslog-relp-configurator/config/process_rsyslog_pstats.sh /host/var/lib/rsyslog-relp-configurator/process_rsyslog_pstats.sh
+          chmod +x /host/var/lib/rsyslog-relp-configurator/process_rsyslog_pstats.sh
         resources:
           requests:
             memory: 4Mi
