@@ -67,11 +67,11 @@ spec:
       priorityClassName: gardener-shoot-system-700
       containers:
       - name: pause-container
-        image: registry.k8s.io/pause:3.7
+        image: registry.k8s.io/pause:3.9
         imagePullPolicy: IfNotPresent
       initContainers:
       - name: rsyslog-configuration-cleaner
-        image: eu.gcr.io/gardener-project/3rd/alpine:3.15.8
+        image: eu.gcr.io/gardener-project/3rd/alpine:3.18.4
         imagePullPolicy: IfNotPresent
         command:
         - "sh"
@@ -348,11 +348,11 @@ spec:
       priorityClassName: gardener-shoot-system-700
       containers:
       - name: pause
-        image: registry.k8s.io/pause:3.7
+        image: registry.k8s.io/pause:3.9
         imagePullPolicy: IfNotPresent
       initContainers:
       - name: rsyslog-relp-configurator
-        image: eu.gcr.io/gardener-project/3rd/alpine:3.15.8
+        image: eu.gcr.io/gardener-project/3rd/alpine:3.18.4
         imagePullPolicy: IfNotPresent
         command:
         - "sh"
