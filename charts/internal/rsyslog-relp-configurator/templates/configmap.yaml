@@ -277,6 +277,7 @@ data:
 
     ruleset(name="relp_action_ruleset") {
       action(
+        name="rsyslog-relp"
         type="omrelp"
         target="{{ required ".Values.rsyslogConfig.target is required" .Values.rsyslogConfig.target }}"
         port="{{ required ".Values.rsyslogConfig.port is required" .Values.rsyslogConfig.port }}"

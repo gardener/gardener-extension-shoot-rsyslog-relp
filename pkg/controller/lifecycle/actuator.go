@@ -180,7 +180,11 @@ func (a *actuator) Reconcile(ctx context.Context, _ logr.Logger, ex *extensionsv
 	}
 
 	rsyslogRelpChart := release.AsSecretData()
-	return managedresources.CreateForShoot(ctx, a.client, namespace, constants.ManagedResourceName, "rsyslog-relp", false, rsyslogRelpChart)
+	if err := managedresources.CreateForShoot(ctx, a.client, namespace, constants.ManagedResourceName, "rsyslog-relp", false, rsyslogRelpChart); err != nil {
+		return err
+	}
+
+	return deployMonitoringConfig(ctx, a.client, namespace)
 }
 
 // Delete deletes the extension resource.

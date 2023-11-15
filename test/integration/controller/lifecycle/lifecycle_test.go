@@ -435,6 +435,7 @@ data:
 
     ruleset(name="relp_action_ruleset") {
       action(
+        name="rsyslog-relp"
         type="omrelp"
         target="localhost"
         port="10250"
