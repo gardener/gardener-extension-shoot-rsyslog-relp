@@ -51,9 +51,12 @@ docker-images:
 # Rules for verification, formatting, linting, testing and cleaning #
 #####################################################################
 
-.PHONY: revendor
-revendor:
+.PHONY: tidy
+tidy:
 	@GO111MODULE=on go mod tidy
+
+.PHONY: revendor
+revendor: tidy
 	@GO111MODULE=on go mod vendor
 	@chmod +x $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/*
 	@chmod +x $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/.ci/*
