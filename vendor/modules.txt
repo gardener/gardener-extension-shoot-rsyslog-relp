@@ -87,11 +87,14 @@ github.com/gardener/gardener/extensions/pkg/util
 github.com/gardener/gardener/extensions/pkg/webhook
 github.com/gardener/gardener/extensions/pkg/webhook/certificates
 github.com/gardener/gardener/extensions/pkg/webhook/cmd
+github.com/gardener/gardener/extensions/pkg/webhook/context
+github.com/gardener/gardener/extensions/pkg/webhook/controlplane/genericmutator
 github.com/gardener/gardener/extensions/pkg/webhook/shoot
 github.com/gardener/gardener/hack
 github.com/gardener/gardener/hack/.ci
 github.com/gardener/gardener/hack/api-reference/template
 github.com/gardener/gardener/hack/tools/report-collector
+github.com/gardener/gardener/imagevector
 github.com/gardener/gardener/pkg/api/core
 github.com/gardener/gardener/pkg/api/extensions
 github.com/gardener/gardener/pkg/apis/authentication
@@ -103,6 +106,7 @@ github.com/gardener/gardener/pkg/apis/core/v1beta1/constants
 github.com/gardener/gardener/pkg/apis/core/v1beta1/helper
 github.com/gardener/gardener/pkg/apis/extensions
 github.com/gardener/gardener/pkg/apis/extensions/v1alpha1
+github.com/gardener/gardener/pkg/apis/extensions/v1alpha1/helper
 github.com/gardener/gardener/pkg/apis/operations
 github.com/gardener/gardener/pkg/apis/operations/install
 github.com/gardener/gardener/pkg/apis/operations/v1alpha1
@@ -120,11 +124,22 @@ github.com/gardener/gardener/pkg/apis/settings/v1alpha1
 github.com/gardener/gardener/pkg/chartrenderer
 github.com/gardener/gardener/pkg/client/kubernetes
 github.com/gardener/gardener/pkg/client/kubernetes/cache
+github.com/gardener/gardener/pkg/component
+github.com/gardener/gardener/pkg/component/extensions/operatingsystemconfig/original/components
+github.com/gardener/gardener/pkg/component/extensions/operatingsystemconfig/original/components/containerd
+github.com/gardener/gardener/pkg/component/extensions/operatingsystemconfig/original/components/containerd/logrotate
+github.com/gardener/gardener/pkg/component/extensions/operatingsystemconfig/original/components/docker
+github.com/gardener/gardener/pkg/component/extensions/operatingsystemconfig/original/components/docker/logrotate
+github.com/gardener/gardener/pkg/component/extensions/operatingsystemconfig/original/components/kubelet
+github.com/gardener/gardener/pkg/component/extensions/operatingsystemconfig/utils
+github.com/gardener/gardener/pkg/component/kubeapiserver/constants
+github.com/gardener/gardener/pkg/component/machinecontrollermanager
 github.com/gardener/gardener/pkg/controllerutils
 github.com/gardener/gardener/pkg/controllerutils/mapper
 github.com/gardener/gardener/pkg/controllerutils/predicate
 github.com/gardener/gardener/pkg/controllerutils/reconciler
 github.com/gardener/gardener/pkg/extensions
+github.com/gardener/gardener/pkg/features
 github.com/gardener/gardener/pkg/gardenlet/apis/config
 github.com/gardener/gardener/pkg/gardenlet/apis/config/v1alpha1
 github.com/gardener/gardener/pkg/healthz
@@ -731,6 +746,9 @@ k8s.io/apimachinery/pkg/watch
 k8s.io/apimachinery/third_party/forked/golang/json
 k8s.io/apimachinery/third_party/forked/golang/netutil
 k8s.io/apimachinery/third_party/forked/golang/reflect
+# k8s.io/apiserver v0.28.3
+## explicit; go 1.20
+k8s.io/apiserver/pkg/util/feature
 # k8s.io/autoscaler/vertical-pod-autoscaler v0.14.0
 ## explicit; go 1.19
 k8s.io/autoscaler/vertical-pod-autoscaler/pkg/apis/autoscaling.k8s.io/v1
@@ -920,13 +938,18 @@ k8s.io/code-generator/pkg/util
 k8s.io/code-generator/third_party/forked/golang/reflect
 # k8s.io/component-base v0.28.3
 ## explicit; go 1.20
+k8s.io/component-base/cli/flag
 k8s.io/component-base/config
 k8s.io/component-base/config/v1alpha1
 k8s.io/component-base/featuregate
+k8s.io/component-base/logs/api/v1
+k8s.io/component-base/logs/internal/setverbositylevel
+k8s.io/component-base/logs/klogflags
 k8s.io/component-base/metrics
 k8s.io/component-base/metrics/legacyregistry
 k8s.io/component-base/metrics/prometheus/feature
 k8s.io/component-base/metrics/prometheusextension
+k8s.io/component-base/tracing/api/v1
 k8s.io/component-base/version
 k8s.io/component-base/version/verflag
 # k8s.io/gengo v0.0.0-20220902162205-c0856e24416d
@@ -992,6 +1015,7 @@ k8s.io/kube-openapi/pkg/util/sets
 k8s.io/kube-openapi/pkg/validation/spec
 # k8s.io/kubelet v0.28.3
 ## explicit; go 1.20
+k8s.io/kubelet/config/v1beta1
 k8s.io/kubelet/pkg/apis
 # k8s.io/metrics v0.28.3
 ## explicit; go 1.20
