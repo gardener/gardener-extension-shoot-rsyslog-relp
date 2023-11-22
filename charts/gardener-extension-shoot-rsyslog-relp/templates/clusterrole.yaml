@@ -20,6 +20,17 @@ rules:
   - list
   - watch
 - apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - mutatingwebhookconfigurations
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+  - create
+  - patch
+- apiGroups:
   - resources.gardener.cloud
   resources:
   - managedresources
