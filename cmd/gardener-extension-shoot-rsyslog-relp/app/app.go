@@ -95,12 +95,20 @@ func (o *Options) run(ctx context.Context) error {
 		return fmt.Errorf("could not add controllers to manager: %s", err)
 	}
 
+	if _, err := o.webhookOptions.Completed().AddToManager(ctx, mgr); err != nil {
+		return fmt.Errorf("could not add the mutating webhook to manager: %s", err)
+	}
+
 	if err := mgr.AddReadyzCheck("informer-sync", gardenerhealthz.NewCacheSyncHealthz(mgr.GetCache())); err != nil {
 		return fmt.Errorf("could not add readycheck for informers: %w", err)
 	}
 
 	if err := mgr.AddHealthzCheck("ping", healthz.Ping); err != nil {
 		return fmt.Errorf("could not add health check to manager: %w", err)
+	}
+
+	if err := mgr.AddReadyzCheck("webhook-server", mgr.GetWebhookServer().StartedChecker()); err != nil {
+		return fmt.Errorf("could not add ready check for webhook server to manager: %w", err)
 	}
 
 	if err := mgr.Start(ctx); err != nil {
