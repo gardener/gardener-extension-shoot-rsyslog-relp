@@ -1,4 +1,4 @@
-# Auditing Shoot Nodes
+# Configuring the Rsyslog Relp Extension
 
 ## Introduction
 As a cluster owner, you might need audit logs on shoot node level. With these audit logs you can track actions on your nodes like privilege escalation, file integrity, process executions and who is the user that performed these actions. Such information is essential for the security of your shoot cluster. Linux operating systems collect such logs via the `auditd` and `journald` daemons. However, these logs can be lost if they are only kept locally on the operating system. You need a reliable way to send them to a remote server where they can be stored for longer time periods and retrieved when necessary.
