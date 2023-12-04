@@ -203,9 +203,12 @@ data:
     }
 
     function configure_rsyslog() {
-      if [[ ! -f etc/rsyslog.d/60-audit.conf ]] || ! diff -rq /var/lib/rsyslog-relp-configurator/rsyslog.d/60-audit.conf /etc/rsyslog.d/60-audit.conf ; then
+      if [[ ! -f /etc/rsyslog.d/60-audit.conf ]] || ! diff -rq /var/lib/rsyslog-relp-configurator/rsyslog.d/60-audit.conf /etc/rsyslog.d/60-audit.conf ; then
         cp -fL /var/lib/rsyslog-relp-configurator/rsyslog.d/60-audit.conf /etc/rsyslog.d/60-audit.conf
         systemctl restart rsyslog
+      elif ! systemctl is-active --quiet rsyslog.service ; then
+        # Ensure that the rsyslog service is running.
+        systemctl start rsyslog.service
       fi
     }
 
@@ -216,11 +219,14 @@ data:
       echo "auditd.service is not installed, skipping configuration"
     fi
 
-    if systemctl list-unit-files rsyslog.service > /dev/null; then
+    # Make sure that the syslog.service symlink which points to the rsyslog.service unit is created before attempting
+    # to configure rsyslog to ensure proper startup of the rsyslog.service.
+    if systemctl list-unit-files syslog.service > /dev/null && \
+      systemctl list-unit-files rsyslog.service > /dev/null; then
       echo "Configuring rsyslog.service ..."
       configure_rsyslog
     else
-      echo "rsyslog.service is not installed, skipping configuration"
+      echo "rsyslog.service and syslog.service are not installed, skipping configuration"
     fi
 
   60-audit.conf: |

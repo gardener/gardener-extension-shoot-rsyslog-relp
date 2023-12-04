@@ -116,7 +116,7 @@ verify-extended: check-generate check format test test-cov test-clean
 test-e2e-local: $(GINKGO)
 	./hack/test-e2e-local.sh --procs=$(PARALLEL_E2E_TESTS) ./test/e2e/...
 
-ci-e2e-kind: $(KIND)
+ci-e2e-kind: $(KIND) $(YQ)
 	./hack/ci-e2e-kind.sh
 
 # use static label for skaffold to prevent rolling all gardener components on every `skaffold` invocation
