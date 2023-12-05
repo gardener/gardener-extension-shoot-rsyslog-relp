@@ -9,22 +9,6 @@ gardener-extension-shoot-rsyslog-relp:
     traits:
       version:
         preprocess: 'inject-commit-hash'
-      publish:
-        oci-builder: docker-buildx
-        platforms:
-        - linux/amd64
-        - linux/arm64
-        dockerimages:
-          gardener-extension-shoot-rsyslog-relp:
-            registry: 'gcr-readwrite'
-            image: 'eu.gcr.io/gardener-project/gardener/extensions/shoot-rsyslog-relp'
-            dockerfile: 'Dockerfile'
-            target: gardener-extension-shoot-rsyslog-relp
-          gardener-extension-shoot-rsyslog-relp-admission:
-            registry: 'gcr-readwrite'
-            image: 'eu.gcr.io/gardener-project/gardener/extensions/shoot-rsyslog-relp-admission'
-            dockerfile: 'Dockerfile'
-            target: gardener-extension-shoot-rsyslog-relp-admission
   jobs:
     head-update:
       traits:
@@ -57,8 +41,17 @@ gardener-extension-shoot-rsyslog-relp:
               slack_cfg_name: 'scp_workspace'
         component_descriptor: ~
         publish:
+          oci-builder: docker-buildx
           dockerimages:
             gardener-extension-shoot-rsyslog-relp:
+              registry: 'gcr-readwrite'
+              image: 'eu.gcr.io/gardener-project/gardener/extensions/shoot-rsyslog-relp'
+              dockerfile: 'Dockerfile'
+              target: gardener-extension-shoot-rsyslog-relp
               tag_as_latest: true
             gardener-extension-shoot-rsyslog-relp-admission:
+              registry: 'gcr-readwrite'
+              image: 'eu.gcr.io/gardener-project/gardener/extensions/shoot-rsyslog-relp-admission'
+              dockerfile: 'Dockerfile'
+              target: gardener-extension-shoot-rsyslog-relp-admission
               tag_as_latest: true
