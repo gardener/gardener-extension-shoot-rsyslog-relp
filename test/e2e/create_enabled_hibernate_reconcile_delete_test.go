@@ -40,6 +40,9 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 		DeferCleanup(cancel)
 		verifier, err := newVerifier(ctx, f.Logger, f.ShootFramework.SeedClient, f.ShootFramework.ShootSeedNamespace(), "local", f.Shoot.Name, string(f.Shoot.UID))
 		Expect(err).NotTo(HaveOccurred())
+
+		// Use a timeout of 20 seconds to ensure that the rsyslog-configurator service which configures
+		// rsyslog has a chance to run after rsyslog-relp is installed. It runs once every 15 seconds
 		verifier.verifyThatLogsAreSentToEchoServer(ctx, "test-program", "1", "this should get sent to echo server", 20*time.Second)
 		verifier.verifyThatLogsAreNotSentToEchoServer(ctx, "other-program", "1", "this should not get sent to echo server")
 		verifier.verifyThatLogsAreNotSentToEchoServer(ctx, "test-program", "3", "this should not get sent to echo server")
