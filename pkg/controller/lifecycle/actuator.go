@@ -37,9 +37,10 @@ const (
 	// ActuatorName is the name of the rsyslog relp actuator.
 	ActuatorName = constants.ServiceName + "-actuator"
 
-	releaseName                     = "rsyslog-relp-configurator"
-	configurationCleanerReleaseName = "rsyslog-relp-configuration-cleaner"
-	deletionTimeout                 = time.Minute * 2
+	releaseName                      = "rsyslog-relp-configurator"
+	configurationCleanerReleaseName  = "rsyslog-relp-configuration-cleaner"
+	deletionTimeout                  = time.Minute * 2
+	nodeExporterTextfileCollectorDir = "/var/lib/node-exporter/textfile-collector"
 )
 
 // NewActuator returns an actuator responsible for Extension resources.
@@ -110,6 +111,9 @@ func (a *actuator) Reconcile(ctx context.Context, _ logr.Logger, ex *extensionsv
 		"timeout":                      shootRsyslogRelpConfig.Timeout,
 		"resumeRetryCount":             shootRsyslogRelpConfig.ResumeRetryCount,
 		"reportSuspensionContinuation": reportSuspensionContinuation,
+		"metrics": map[string]interface{}{
+			"textfileDir": nodeExporterTextfileCollectorDir,
+		},
 	}
 
 	if shootRsyslogRelpConfig.TLS != nil && shootRsyslogRelpConfig.TLS.Enabled {
@@ -176,7 +180,11 @@ func (a *actuator) Reconcile(ctx context.Context, _ logr.Logger, ex *extensionsv
 	}
 
 	rsyslogRelpChart := release.AsSecretData()
-	return managedresources.CreateForShoot(ctx, a.client, namespace, constants.ManagedResourceName, "rsyslog-relp", false, rsyslogRelpChart)
+	if err := managedresources.CreateForShoot(ctx, a.client, namespace, constants.ManagedResourceName, "rsyslog-relp", false, rsyslogRelpChart); err != nil {
+		return err
+	}
+
+	return deployMonitoringConfig(ctx, a.client, namespace)
 }
 
 // Delete deletes the extension resource.
