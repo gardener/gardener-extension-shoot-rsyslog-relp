@@ -67,6 +67,7 @@ func (a *actuator) Reconcile(ctx context.Context, _ logr.Logger, ex *extensionsv
 		return errors.New("cluster.shoot is not yet populated")
 	}
 
+	// TODO(plkoknanov): remove this after a couple releases.
 	if err := managedresources.DeleteForShoot(ctx, a.client, namespace, constants.ManagedResourceName); err != nil {
 		return err
 	}
@@ -93,6 +94,7 @@ func (a *actuator) Delete(ctx context.Context, _ logr.Logger, ex *extensionsv1al
 		return errors.New("cluster.shoot is not yet populated")
 	}
 
+	// TODO(plkokanov): remove this after a couple releases.
 	if err := managedresources.DeleteForShoot(ctx, a.client, namespace, constants.ManagedResourceName); err != nil {
 		return err
 	}
@@ -164,6 +166,7 @@ func (a *actuator) ForceDelete(ctx context.Context, _ logr.Logger, ex *extension
 		return errors.New("cluster.shoot is not yet populated")
 	}
 
+	// TODO(plkokanov): remove this after a couple releases
 	return managedresources.DeleteForShoot(ctx, a.client, namespace, constants.ManagedResourceName)
 }
 
@@ -176,11 +179,7 @@ func (a *actuator) Restore(ctx context.Context, log logr.Logger, ex *extensionsv
 func (a *actuator) Migrate(ctx context.Context, _ logr.Logger, ex *extensionsv1alpha1.Extension) error {
 	namespace := ex.GetNamespace()
 
-	// Keep objects for shoot managed resources so that they are not deleted from the shoot during the migration
-	if err := managedresources.SetKeepObjects(ctx, a.client, namespace, constants.ManagedResourceName, true); err != nil {
-		return err
-	}
-
+	// TODO(plkokanov): remove this after a couple releases.
 	if err := managedresources.DeleteForShoot(ctx, a.client, namespace, constants.ManagedResourceName); err != nil {
 		return err
 	}
