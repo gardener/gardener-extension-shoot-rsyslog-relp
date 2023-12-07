@@ -22,4 +22,11 @@ const (
 	PauseContainerImageName = "pause-container"
 	// AlpineImageName is the name of the alpine image.
 	AlpineImageName = "alpine"
+
+	// RsyslogCertifcateAuthorityKey is a key in a secret's data which holds the certificate authority used for the tls connection.
+	RsyslogCertifcateAuthorityKey = "ca"
+	// RsyslogClientCertificateKey is a key in a secret's data which holds the client certificate used for the tls connection.
+	RsyslogClientCertificateKey = "crt"
+	// RsyslogPrivateKeyKey is a key in a secret's data which holds the private key used for the tls connection.
+	RsyslogPrivateKeyKey = "key"
 )
