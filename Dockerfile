@@ -17,14 +17,14 @@ RUN make install EFFECTIVE_VERSION=$EFFECTIVE_VERSION GOARCH=$TARGETARCH
 FROM gcr.io/distroless/static-debian11:nonroot AS base
 
 ############# gardener-extension-shoot-rsyslog-relp
-FROM base AS gardener-extension-shoot-rsyslog-relp
+FROM base AS shoot-rsyslog-relp
 WORKDIR /
 
 COPY --from=builder /go/bin/gardener-extension-shoot-rsyslog-relp /gardener-extension-shoot-rsyslog-relp
 ENTRYPOINT ["/gardener-extension-shoot-rsyslog-relp"]
 
 ############# gardener-extension-shoot-rsyslog-relp-admission
-FROM base AS gardener-extension-shoot-rsyslog-relp-admission
+FROM base AS shoot-rsyslog-relp-admission
 WORKDIR /
 
 COPY --from=builder /go/bin/gardener-extension-shoot-rsyslog-relp-admission /gardener-extension-shoot-rsyslog-relp-admission
