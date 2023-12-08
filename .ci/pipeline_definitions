@@ -47,11 +47,11 @@ gardener-extension-shoot-rsyslog-relp:
               registry: 'gcr-readwrite'
               image: 'eu.gcr.io/gardener-project/gardener/extensions/shoot-rsyslog-relp'
               dockerfile: 'Dockerfile'
-              target: gardener-extension-shoot-rsyslog-relp
+              target: shoot-rsyslog-relp
               tag_as_latest: true
             gardener-extension-shoot-rsyslog-relp-admission:
               registry: 'gcr-readwrite'
               image: 'eu.gcr.io/gardener-project/gardener/extensions/shoot-rsyslog-relp-admission'
               dockerfile: 'Dockerfile'
-              target: gardener-extension-shoot-rsyslog-relp-admission
+              target: shoot-rsyslog-relp-admission
               tag_as_latest: true
