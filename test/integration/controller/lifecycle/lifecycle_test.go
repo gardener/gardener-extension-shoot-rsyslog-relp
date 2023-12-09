@@ -103,10 +103,10 @@ spec:
           fi
         resources:
           requests:
-            memory: 4Mi
+            memory: 8Mi
             cpu: 2m
           limits:
-            memory: 8Mi
+            memory: 16Mi
         volumeMounts:
         - name: host-root-volume
           mountPath: /host
@@ -555,10 +555,10 @@ spec:
           chmod +x /host/var/lib/rsyslog-relp-configurator/process_rsyslog_pstats.sh
         resources:
           requests:
-            memory: 4Mi
+            memory: 8Mi
             cpu: 2m
           limits:
-            memory: 8Mi
+            memory: 16Mi
         volumeMounts:` + stringBasedOnCondition(tlsEnabled, `
         - name: rsyslog-relp-configurator-tls-volume
           mountPath: /var/lib/rsyslog-relp-configurator/tls`,
