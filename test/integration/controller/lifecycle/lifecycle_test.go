@@ -221,7 +221,11 @@ data:
 
     # Make sure that the syslog.service symlink which points to the rsyslog.service unit is created before attempting
     # to configure rsyslog to ensure proper startup of the rsyslog.service.
-    if systemctl list-unit-files syslog.service > /dev/null && \
+    # TODO(plkokanov): due to an issue on gardenlinux, syslog.service is missing: https://github.com/gardenlinux/gardenlinux/issues/1864.
+    # This means that for gardenlinux we have to skip the check if syslog.service exists for now.
+    # As rsyslog.service comes preinstalled on gardenlinux, this should not lead to configuration problems.
+    if grep -q gardenlinux /etc/os-release || \
+      systemctl list-unit-files syslog.service > /dev/null && \
       systemctl list-unit-files rsyslog.service > /dev/null; then
       echo "Configuring rsyslog.service ..."
       configure_rsyslog
