@@ -85,14 +85,6 @@ build:
         main: ./cmd/gardener-extension-shoot-rsyslog-relp-admission
 deploy:
   helm:
-    hooks:
-      before:
-        - host:
-            command:
-              - kubectl
-              - apply
-              - -f
-              - example/local/admission/networkpolicy.yaml
     releases:
       - name: shoot-rsyslog-relp-admission
         namespace: garden
