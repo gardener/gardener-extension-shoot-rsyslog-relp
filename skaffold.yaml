@@ -45,6 +45,8 @@ build:
             - pkg/utils
             - vendor
             - VERSION
+        ldflags:
+          - '{{.LD_FLAGS}}'
         main: ./cmd/gardener-extension-shoot-rsyslog-relp
 resourceSelector:
   allow:
@@ -78,6 +80,8 @@ build:
             - pkg/utils
             - vendor
             - VERSION
+        ldflags:
+          - '{{.LD_FLAGS}}'
         main: ./cmd/gardener-extension-shoot-rsyslog-relp-admission
 deploy:
   helm:

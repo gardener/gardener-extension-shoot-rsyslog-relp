@@ -2,16 +2,15 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-EXTENSION_PREFIX            := gardener-extension
-NAME_ADMISSION              := shoot-rsyslog-relp-admission
 NAME                        := shoot-rsyslog-relp
-REGISTRY                    := eu.gcr.io/gardener-project/gardener
-IMAGE_PREFIX                := $(REGISTRY)/extensions
+NAME_ADMISSION              := $(NAME)-admission
+IMAGE                       := eu.gcr.io/gardener-project/gardener/extensions/shoot-rsyslog-relp
 REPO_ROOT                   := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 HACK_DIR                    := $(REPO_ROOT)/hack
 VERSION                     := $(shell cat "$(REPO_ROOT)/VERSION")
 EFFECTIVE_VERSION           := $(VERSION)-$(shell git rev-parse HEAD)
-GOARCH                      ?= $(shell go env GOARCH)
+IMAGE_TAG                   := $(EFFECTIVE_VERSION)
+LD_FLAGS                    := "-w $(shell EFFECTIVE_VERSION=$(EFFECTIVE_VERSION) $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/get-build-ld-flags.sh k8s.io/component-base $(REPO_ROOT)/VERSION $(NAME))"
 PARALLEL_E2E_TESTS          := 2
 
 ifndef ARTIFACTS
@@ -35,8 +34,8 @@ include $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/tools.mk
 
 .PHONY: install
 install:
-	@LD_FLAGS="-w $(shell EFFECTIVE_VERSION=$(EFFECTIVE_VERSION) $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/get-build-ld-flags.sh k8s.io/component-base $(REPO_ROOT)/VERSION $(EXTENSION_PREFIX)-$(NAME))" \
-	$(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/install.sh ./...
+	@LD_FLAGS=$(LD_FLAGS) \
+	$(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/install.sh ./cmd/...
 
 .PHONY: docker-login
 docker-login:
@@ -44,8 +43,8 @@ docker-login:
 
 .PHONY: docker-images
 docker-images:
-	@docker build --build-arg EFFECTIVE_VERSION=$(EFFECTIVE_VERSION) --build-arg TARGETARCH=$(GOARCH) -t $(IMAGE_PREFIX)/$(NAME):$(EFFECTIVE_VERSION) -t $(IMAGE_PREFIX)/$(NAME):latest -f Dockerfile -m 6g --target $(EXTENSION_PREFIX)-$(NAME) .
-	@docker build --build-arg EFFECTIVE_VERSION=$(EFFECTIVE_VERSION) --build-arg TARGETARCH=$(GOARCH) -t $(IMAGE_PREFIX)/$(NAME_ADMISSION):$(EFFECTIVE_VERSION) -t $(IMAGE_PREFIX)/$(NAME_ADMISSION):latest -f Dockerfile -m 6g --target $(EXTENSION_PREFIX)-$(NAME_ADMISSION) .
+	@docker build --build-arg EFFECTIVE_VERSION=$(EFFECTIVE_VERSION) -t $(IMAGE):$(IMAGE_TAG) -f Dockerfile -m 6g --target $(NAME) .
+	@docker build --build-arg EFFECTIVE_VERSION=$(EFFECTIVE_VERSION) -t $(IMAGE)-admission:$(IMAGE_TAG) -f Dockerfile -m 6g --target $(NAME_ADMISSION) .
 
 #####################################################################
 # Rules for verification, formatting, linting, testing and cleaning #
@@ -123,7 +122,7 @@ ci-e2e-kind: $(KIND) $(YQ)
 extension-up extension-down: export SKAFFOLD_LABEL = skaffold.dev/run-id=extension-local
 
 extension-up: $(SKAFFOLD) $(HELM) $(KUBECTL)
-	$(SKAFFOLD) run
+	@LD_FLAGS=$(LD_FLAGS) $(SKAFFOLD) run
 
 extension-dev: $(SKAFFOLD) $(HELM) $(KUBECTL)
 	$(SKAFFOLD) dev --cleanup=false --trigger=manual

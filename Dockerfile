@@ -11,7 +11,7 @@ COPY . .
 ARG EFFECTIVE_VERSION
 ARG TARGETARCH
 
-RUN make install EFFECTIVE_VERSION=$EFFECTIVE_VERSION GOARCH=$TARGETARCH
+RUN make install EFFECTIVE_VERSION=$EFFECTIVE_VERSION
 
 ############# base
 FROM gcr.io/distroless/static-debian11:nonroot AS base
