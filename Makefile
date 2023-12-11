@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+EXTENSION_PREFIX            := gardener-extension
 NAME                        := shoot-rsyslog-relp
 NAME_ADMISSION              := $(NAME)-admission
 IMAGE                       := eu.gcr.io/gardener-project/gardener/extensions/shoot-rsyslog-relp
@@ -10,7 +11,7 @@ HACK_DIR                    := $(REPO_ROOT)/hack
 VERSION                     := $(shell cat "$(REPO_ROOT)/VERSION")
 EFFECTIVE_VERSION           := $(VERSION)-$(shell git rev-parse HEAD)
 IMAGE_TAG                   := $(EFFECTIVE_VERSION)
-LD_FLAGS                    := "-w $(shell EFFECTIVE_VERSION=$(EFFECTIVE_VERSION) $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/get-build-ld-flags.sh k8s.io/component-base $(REPO_ROOT)/VERSION $(NAME))"
+LD_FLAGS                    := "-w $(shell EFFECTIVE_VERSION=$(EFFECTIVE_VERSION) $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/get-build-ld-flags.sh k8s.io/component-base $(REPO_ROOT)/VERSION $(EXTENSION_PREFIX)-$(NAME))"
 PARALLEL_E2E_TESTS          := 2
 
 ifndef ARTIFACTS
