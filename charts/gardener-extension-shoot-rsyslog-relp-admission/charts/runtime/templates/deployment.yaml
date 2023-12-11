@@ -25,8 +25,11 @@ spec:
         {{- end }}
       labels:
         networking.gardener.cloud/to-dns: allowed
+        {{- if .Values.global.virtualGarden.enabled }}
         networking.resources.gardener.cloud/to-virtual-garden-kube-apiserver-tcp-443: allowed
+        {{- else }}
         networking.gardener.cloud/to-runtime-apiserver: allowed
+        {{- end }}
 {{ include "labels" . | indent 8 }}
     spec:
       serviceAccountName: {{ include "name" . }}
