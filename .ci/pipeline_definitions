@@ -3,9 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 gardener-extension-shoot-rsyslog-relp:
-  template: 'default'
   base_definition:
-    repo: ~
     traits:
       version:
         preprocess: 'inject-commit-hash'
@@ -44,13 +42,11 @@ gardener-extension-shoot-rsyslog-relp:
           oci-builder: docker-buildx
           dockerimages:
             gardener-extension-shoot-rsyslog-relp:
-              registry: 'gcr-readwrite'
               image: 'eu.gcr.io/gardener-project/gardener/extensions/shoot-rsyslog-relp'
               dockerfile: 'Dockerfile'
               target: shoot-rsyslog-relp
               tag_as_latest: true
             gardener-extension-shoot-rsyslog-relp-admission:
-              registry: 'gcr-readwrite'
               image: 'eu.gcr.io/gardener-project/gardener/extensions/shoot-rsyslog-relp-admission'
               dockerfile: 'Dockerfile'
               target: shoot-rsyslog-relp-admission
