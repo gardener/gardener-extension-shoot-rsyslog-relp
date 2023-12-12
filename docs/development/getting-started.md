@@ -1,4 +1,4 @@
-# Running Rsyslog Relp Extension Locally
+# Deploying Rsyslog Relp Extension Locally
 
 This document will walk you through running the Rsyslog Relp extension and a fake rsyslog relp service on your local machine for development purposes. This guide uses the Gardener's local development setup and builds on top of it.
 If you encounter difficulties, please open an issue so that we can make this process easier.
@@ -23,13 +23,13 @@ This will build the `shoot-rsyslog-relp`, `shoot-rsyslog-relp-admission` and `rs
 Once the above step is completed we can deploy and configure a shoot cluster with a default rsyslog relp settings.
 
 ```bash
-kubectl apply -f ./example/local/01-shoot.yaml
+kubectl apply -f ./example/shoot.yaml
 ```
 
 Once the shoot's namespace is created we can create a `networkpolicy` that will allow egress traffic from the `rsyslog` on the `Shoot`'s nodes to the `rsyslog-relp-echo-server` that serves as a fake rsyslog target server.
 
 ```bash
-kubectl apply -f ./example/local/02-allow-machine-to-rsyslog-relp-echo-server-netpol.yaml
+kubectl apply -f ./example/local/allow-machine-to-rsyslog-relp-echo-server-netpol.yaml
 ```
 
 Currently the shoot's nodes run Ubuntu which does not have the `rsyslog-relp` and `auditd` packages installed, so the configuration done by the extension has no effect.
