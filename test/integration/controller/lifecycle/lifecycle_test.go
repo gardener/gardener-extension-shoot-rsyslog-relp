@@ -67,7 +67,7 @@ spec:
         imagePullPolicy: IfNotPresent
       initContainers:
       - name: rsyslog-configuration-cleaner
-        image: eu.gcr.io/gardener-project/3rd/alpine:3.18.4
+        image: europe-docker.pkg.dev/gardener-project/releases/3rd/alpine:3.18.4
         imagePullPolicy: IfNotPresent
         command:
         - "sh"

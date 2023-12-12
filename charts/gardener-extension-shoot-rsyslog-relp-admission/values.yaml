@@ -9,7 +9,7 @@ global:
     user:
       name: ""
   image:
-    repository: eu.gcr.io/gardener-project/gardener/extensions/shoot-rsyslog-relp-admission
+    repository: europe-docker.pkg.dev/gardener-project/public/gardener/extensions/shoot-rsyslog-relp-admission
     tag: latest
     pullPolicy: IfNotPresent
   replicaCount: 1

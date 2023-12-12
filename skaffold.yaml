@@ -4,10 +4,10 @@ metadata:
   name: rsyslog-relp-echo-server
 build:
   artifacts:
-    - image: eu.gcr.io/gardener-project/gardener/extensions/rsyslog-relp-echo-server
+    - image: europe-docker.pkg.dev/gardener-project/public/gardener/extensions/rsyslog-relp-echo-server
       docker:
         cacheFrom:
-          - eu.gcr.io/gardener-project/gardener/extensions/rsyslog-relp-echo-server
+          - europe-docker.pkg.dev/gardener-project/public/gardener/extensions/rsyslog-relp-echo-server
   local: {}
 deploy:
   helm:
@@ -18,7 +18,7 @@ deploy:
         wait: true
         chartPath: example/local/charts/rsyslog-relp-echo-server
         setValueTemplates:
-          images.rsyslog: '{{.IMAGE_FULLY_QUALIFIED_eu_gcr_io_gardener_project_gardener_extensions_rsyslog_relp_echo_server}}'
+          images.rsyslog: '{{.IMAGE_FULLY_QUALIFIED_europe_docker_pkg_dev_gardener_project_public_gardener_extensions_rsyslog_relp_echo_server}}'
 ---
 apiVersion: skaffold/v4beta3
 kind: Config
@@ -26,7 +26,7 @@ metadata:
   name: extension
 build:
   artifacts:
-    - image: eu.gcr.io/gardener-project/gardener/extensions/shoot-rsyslog-relp
+    - image: europe-docker.pkg.dev/gardener-project/public/gardener/extensions/shoot-rsyslog-relp
       ko:
         dependencies:
           paths:
@@ -66,7 +66,7 @@ metadata:
   name: admission
 build:
   artifacts:
-    - image: eu.gcr.io/gardener-project/gardener/extensions/shoot-rsyslog-relp-admission
+    - image: europe-docker.pkg.dev/gardener-project/public/gardener/extensions/shoot-rsyslog-relp-admission
       ko:
         dependencies:
           paths:
@@ -94,5 +94,5 @@ deploy:
         valuesFiles:
           - "example/local/admission/values.yaml"
         setValueTemplates:
-          global.image.repository: '{{.IMAGE_REPO_eu_gcr_io_gardener_project_gardener_extensions_shoot_rsyslog_relp_admission}}'
-          global.image.tag: '{{.IMAGE_TAG_eu_gcr_io_gardener_project_gardener_extensions_shoot_rsyslog_relp_admission}}@{{.IMAGE_DIGEST_eu_gcr_io_gardener_project_gardener_extensions_shoot_rsyslog_relp_admission}}'
+          global.image.repository: '{{.IMAGE_REPO_europe_docker_pkg_dev_gardener_project_public_gardener_extensions_shoot_rsyslog_relp_admission}}'
+          global.image.tag: '{{.IMAGE_TAG_europe_docker_pkg_dev_gardener_project_public_gardener_extensions_shoot_rsyslog_relp_admission}}@{{.IMAGE_DIGEST_europe_docker_pkg_dev_gardener_project_public_gardener_extensions_shoot_rsyslog_relp_admission}}'
