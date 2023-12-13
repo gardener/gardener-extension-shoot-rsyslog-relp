@@ -12,16 +12,16 @@ import (
 
 	extensionscontroller "github.com/gardener/gardener/extensions/pkg/controller"
 	"github.com/gardener/gardener/extensions/pkg/controller/extension"
-	gardencorev1beta1helper "github.com/gardener/gardener/pkg/apis/core/v1beta1/helper"
+	v1beta1helper "github.com/gardener/gardener/pkg/apis/core/v1beta1/helper"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	"github.com/gardener/gardener/pkg/component"
 	"github.com/gardener/gardener/pkg/utils/managedresources"
 	"github.com/go-logr/logr"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/charts"
 	apisconfig "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/config"
+	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/component/rsyslogrelpconfigcleaner"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/constants"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/imagevector"
 )
@@ -103,42 +103,7 @@ func (a *actuator) Delete(ctx context.Context, _ logr.Logger, ex *extensionsv1al
 		return nil
 	}
 
-	chartRenderer, err := a.chartRendererFactory.NewChartRendererForShoot(cluster.Shoot.Spec.Kubernetes.Version)
-	if err != nil {
-		return fmt.Errorf("could not create chart renderer for shoot '%s', %w", namespace, err)
-	}
-
-	values := map[string]interface{}{
-		"images": map[string]interface{}{
-			"alpine": imagevector.AlpineImage(),
-			"pause":  imagevector.PauseContainerImage(),
-		},
-		"pspDisabled": gardencorev1beta1helper.IsPSPDisabled(cluster.Shoot),
-	}
-
-	release, err := chartRenderer.RenderEmbeddedFS(charts.InternalChart, charts.RsyslogConfigurationCleanerChartPath, configurationCleanerReleaseName, metav1.NamespaceSystem, values)
-	if err != nil {
-		return err
-	}
-
-	rsyslogRelpCleanerChart := release.AsSecretData()
-	if err := managedresources.CreateForShoot(ctx, a.client, namespace, constants.ManagedResourceNameConfigCleaner, "rsyslog-relp", false, rsyslogRelpCleanerChart); err != nil {
-		return err
-	}
-
-	timeoutCtx, cancelCtx = context.WithTimeout(ctx, deletionTimeout)
-	defer cancelCtx()
-	if err := managedresources.WaitUntilHealthy(timeoutCtx, a.client, namespace, constants.ManagedResourceNameConfigCleaner); err != nil {
-		return err
-	}
-
-	if err := managedresources.DeleteForShoot(ctx, a.client, namespace, constants.ManagedResourceNameConfigCleaner); err != nil {
-		return err
-	}
-
-	timeoutCtx, cancelCtx = context.WithTimeout(ctx, deletionTimeout)
-	defer cancelCtx()
-	return managedresources.WaitUntilDeleted(timeoutCtx, a.client, namespace, constants.ManagedResourceNameConfigCleaner)
+	return cleanRsyslogRelpConfiguration(ctx, cluster, a.client, namespace)
 }
 
 // ForceDelete deletes the extension resource.
@@ -179,4 +144,37 @@ func (a *actuator) Migrate(ctx context.Context, _ logr.Logger, ex *extensionsv1a
 	timeoutCtx, cancelCtx := context.WithTimeout(ctx, twoMinutes)
 	defer cancelCtx()
 	return managedresources.WaitUntilDeleted(timeoutCtx, a.client, namespace, constants.ManagedResourceName)
+}
+
+func cleanRsyslogRelpConfiguration(ctx context.Context, cluster *extensionscontroller.Cluster, client client.Client, namespace string) error {
+	// If the Shoot is hibernated, we don't have Nodes. Hence, there is no need to clean up anything.
+	if extensionscontroller.IsHibernated(cluster) {
+		return nil
+	}
+
+	alpineImage, err := imagevector.ImageVector().FindImage("alpine")
+	if err != nil {
+		return fmt.Errorf("failed to find the alpine image: %w", err)
+	}
+	pauseImage, err := imagevector.ImageVector().FindImage("pause-container")
+	if err != nil {
+		return fmt.Errorf("failed to find the pause image: %w", err)
+	}
+
+	values := rsyslogrelpconfigcleaner.Values{
+		AlpineImage:         alpineImage.String(),
+		PauseContainerImage: pauseImage.String(),
+		PSPDisabled:         v1beta1helper.IsPSPDisabled(cluster.Shoot),
+	}
+	cleaner := rsyslogrelpconfigcleaner.New(client, namespace, values)
+
+	if err := component.OpWait(cleaner).Deploy(ctx); err != nil {
+		return fmt.Errorf("failed to deploy the rsyslog relp configuration cleaner component: %w", err)
+	}
+
+	if err := component.OpDestroyAndWait(cleaner).Destroy(ctx); err != nil {
+		return fmt.Errorf("failed to destroy the rsyslog relp configuration cleaner component: %w", err)
+	}
+
+	return nil
 }

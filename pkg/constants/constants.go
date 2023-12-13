@@ -10,13 +10,10 @@ const (
 	// ServiceName is the name of the service.
 	ServiceName = "shoot-rsyslog-relp"
 
-	extensionServiceName = "extension-" + ServiceName
-
+	// Origin is the origin used for the shoot-rsyslog-relp ManagedResources.
+	Origin = "shoot-rsyslog-cache"
 	// ManagedResourceName is the name used to describe the managed shoot resources.
-	ManagedResourceName = extensionServiceName + "-shoot"
-	// ManagedResourceNameConfigCleaner is the name used to describe the manged
-	// resource that will clean up the rsyslog config from the shoot nodes.
-	ManagedResourceNameConfigCleaner = extensionServiceName + "-configuration-cleaner-shoot"
+	ManagedResourceName = "extension-" + ServiceName + "-shoot"
 
 	// PauseContainerImageName is the name of the pause container image.
 	PauseContainerImageName = "pause-container"
