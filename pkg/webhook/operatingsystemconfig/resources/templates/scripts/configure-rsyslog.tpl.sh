@@ -5,6 +5,10 @@ set -o nounset
 set -o pipefail
 
 function configure_auditd() {
+  if [[ ! -d {{ .pathAuditRulesFromOSCDir }} ]]; then
+    return 0
+  fi
+
   if [[ ! -d {{ .pathAuditRulesBackupDir }} ]] && [[ -d {{ .pathAuditRulesDir }} ]]; then
     mv {{ .pathAuditRulesDir }} {{ .pathAuditRulesBackupDir }}
   fi
