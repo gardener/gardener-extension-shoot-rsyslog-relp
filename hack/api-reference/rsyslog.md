@@ -141,6 +141,66 @@ bool
 should be reported.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>auditRulesConfig</code></br>
+<em>
+<a href="#rsyslog-relp.extensions.gardener.cloud/v1alpha1.AuditRulesConfig">
+AuditRulesConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AuditRulesConfig contains the config for the audit rules to be deployed on the shoot nodes.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="rsyslog-relp.extensions.gardener.cloud/v1alpha1.AuditRulesConfig">AuditRulesConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#rsyslog-relp.extensions.gardener.cloud/v1alpha1.RsyslogRelpConfig">RsyslogRelpConfig</a>)
+</p>
+<p>
+<p>AuditConfig contains options to configure the audit system.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>enabled</code></br>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Enabled determines whether audit configuration is enabled or not. If it is enabled,
+the audit rules on the system will be replaced.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>configMapReferenceName</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ConfigMapReferenceName is the name of the reference for the configmap containing
+the audit rules to set on the shoot nodes. When this is not set, the following default
+rules are specified: TODO: add ref to default rules</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="rsyslog-relp.extensions.gardener.cloud/v1alpha1.AuthMode">AuthMode

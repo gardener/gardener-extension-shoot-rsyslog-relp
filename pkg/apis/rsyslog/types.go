@@ -32,6 +32,8 @@ type RsyslogRelpConfig struct {
 	// ReportSuspensionContinuation determines whether suspension continuation in the relp action
 	// should be reported.
 	ReportSuspensionContinuation *bool
+	// AuditRulesConfig contains the config for the audit rules to be deployed on the shoot nodes.
+	AuditRulesConfig *AuditRulesConfig
 }
 
 // TLS contains options for the tls connection to the target server.
@@ -60,6 +62,17 @@ type LoggingRule struct {
 	ProgramNames []string
 	// Severity determines which logs are sent to the target server based on their severity.
 	Severity int
+}
+
+// AuditConfig contains options to configure the audit system.
+type AuditRulesConfig struct {
+	// Enabled determines whether audit rules configuration is enabled or not. If it is enabled,
+	// the audit rules on the system will be replaced.
+	Enabled *bool
+	// ConfigMapReferenceName is the name of the reference for the configmap containing
+	// the audit rules to set on the shoot nodes. When this is not set, the following default
+	// rules are specified: TODO: add ref to default rules
+	ConfigMapReferenceName *string
 }
 
 // AuthMode is the type of authentication mode that can be used for the rsyslog relp connection to the target server.
