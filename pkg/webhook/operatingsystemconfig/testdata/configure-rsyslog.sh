@@ -5,6 +5,10 @@ set -o nounset
 set -o pipefail
 
 function configure_auditd() {
+  if [[ ! -d /var/lib/rsyslog-relp-configurator/audit/rules.d ]]; then
+    return 0
+  fi
+
   if [[ ! -d /etc/audit/rules.d.original ]] && [[ -d /etc/audit/rules.d ]]; then
     mv /etc/audit/rules.d /etc/audit/rules.d.original
   fi

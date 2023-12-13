@@ -120,6 +120,9 @@ var _ = Describe("Ensurer", func() {
 					Severity: 2,
 				},
 			},
+			AuditRulesConfig: &rsyslog.AuditRulesConfig{
+				Enabled: pointer.Bool(true),
+			},
 		}
 	})
 
@@ -232,6 +235,80 @@ var _ = Describe("Ensurer", func() {
 				files = append(files, getAuditRulesFiles(false)...)
 				files = append(files, getRsyslogTLSFiles(false)...)
 
+				Expect(ensurer.EnsureAdditionalFiles(ctx, gctx, &files, nil)).To(Succeed())
+				Expect(files).To(ConsistOf(expectedFiles))
+			})
+		})
+
+		Context("when audit rules are specified via a configmap reference", func() {
+			BeforeEach(func() {
+				shoot.Spec.Resources = []gardencorev1beta1.NamedResourceReference{
+					{
+						Name: "audit-rules",
+						ResourceRef: v1.CrossVersionObjectReference{
+							Kind: "ConfigMap",
+							Name: "audit-rules",
+						},
+					},
+				}
+
+				auditRulesConfigMap := &corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "ref-audit-rules",
+						Namespace: shootTechnicalID,
+					},
+					Data: map[string]string{
+						"custom-rule-00": "custom-rule-00",
+						"custom-rule-01": "custom-rule-01",
+					},
+				}
+				Expect(fakeClient.Create(ctx, auditRulesConfigMap)).To(Succeed())
+
+				extensionProviderConfig.AuditRulesConfig = &rsyslog.AuditRulesConfig{
+					Enabled:                pointer.Bool(true),
+					ConfigMapReferenceName: pointer.String("audit-rules"),
+				}
+
+				expectedFiles = append([]extensionsv1alpha1.File{oldFile}, getRsyslogFiles(rsyslogConfig, true)...)
+				expectedFiles = append(expectedFiles, []extensionsv1alpha1.File{
+					{
+						Path:        "/var/lib/rsyslog-relp-configurator/audit/rules.d/custom-rule-00",
+						Permissions: pointer.Int32(0644),
+						Content: extensionsv1alpha1.FileContent{
+							Inline: &extensionsv1alpha1.FileContentInline{
+								Encoding: "b64",
+								Data:     gardenerutils.EncodeBase64([]byte("custom-rule-00")),
+							},
+						},
+					},
+					{
+						Path:        "/var/lib/rsyslog-relp-configurator/audit/rules.d/custom-rule-01",
+						Permissions: pointer.Int32(0644),
+						Content: extensionsv1alpha1.FileContent{
+							Inline: &extensionsv1alpha1.FileContentInline{
+								Encoding: "b64",
+								Data:     gardenerutils.EncodeBase64([]byte("custom-rule-01")),
+							},
+						},
+					},
+				}...)
+			})
+
+			It("should add additional files to current ones", func() {
+				Expect(ensurer.EnsureAdditionalFiles(ctx, gctx, &files, nil)).To(Succeed())
+				Expect(files).To(ConsistOf(expectedFiles))
+			})
+		})
+
+		Context("when modification of audit rules is disabled", func() {
+			BeforeEach(func() {
+				extensionProviderConfig.AuditRulesConfig = &rsyslog.AuditRulesConfig{
+					Enabled: pointer.Bool(false),
+				}
+				expectedFiles = append([]extensionsv1alpha1.File{oldFile}, getRsyslogFiles(rsyslogConfig, true)...)
+			})
+
+			It("should add additional files to the current ones", func() {
 				Expect(ensurer.EnsureAdditionalFiles(ctx, gctx, &files, nil)).To(Succeed())
 				Expect(files).To(ConsistOf(expectedFiles))
 			})
