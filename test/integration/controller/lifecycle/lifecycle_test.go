@@ -106,7 +106,7 @@ spec:
             memory: 8Mi
             cpu: 2m
           limits:
-            memory: 16Mi
+            memory: 32Mi
         volumeMounts:
         - name: host-root-volume
           mountPath: /host
@@ -558,7 +558,7 @@ spec:
             memory: 8Mi
             cpu: 2m
           limits:
-            memory: 16Mi
+            memory: 32Mi
         volumeMounts:` + stringBasedOnCondition(tlsEnabled, `
         - name: rsyslog-relp-configurator-tls-volume
           mountPath: /var/lib/rsyslog-relp-configurator/tls`,
