@@ -59,7 +59,7 @@ spec:
             memory: 8Mi
             cpu: 2m
           limits:
-            memory: 16Mi
+            memory: 32Mi
         volumeMounts:
         {{- if .Values.rsyslogConfig.tls.enabled }}
         - name: rsyslog-relp-configurator-tls-volume
