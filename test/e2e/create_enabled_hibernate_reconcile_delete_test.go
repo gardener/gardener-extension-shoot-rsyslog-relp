@@ -8,16 +8,18 @@ import (
 	"context"
 	"time"
 
-	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	e2e "github.com/gardener/gardener/test/e2e/gardener"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
+
+	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/test/common"
 )
 
 var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 	f := defaultShootCreationFramework()
 	f.Shoot = e2e.DefaultShoot("e2e-rslog-hib")
-	f.Shoot.Spec.Extensions = []gardencorev1beta1.Extension{shootRsyslogRelpExtension()}
+	common.AddOrUpdateRsyslogRelpExtension(f.Shoot)
 
 	It("Create Shoot with shoot-rsyslog-relp extension enabled, hibernate Shoot, reconcile Shoot, wake up Shoot, delete Shoot", Label("hibernation"), func() {
 		By("Create Shoot")
@@ -33,19 +35,21 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 		Expect(createNetworkPolicyForEchoServer(ctx, f.ShootFramework.SeedClient, f.ShootFramework.ShootSeedNamespace())).To(Succeed())
 
 		By("Install rsyslog-relp unit on Shoot nodes")
-		Expect(execInShootNode(ctx, f.ShootFramework.SeedClient, f.Logger, f.ShootFramework.ShootSeedNamespace(), "apt-get update && apt-get install -y rsyslog-relp")).To(Succeed())
+		common.ForEachNode(ctx, f.ShootFramework.ShootClient, func(ctx context.Context, node *corev1.Node) {
+			installRsyslogRelp(ctx, f.Logger, f.ShootFramework.ShootClient, node.Name)
+		})
 
 		By("Verify shoot-rsyslog-relp works")
 		ctx, cancel = context.WithTimeout(parentCtx, 5*time.Minute)
 		DeferCleanup(cancel)
-		verifier, err := newVerifier(ctx, f.Logger, f.ShootFramework.SeedClient, f.ShootFramework.ShootSeedNamespace(), "local", f.Shoot.Name, string(f.Shoot.UID))
-		Expect(err).NotTo(HaveOccurred())
 
-		// Use a timeout of 20 seconds to ensure that the rsyslog-configurator service which configures
-		// rsyslog has a chance to run after rsyslog-relp is installed. It runs once every 15 seconds
-		verifier.verifyThatLogsAreSentToEchoServer(ctx, "test-program", "1", "this should get sent to echo server", 20*time.Second)
-		verifier.verifyThatLogsAreNotSentToEchoServer(ctx, "other-program", "1", "this should not get sent to echo server")
-		verifier.verifyThatLogsAreNotSentToEchoServer(ctx, "test-program", "3", "this should not get sent to echo server")
+		echoServerPodIf, echoServerPodName, err := common.GetEchoServerPodInterfaceAndName(ctx, f.ShootFramework.SeedClient)
+		Expect(err).NotTo(HaveOccurred())
+		verifier := common.NewVerifier(f.Logger, f.ShootFramework.ShootClient, echoServerPodIf, echoServerPodName, f.ShootFramework.Project.Name, f.Shoot.Name, string(f.Shoot.UID))
+
+		common.ForEachNode(ctx, f.ShootFramework.ShootClient, func(ctx context.Context, node *corev1.Node) {
+			verifier.VerifyExtensionForNode(ctx, node.Name)
+		})
 
 		By("Hibernate Shoot")
 		ctx, cancel = context.WithTimeout(parentCtx, 10*time.Minute)
@@ -61,14 +65,16 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 		DeferCleanup(cancel)
 
 		By("Install rsyslog-relp unit on Shoot nodes")
-		Expect(execInShootNode(ctx, f.ShootFramework.SeedClient, f.Logger, f.ShootFramework.ShootSeedNamespace(), "apt-get update && apt-get install -y rsyslog-relp")).To(Succeed())
+		common.ForEachNode(ctx, f.ShootFramework.ShootClient, func(ctx context.Context, node *corev1.Node) {
+			installRsyslogRelp(ctx, f.Logger, f.ShootFramework.ShootClient, node.Name)
+		})
 
 		By("Verify that shoot-rsyslog-relp works after wake up")
 		ctx, cancel = context.WithTimeout(parentCtx, 5*time.Minute)
 		DeferCleanup(cancel)
-		verifier.verifyThatLogsAreSentToEchoServer(ctx, "test-program", "1", "this should get sent to echo server", 20*time.Second)
-		verifier.verifyThatLogsAreNotSentToEchoServer(ctx, "other-program", "1", "this should not get sent to echo server")
-		verifier.verifyThatLogsAreNotSentToEchoServer(ctx, "test-program", "3", "this should not get sent to echo server")
+		common.ForEachNode(ctx, f.ShootFramework.ShootClient, func(ctx context.Context, node *corev1.Node) {
+			verifier.VerifyExtensionForNode(ctx, node.Name)
+		})
 
 		By("Delete Shoot")
 		ctx, cancel = context.WithTimeout(parentCtx, 15*time.Minute)
