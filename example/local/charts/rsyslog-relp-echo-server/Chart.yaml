@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-apiVersion: v2
+apiVersion: v1
 description: A helm chart for the rsyslog-relp echo server which is used for tests.
 name: rsyslog-relp-echo-server
 version: 0.1.0
