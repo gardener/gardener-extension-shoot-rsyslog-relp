@@ -58,16 +58,7 @@ type actuator struct {
 func (a *actuator) Reconcile(ctx context.Context, _ logr.Logger, ex *extensionsv1alpha1.Extension) error {
 	namespace := ex.GetNamespace()
 
-	cluster, err := extensionscontroller.GetCluster(ctx, a.client, namespace)
-	if err != nil {
-		return err
-	}
-
-	if cluster.Shoot == nil {
-		return errors.New("cluster.shoot is not yet populated")
-	}
-
-	// TODO(plkoknanov): remove this after a couple releases.
+	// TODO(plkokanov): remove this after a couple releases.
 	if err := managedresources.DeleteForShoot(ctx, a.client, namespace, constants.ManagedResourceName); err != nil {
 		return err
 	}

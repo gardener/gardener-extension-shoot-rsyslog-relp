@@ -5,6 +5,8 @@
 package operatingsystemconfig
 
 import (
+	_ "embed"
+
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenerutils "github.com/gardener/gardener/pkg/utils"
 	"k8s.io/utils/pointer"
@@ -15,30 +17,17 @@ const (
 	privilegeEscalationRulesPath = "/var/lib/rsyslog-relp-configurator/audit/rules.d/10-privilege-escalation.rules"
 	privilegeSpecialRulesPath    = "/var/lib/rsyslog-relp-configurator/audit/rules.d/11-privileged-special.rules"
 	systemIntegrityRulesPath     = "/var/lib/rsyslog-relp-configurator/audit/rules.d/12-system-integrity.rules"
+)
 
-	baseConfigRules = `## First rule - delete all
--D
-## Increase the buffers to survive stress events.
-## Make this bigger for busy systems
--b 8192
-## This determine how long to wait in burst of events
---backlog_wait_time 60000
-## Set failure mode to syslog
--f 1`
-	privilegeEscalationRules = `-a exit,always -F arch=b64 -S setuid -S setreuid -S setgid -S setregid -F auid>0 -F auid!=-1 -F key=privilege_escalation
--a exit,always -F arch=b64 -S execve -S execveat -F euid=0 -F auid>0 -F auid!=-1 -F key=privilege_escalation`
-
-	privilegeSpecialRules = `-a exit,always -F arch=b64 -S mount -S mount_setattr -S umount2 -S mknod -S mknodat -S chroot -F auid!=-1 -F key=privileged_special`
-
-	systemIntegrityRules = `-a exit,always -F dir=/boot -F perm=wa -F key=system_integrity
--a exit,always -F dir=/etc -F perm=wa -F key=system_integrity
--a exit,always -F dir=/bin -F perm=wa -F key=system_integrity
--a exit,always -F dir=/sbin -F perm=wa -F key=system_integrity
--a exit,always -F dir=/lib -F perm=wa -F key=system_integrity
--a exit,always -F dir=/lib64 -F perm=wa -F key=system_integrity
--a exit,always -F dir=/usr -F perm=wa -F key=system_integrity
--a exit,always -F dir=/opt -F perm=wa -F key=system_integrity
--a exit,always -F dir=/root -F perm=wa -F key=system_integrity`
+var (
+	//go:embed resources/auditrules/00-base-config.rules
+	baseConfigRules []byte
+	//go:embed resources/auditrules/10-privilege-escalation.rules
+	privilegeEscalationRules []byte
+	//go:embed resources/auditrules/11-privileged-special.rules
+	privilegeSpecialRules []byte
+	//go:embed resources/auditrules/12-system-integrity.rules
+	systemIntegrityRules []byte
 )
 
 func getAuditdFiles() []extensionsv1alpha1.File {
@@ -49,7 +38,7 @@ func getAuditdFiles() []extensionsv1alpha1.File {
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
-					Data:     gardenerutils.EncodeBase64([]byte(baseConfigRules)),
+					Data:     gardenerutils.EncodeBase64(baseConfigRules),
 				},
 			},
 		},
@@ -59,7 +48,7 @@ func getAuditdFiles() []extensionsv1alpha1.File {
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
-					Data:     gardenerutils.EncodeBase64([]byte(privilegeEscalationRules)),
+					Data:     gardenerutils.EncodeBase64(privilegeEscalationRules),
 				},
 			},
 		},
@@ -69,7 +58,7 @@ func getAuditdFiles() []extensionsv1alpha1.File {
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
-					Data:     gardenerutils.EncodeBase64([]byte(privilegeSpecialRules)),
+					Data:     gardenerutils.EncodeBase64(privilegeSpecialRules),
 				},
 			},
 		},
@@ -79,7 +68,7 @@ func getAuditdFiles() []extensionsv1alpha1.File {
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
-					Data:     gardenerutils.EncodeBase64([]byte(systemIntegrityRules)),
+					Data:     gardenerutils.EncodeBase64(systemIntegrityRules),
 				},
 			},
 		},

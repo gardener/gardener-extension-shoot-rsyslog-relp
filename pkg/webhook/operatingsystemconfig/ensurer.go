@@ -15,6 +15,7 @@ import (
 	"github.com/go-logr/logr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
@@ -90,39 +91,29 @@ func (e *ensurer) EnsureAdditionalUnits(_ context.Context, _ gcontext.GardenCont
 }
 
 func mergeFiles(files *[]extensionsv1alpha1.File, newFiles ...extensionsv1alpha1.File) {
-	var (
-		newFilesSet = make(map[string]struct{}, len(newFiles))
-		resFiles    = make([]extensionsv1alpha1.File, 0, len(*files))
-	)
-
-	for _, f := range newFiles {
-		newFilesSet[f.Path] = struct{}{}
-	}
-
-	for _, f := range *files {
-		if _, ok := newFilesSet[f.Path]; !ok {
-			resFiles = append(resFiles, f)
-		}
-	}
-
-	*files = append(resFiles, newFiles...)
+	merge(func(f extensionsv1alpha1.File) string { return f.Path }, files, newFiles...)
 }
 
 func mergeUnits(units *[]extensionsv1alpha1.Unit, newUnits ...extensionsv1alpha1.Unit) {
+	merge(func(u extensionsv1alpha1.Unit) string { return u.Name }, units, newUnits...)
+}
+
+func merge[T any](getUniqueId func(t T) string, base *[]T, from ...T) {
 	var (
-		newUnitsSet = make(map[string]struct{}, len(newUnits))
-		resUnits    = make([]extensionsv1alpha1.Unit, 0, len(*units))
+		fromSet = sets.New[string]()
+		res     = make([]T, 0, len(*base))
 	)
 
-	for _, u := range newUnits {
-		newUnitsSet[u.Name] = struct{}{}
+	for _, elem := range from {
+		fromSet.Insert(getUniqueId(elem))
+		res = append(res, elem)
 	}
 
-	for _, u := range *units {
-		if _, ok := newUnitsSet[u.Name]; !ok {
-			resUnits = append(resUnits, u)
+	for _, elem := range *base {
+		if !fromSet.Has(getUniqueId(elem)) {
+			res = append(res, elem)
 		}
 	}
 
-	*units = append(resUnits, newUnits...)
+	*base = res
 }

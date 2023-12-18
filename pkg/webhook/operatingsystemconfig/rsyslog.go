@@ -14,8 +14,11 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig"
+	"github.com/gardener/gardener/extensions/pkg/controller"
 	extensionscontroller "github.com/gardener/gardener/extensions/pkg/controller"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
+	v1beta1helper "github.com/gardener/gardener/pkg/apis/core/v1beta1/helper"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenerutils "github.com/gardener/gardener/pkg/utils"
 	corev1 "k8s.io/api/core/v1"
@@ -46,17 +49,17 @@ const (
 )
 
 var (
-	//go:embed  templates/60-audit.conf.tpl
+	//go:embed resources/templates/60-audit.conf.tpl
 	rsyslogAuditConfigTemplateContent string
 	rsyslogAuditConfigTemplate        *template.Template
 
-	//go:embed templates/scripts/configure-rsyslog.tpl.sh
-	configureRsyslogScriptTemplateContents string
-	configureRsyslogScriptTemplate         *template.Template
+	//go:embed resources/templates/scripts/configure-rsyslog.tpl.sh
+	configureRsyslogScriptTemplateContent string
+	configureRsyslogScript                bytes.Buffer
 
-	//go:embed templates/scripts/process-rsyslog-pstats.tpl.sh
-	processRsyslogPstatsScriptTemplateContents string
-	processRsyslogPstatsScriptTemplate         *template.Template
+	//go:embed resources/templates/scripts/process-rsyslog-pstats.tpl.sh
+	processRsyslogPstatsScriptTemplateContent string
+	processRsyslogPstatsScript                bytes.Buffer
 )
 
 func init() {
@@ -69,19 +72,36 @@ func init() {
 		panic(err)
 	}
 
-	configureRsyslogScriptTemplate, err = template.
+	configureRsyslogScriptTemplate, err := template.
 		New("configure-rsyslog.sh").
 		Funcs(sprig.TxtFuncMap()).
-		Parse(configureRsyslogScriptTemplateContents)
+		Parse(configureRsyslogScriptTemplateContent)
 	if err != nil {
 		panic(err)
 	}
 
-	processRsyslogPstatsScriptTemplate, err = template.
+	if err := configureRsyslogScriptTemplate.Execute(&configureRsyslogScript, map[string]interface{}{
+		"pathAuditRulesDir":           auditRulesDir,
+		"pathAuditRulesBackupDir":     auditRulesBackupDir,
+		"pathAuditRulesFromOSCDir":    auditRulesFromOSCDir,
+		"pathSyslogAuditPlugin":       auditSyslogPluginPath,
+		"pathRsyslogAuditConf":        rsyslogConfigPath,
+		"pathRsyslogAuditConfFromOSC": rsyslogConfigFromOSCPath,
+	}); err != nil {
+		panic(err)
+	}
+
+	processRsyslogPstatsScriptTemplate, err := template.
 		New("process-rsyslog-pstats.sh").
 		Funcs(sprig.TxtFuncMap()).
-		Parse(processRsyslogPstatsScriptTemplateContents)
+		Parse(processRsyslogPstatsScriptTemplateContent)
 	if err != nil {
+		panic(err)
+	}
+
+	if err := processRsyslogPstatsScriptTemplate.Execute(&processRsyslogPstatsScript, map[string]interface{}{
+		"rsyslogPstatsTextfileDir": nodeExporterTextfileCollectorDir,
+	}); err != nil {
 		panic(err)
 	}
 }
@@ -105,25 +125,6 @@ func getRsyslogFiles(ctx context.Context, c client.Client, namespace string, rsy
 		return nil, err
 	}
 
-	var script bytes.Buffer
-	if err := configureRsyslogScriptTemplate.Execute(&script, map[string]interface{}{
-		"pathAuditRulesDir":           auditRulesDir,
-		"pathAuditRulesBackupDir":     auditRulesBackupDir,
-		"pathAuditRulesFromOSCDir":    auditRulesFromOSCDir,
-		"pathSyslogAuditPlugin":       auditSyslogPluginPath,
-		"pathRsyslogAuditConf":        rsyslogConfigPath,
-		"pathRsyslogAuditConfFromOSC": rsyslogConfigFromOSCPath,
-	}); err != nil {
-		return nil, err
-	}
-
-	var processRsyslogPstatsScript bytes.Buffer
-	if err := processRsyslogPstatsScriptTemplate.Execute(&processRsyslogPstatsScript, map[string]interface{}{
-		"rsyslogPstatsTextfileDir": nodeExporterTextfileCollectorDir,
-	}); err != nil {
-		return nil, err
-	}
-
 	rsyslogFiles = append(rsyslogFiles, []extensionsv1alpha1.File{
 		{
 			Path:        rsyslogConfigFromOSCPath,
@@ -141,7 +142,7 @@ func getRsyslogFiles(ctx context.Context, c client.Client, namespace string, rsy
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
-					Data:     gardenerutils.EncodeBase64(script.Bytes()),
+					Data:     gardenerutils.EncodeBase64(configureRsyslogScript.Bytes()),
 				},
 			},
 		},
@@ -216,25 +217,20 @@ func getRsyslogTLSValues(rsyslogRelpConfig *rsyslog.RsyslogRelpConfig) map[strin
 }
 
 func getRsyslogTLSFiles(ctx context.Context, c client.Client, cluster *extensionscontroller.Cluster, secretRefName, namespace string) ([]extensionsv1alpha1.File, error) {
-	refSecretName, err := lookupReferencedSecret(cluster, secretRefName)
-	if err != nil {
-		return nil, err
+	ref := v1beta1helper.GetResourceByName(cluster.Shoot.Spec.Resources, secretRefName)
+	if ref == nil || ref.ResourceRef.Kind != "Secret" {
+		return nil, fmt.Errorf("failed to find referenced resource with name %s and kind Secret", secretRefName)
 	}
 
-	refSecret := &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      refSecretName,
-			Namespace: namespace,
-		},
-	}
-	if err = c.Get(ctx, client.ObjectKeyFromObject(refSecret), refSecret); err != nil {
-		return nil, err
+	// TODO(plkokanov): Remove this validation once the referenced secret in the project in
+	// the garden cluster is forced to be immutable. In that case updating the secret will require
+	// creating a new secret object and editing the shoot.spec.resources to refer to that new secret.
+	// This will trigger the secret validation in the shoot-rsyslog-relp admission.
+	if err := validateReferencedSecret(ctx, c, ref, secretRefName, namespace); err != nil {
+		return nil, fmt.Errorf("referenced secret is not valid: %w", err)
 	}
 
-	if err := utils.ValidateRsyslogRelpSecret(refSecret); err != nil {
-		return nil, err
-	}
-
+	refSecretName := v1beta1constants.ReferencedResourcesPrefix + ref.ResourceRef.Name
 	return []extensionsv1alpha1.File{
 		{
 			Path:        rsyslogCaPath,
@@ -304,17 +300,16 @@ func computeLogFilters(loggingRules []rsyslog.LoggingRule) []string {
 	return filters
 }
 
-func lookupReferencedSecret(cluster *extensionscontroller.Cluster, refname string) (string, error) {
-	if cluster.Shoot != nil {
-		for _, ref := range cluster.Shoot.Spec.Resources {
-			if ref.Name == refname {
-				if ref.ResourceRef.Kind != "Secret" {
-					err := fmt.Errorf("invalid referenced resource, expected kind Secret, not %s: %s", ref.ResourceRef.Kind, ref.ResourceRef.Name)
-					return "", err
-				}
-				return v1beta1constants.ReferencedResourcesPrefix + ref.ResourceRef.Name, nil
-			}
-		}
+func validateReferencedSecret(ctx context.Context, c client.Client, ref *gardencorev1beta1.NamedResourceReference, secretRefName, namespace string) error {
+	refSecret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      ref.ResourceRef.Name,
+			Namespace: namespace,
+		},
 	}
-	return "", fmt.Errorf("missing or invalid referenced resource: %s", refname)
+	if err := controller.GetObjectByReference(ctx, c, &ref.ResourceRef, namespace, refSecret); err != nil {
+		return fmt.Errorf("failed to read referenced secret %s%s for reference %s", v1beta1constants.ReferencedResourcesPrefix, ref.ResourceRef.Name, secretRefName)
+	}
+
+	return utils.ValidateRsyslogRelpSecret(refSecret)
 }
