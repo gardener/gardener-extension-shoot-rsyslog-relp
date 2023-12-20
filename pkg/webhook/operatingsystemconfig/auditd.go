@@ -85,7 +85,7 @@ func getDefaultAuditRules() []extensionsv1alpha1.File {
 	return []extensionsv1alpha1.File{
 		{
 			Path:        baseConfigRulesPath,
-			Permissions: pointer.Int32(0744),
+			Permissions: pointer.Int32(0644),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -95,7 +95,7 @@ func getDefaultAuditRules() []extensionsv1alpha1.File {
 		},
 		{
 			Path:        privilegeEscalationRulesPath,
-			Permissions: pointer.Int32(0744),
+			Permissions: pointer.Int32(0644),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -105,7 +105,7 @@ func getDefaultAuditRules() []extensionsv1alpha1.File {
 		},
 		{
 			Path:        privilegeSpecialRulesPath,
-			Permissions: pointer.Int32(0744),
+			Permissions: pointer.Int32(0644),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -115,7 +115,7 @@ func getDefaultAuditRules() []extensionsv1alpha1.File {
 		},
 		{
 			Path:        systemIntegrityRulesPath,
-			Permissions: pointer.Int32(0744),
+			Permissions: pointer.Int32(0644),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",

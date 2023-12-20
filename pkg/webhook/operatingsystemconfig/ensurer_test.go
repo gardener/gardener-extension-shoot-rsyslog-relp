@@ -350,7 +350,7 @@ func getAuditRulesFiles(useExpectedContent bool) []extensionsv1alpha1.File {
 	return []extensionsv1alpha1.File{
 		{
 			Path:        "/var/lib/rsyslog-relp-configurator/audit/rules.d/00-base-config.rules",
-			Permissions: pointer.Int32(0744),
+			Permissions: pointer.Int32(0644),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -360,7 +360,7 @@ func getAuditRulesFiles(useExpectedContent bool) []extensionsv1alpha1.File {
 		},
 		{
 			Path:        "/var/lib/rsyslog-relp-configurator/audit/rules.d/10-privilege-escalation.rules",
-			Permissions: pointer.Int32(0744),
+			Permissions: pointer.Int32(0644),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -370,7 +370,7 @@ func getAuditRulesFiles(useExpectedContent bool) []extensionsv1alpha1.File {
 		},
 		{
 			Path:        "/var/lib/rsyslog-relp-configurator/audit/rules.d/11-privileged-special.rules",
-			Permissions: pointer.Int32(0744),
+			Permissions: pointer.Int32(0644),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -380,7 +380,7 @@ func getAuditRulesFiles(useExpectedContent bool) []extensionsv1alpha1.File {
 		},
 		{
 			Path:        "/var/lib/rsyslog-relp-configurator/audit/rules.d/12-system-integrity.rules",
-			Permissions: pointer.Int32(0744),
+			Permissions: pointer.Int32(0644),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -395,7 +395,7 @@ func getRsyslogFiles(rsyslogConfig []byte, useExpectedContent bool) []extensions
 	return []extensionsv1alpha1.File{
 		{
 			Path:        "/var/lib/rsyslog-relp-configurator/rsyslog.d/60-audit.conf",
-			Permissions: pointer.Int32(0744),
+			Permissions: pointer.Int32(0644),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
