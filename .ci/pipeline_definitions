@@ -25,7 +25,7 @@ gardener-extension-shoot-rsyslog-relp:
     release:
       steps:
         verify:
-          image: 'golang:1.21.3'
+          image: 'golang:1.21.5'
       traits:
         version:
           preprocess: 'finalize'
