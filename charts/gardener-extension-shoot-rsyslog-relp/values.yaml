@@ -43,3 +43,7 @@ healthPort: 8081
 metrics:
   port: 8080
   enableScraping: true
+
+webhookConfig:
+  servicePort: 443
+  serverPort: 10250

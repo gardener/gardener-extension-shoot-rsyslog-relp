@@ -43,6 +43,7 @@ build:
             - pkg/controller/lifecycle
             - pkg/imagevector
             - pkg/utils
+            - pkg/webhook/operatingsystemconfig
             - vendor
             - VERSION
         ldflags:

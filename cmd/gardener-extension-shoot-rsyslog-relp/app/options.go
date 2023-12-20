@@ -9,6 +9,7 @@ import (
 
 	controllercmd "github.com/gardener/gardener/extensions/pkg/controller/cmd"
 	heartbeatcmd "github.com/gardener/gardener/extensions/pkg/controller/heartbeat/cmd"
+	webhookcmd "github.com/gardener/gardener/extensions/pkg/webhook/cmd"
 
 	rsyslogrelpcmd "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/cmd/rsyslogrelp"
 )
@@ -27,11 +28,26 @@ type Options struct {
 	controllerSwitches *controllercmd.SwitchOptions
 	reconcileOptions   *controllercmd.ReconcilerOptions
 	heartbeatOptions   *heartbeatcmd.Options
+	webhookOptions     *webhookcmd.AddToManagerOptions
 	optionAggregator   controllercmd.OptionAggregator
 }
 
 // NewOptions creates a new Options instance.
 func NewOptions() *Options {
+	// options for the webhook server
+	webhookServerOptions := &webhookcmd.ServerOptions{
+		Namespace: os.Getenv("WEBHOOK_CONFIG_NAMESPACE"),
+	}
+
+	webhookSwitches := rsyslogrelpcmd.WebhookSwitchOptions()
+	webhookOptions := webhookcmd.NewAddToManagerOptions(
+		"shoot-rsyslog-relp",
+		"",
+		nil,
+		webhookServerOptions,
+		webhookSwitches,
+	)
+
 	options := &Options{
 		generalOptions:     &controllercmd.GeneralOptions{},
 		rsyslogRelpOptions: &rsyslogrelpcmd.Options{},
@@ -56,6 +72,7 @@ func NewOptions() *Options {
 		},
 		reconcileOptions:   &controllercmd.ReconcilerOptions{},
 		controllerSwitches: rsyslogrelpcmd.ControllerSwitches(),
+		webhookOptions:     webhookOptions,
 	}
 
 	options.optionAggregator = controllercmd.NewOptionAggregator(
@@ -68,6 +85,7 @@ func NewOptions() *Options {
 		controllercmd.PrefixOption("heartbeat-", options.heartbeatOptions),
 		options.controllerSwitches,
 		options.reconcileOptions,
+		options.webhookOptions,
 	)
 
 	return options
