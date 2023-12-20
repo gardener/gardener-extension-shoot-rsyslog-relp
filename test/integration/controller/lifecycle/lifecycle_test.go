@@ -32,47 +32,40 @@ import (
 
 var _ = Describe("Lifecycle controller tests", func() {
 	var (
-		rsyslogConfigurationCleanerDaemonsetYaml = func(pspDisabled bool) string {
-			return `# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
-#
-# SPDX-License-Identifier: Apache-2.0
-
----
-apiVersion: apps/v1
+		rsyslogConfigurationCleanerDaemonsetYaml = func(serviceAccountName string) string {
+			return `apiVersion: apps/v1
 kind: DaemonSet
 metadata:
+  creationTimestamp: null
+  labels:
+    app.kubernetes.io/instance: rsyslog-relp-configuration-cleaner
+    app.kubernetes.io/name: rsyslog-relp-configuration-cleaner
   name: rsyslog-relp-configuration-cleaner
   namespace: kube-system
-  labels:
-    app.kubernetes.io/name: rsyslog-relp-configuration-cleaner
-    app.kubernetes.io/instance: rsyslog-relp-configuration-cleaner
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: rsyslog-relp-configuration-cleaner
       app.kubernetes.io/instance: rsyslog-relp-configuration-cleaner
+      app.kubernetes.io/name: rsyslog-relp-configuration-cleaner
   template:
     metadata:
+      creationTimestamp: null
       labels:
-        app.kubernetes.io/name: rsyslog-relp-configuration-cleaner
         app.kubernetes.io/instance: rsyslog-relp-configuration-cleaner
+        app.kubernetes.io/name: rsyslog-relp-configuration-cleaner
     spec:
-      securityContext:
-        seccompProfile:
-          type: RuntimeDefault
-      priorityClassName: gardener-shoot-system-700
+      automountServiceAccountToken: false
       containers:
-      - name: pause-container
-        image: registry.k8s.io/pause:3.9
+      - image: registry.k8s.io/pause:3.9
         imagePullPolicy: IfNotPresent
+        name: pause-container
+        resources: {}
+      hostPID: true
       initContainers:
-      - name: rsyslog-configuration-cleaner
-        image: europe-docker.pkg.dev/gardener-project/releases/3rd/alpine:3.18.4
-        imagePullPolicy: IfNotPresent
-        command:
-        - "sh"
-        - "-c"
-        - |
+      - command:
+        - sh
+        - -c
+        - |-
           if [[ -f /host/etc/systemd/system/rsyslog-configurator.service ]]; then
             chroot /host /bin/bash -c 'systemctl disable rsyslog-configurator; systemctl stop rsyslog-configurator; rm -f /etc/systemd/system/rsyslog-configurator.service'
           fi
@@ -97,47 +90,51 @@ spec:
           if [[ -d /host/var/lib/rsyslog-relp-configurator ]]; then
             rm -rf /host/var/lib/rsyslog-relp-configurator
           fi
+        image: europe-docker.pkg.dev/gardener-project/releases/3rd/alpine:3.18.4
+        imagePullPolicy: IfNotPresent
+        name: rsyslog-relp-configuration-cleaner
         resources:
-          requests:
-            memory: 8Mi
-            cpu: 2m
           limits:
             memory: 32Mi
+          requests:
+            cpu: 2m
+            memory: 8Mi
         volumeMounts:
-        - name: host-root-volume
-          mountPath: /host
-          readOnly: false` + stringBasedOnCondition(!pspDisabled, `
-      serviceAccountName: rsyslog-relp-configuration-cleaner`, ``) + `
-      hostPID: true
+        - mountPath: /host
+          mountPropagation: HostToContainer
+          name: host-root-volume
+      priorityClassName: gardener-shoot-system-700
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: ` + serviceAccountName + `
       volumes:
-      - name: host-root-volume
-        hostPath:
-          path: /`
+      - hostPath:
+          path: /
+        name: host-root-volume
+  updateStrategy: {}
+status:
+  currentNumberScheduled: 0
+  desiredNumberScheduled: 0
+  numberMisscheduled: 0
+  numberReady: 0
+`
 		}
 
-		rsyslogRelpPSPYaml = func(pspDisabled bool) string {
-			return stringBasedOnCondition(
-				pspDisabled,
-				`# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
-#
-# SPDX-License-Identifier: Apache-2.0`,
-				`# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
-#
-# SPDX-License-Identifier: Apache-2.0
----
-apiVersion: policy/v1beta1
+		rsyslogRelpPSPYaml = `apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
   annotations:
-    seccomp.security.alpha.kubernetes.io/defaultProfileName: 'runtime/default'
-    seccomp.security.alpha.kubernetes.io/allowedProfileNames: 'runtime/default'
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: runtime/default
+    seccomp.security.alpha.kubernetes.io/defaultProfileName: runtime/default
+  creationTimestamp: null
   name: gardener.kube-system.rsyslog-relp-configuration-cleaner
 spec:
-  hostPID: true
-  volumes:
-  - hostPath
   allowedHostPaths:
   - pathPrefix: /
+  fsGroup:
+    rule: RunAsAny
+  hostPID: true
   readOnlyRootFilesystem: true
   runAsUser:
     rule: RunAsAny
@@ -145,23 +142,14 @@ spec:
     rule: RunAsAny
   supplementalGroups:
     rule: RunAsAny
-  fsGroup:
-    rule: RunAsAny`)
-		}
+  volumes:
+  - hostPath
+`
 
-		rsyslogRelpPSPClusterRoleYaml = func(pspDisabled bool) string {
-			return stringBasedOnCondition(
-				pspDisabled,
-				`# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
-#
-# SPDX-License-Identifier: Apache-2.0`,
-				`# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
-#
-# SPDX-License-Identifier: Apache-2.0
----
-apiVersion: rbac.authorization.k8s.io/v1
+		rsyslogRelpPSPClusterRoleYaml = `apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  creationTimestamp: null
   name: gardener.cloud:psp:kube-system:rsyslog-relp-configuration-cleaner
 rules:
 - apiGroups:
@@ -172,43 +160,24 @@ rules:
   resources:
   - podsecuritypolicies
   verbs:
-  - use`)
-		}
+  - use
+`
 
-		rsyslogRelpPSPServiceAccountYaml = func(pspDisabled bool) string {
-			return stringBasedOnCondition(
-				pspDisabled,
-				`# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
-#
-# SPDX-License-Identifier: Apache-2.0`,
-				`# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
-#
-# SPDX-License-Identifier: Apache-2.0
----
-apiVersion: v1
+		rsyslogRelpPSPServiceAccountYaml = `apiVersion: v1
+automountServiceAccountToken: false
 kind: ServiceAccount
 metadata:
+  creationTimestamp: null
   name: rsyslog-relp-configuration-cleaner
   namespace: kube-system
-  labels:
-    app.kubernetes.io/name: rsyslog-relp-configuration-cleaner
-    app.kubernetes.io/instance: rsyslog-relp-configuration-cleaner
-automountServiceAccountToken: false`)
-		}
+`
 
-		rsyslogRelpPSPRoleBindingYaml = func(pspDisabled bool) string {
-			return stringBasedOnCondition(
-				pspDisabled,
-				`# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
-#
-# SPDX-License-Identifier: Apache-2.0`,
-				`# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
-#
-# SPDX-License-Identifier: Apache-2.0
----
-apiVersion: rbac.authorization.k8s.io/v1
+		rsyslogRelpPSPRoleBindingYaml = `apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
+  annotations:
+    resources.gardener.cloud/delete-on-invalid-update: "true"
+  creationTimestamp: null
   name: gardener.cloud:psp:rsyslog-relp-configuration-cleaner
   namespace: kube-system
 roleRef:
@@ -218,8 +187,8 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: rsyslog-relp-configuration-cleaner
-  namespace: kube-system`)
-		}
+  namespace: kube-system
+`
 
 		cluster  *extensionsv1alpha1.Cluster
 		shoot    *gardencorev1beta1.Shoot
@@ -388,11 +357,18 @@ subjects:
 
 				g.Expect(testClient.Get(ctx, client.ObjectKeyFromObject(configCleanerResourceSecret), configCleanerResourceSecret)).To(Succeed())
 				g.Expect(configCleanerResourceSecret.Type).To(Equal(corev1.SecretTypeOpaque))
-				g.Expect(string(configCleanerResourceSecret.Data["rsyslog-relp-configuration-cleaner_templates_daemonset.yaml"])).To(Equal(rsyslogConfigurationCleanerDaemonsetYaml(pspDisabled)))
-				g.Expect(string(configCleanerResourceSecret.Data["rsyslog-relp-configuration-cleaner_templates_clusterrole-psp.yaml"])).To(Equal(rsyslogRelpPSPClusterRoleYaml(pspDisabled)))
-				g.Expect(string(configCleanerResourceSecret.Data["rsyslog-relp-configuration-cleaner_templates_psp.yaml"])).To(Equal(rsyslogRelpPSPYaml(pspDisabled)))
-				g.Expect(string(configCleanerResourceSecret.Data["rsyslog-relp-configuration-cleaner_templates_rolebinding-psp.yaml"])).To(Equal(rsyslogRelpPSPRoleBindingYaml(pspDisabled)))
-				g.Expect(string(configCleanerResourceSecret.Data["rsyslog-relp-configuration-cleaner_templates_serviceaccount.yaml"])).To(Equal(rsyslogRelpPSPServiceAccountYaml(pspDisabled)))
+				if pspDisabled {
+					g.Expect(string(configCleanerResourceSecret.Data["daemonset__kube-system__rsyslog-relp-configuration-cleaner.yaml"])).To(Equal(rsyslogConfigurationCleanerDaemonsetYaml("default")))
+				} else {
+					for key, value := range configCleanerResourceSecret.Data {
+						fmt.Printf("\n%s: %s\n", key, string(value))
+					}
+					g.Expect(string(configCleanerResourceSecret.Data["daemonset__kube-system__rsyslog-relp-configuration-cleaner.yaml"])).To(Equal(rsyslogConfigurationCleanerDaemonsetYaml("rsyslog-relp-configuration-cleaner")))
+					g.Expect(string(configCleanerResourceSecret.Data["clusterrole____gardener.cloud_psp_kube-system_rsyslog-relp-configuration-cleaner.yaml"])).To(Equal(rsyslogRelpPSPClusterRoleYaml))
+					g.Expect(string(configCleanerResourceSecret.Data["podsecuritypolicy____gardener.kube-system.rsyslog-relp-configuration-cleaner.yaml"])).To(Equal(rsyslogRelpPSPYaml))
+					g.Expect(string(configCleanerResourceSecret.Data["rolebinding__kube-system__gardener.cloud_psp_rsyslog-relp-configuration-cleaner.yaml"])).To(Equal(rsyslogRelpPSPRoleBindingYaml))
+					g.Expect(string(configCleanerResourceSecret.Data["serviceaccount__kube-system__rsyslog-relp-configuration-cleaner.yaml"])).To(Equal(rsyslogRelpPSPServiceAccountYaml))
+				}
 			}).Should(Succeed())
 
 			By("Ensure that managed resource used for configuration cleanup does not get deleted immediately")
@@ -439,10 +415,3 @@ subjects:
 		test()
 	})
 })
-
-func stringBasedOnCondition(condition bool, whenTrue, whenFalse string) string {
-	if condition {
-		return whenTrue
-	}
-	return whenFalse
-}
