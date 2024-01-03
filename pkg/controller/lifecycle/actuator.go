@@ -12,7 +12,6 @@ import (
 
 	extensionscontroller "github.com/gardener/gardener/extensions/pkg/controller"
 	"github.com/gardener/gardener/extensions/pkg/controller/extension"
-	gardencorev1beta1helper "github.com/gardener/gardener/pkg/apis/core/v1beta1/helper"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/utils/managedresources"
 	"github.com/go-logr/logr"
@@ -113,7 +112,6 @@ func (a *actuator) Delete(ctx context.Context, _ logr.Logger, ex *extensionsv1al
 			"alpine": imagevector.AlpineImage(),
 			"pause":  imagevector.PauseContainerImage(),
 		},
-		"pspDisabled": gardencorev1beta1helper.IsPSPDisabled(cluster.Shoot),
 	}
 
 	release, err := chartRenderer.RenderEmbeddedFS(charts.InternalChart, charts.RsyslogConfigurationCleanerChartPath, configurationCleanerReleaseName, metav1.NamespaceSystem, values)
