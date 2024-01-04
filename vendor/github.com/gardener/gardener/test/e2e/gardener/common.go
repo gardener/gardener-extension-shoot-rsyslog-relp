@@ -128,8 +128,9 @@ func DefaultWorkerlessShoot(name string) *gardencorev1beta1.Shoot {
 			Region:           "local",
 			CloudProfileName: "local",
 			Kubernetes: gardencorev1beta1.Kubernetes{
-				Version:                     "1.27.1",
+				Version:                     "1.28.2",
 				EnableStaticTokenKubeconfig: pointer.Bool(false),
+				KubeAPIServer:               &gardencorev1beta1.KubeAPIServerConfig{},
 			},
 			Provider: gardencorev1beta1.Provider{
 				Type: "local",
