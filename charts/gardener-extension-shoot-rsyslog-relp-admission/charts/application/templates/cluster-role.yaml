@@ -21,7 +21,19 @@ rules:
   - ""
   resources:
   - secrets
+  - namespaces
   verbs:
   - get
   - list
   - watch
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - validatingwebhookconfigurations
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+  - patch
+  - update
