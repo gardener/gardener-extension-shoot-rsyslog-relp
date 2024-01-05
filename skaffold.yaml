@@ -47,7 +47,6 @@ build:
             - pkg/imagevector
             - pkg/utils
             - pkg/webhook/operatingsystemconfig
-            - vendor
             - VERSION
         ldflags:
           - '{{.LD_FLAGS}}'
@@ -82,7 +81,6 @@ build:
             - pkg/apis/rsyslog/validation
             - pkg/constants
             - pkg/utils
-            - vendor
             - VERSION
         ldflags:
           - '{{.LD_FLAGS}}'
