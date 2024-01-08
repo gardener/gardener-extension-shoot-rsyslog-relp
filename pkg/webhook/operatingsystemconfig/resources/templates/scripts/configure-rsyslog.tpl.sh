@@ -24,6 +24,11 @@ function configure_auditd() {
 }
 
 function configure_rsyslog() {
+  # Enable the rsyslog service so that necessary symlinks can be created under /etc/systemd/system (e.g. /etc/systemd/system/syslog.service)
+  if ! systemctl is-enabled --quiet rsyslog.service ; then
+    systemctl enable rsyslog.service
+  fi
+
   if [[ ! -f {{ .pathRsyslogAuditConf }} ]] || ! diff -rq {{ .pathRsyslogAuditConfFromOSC }} {{ .pathRsyslogAuditConf }} ; then
     cp -fL {{ .pathRsyslogAuditConfFromOSC }} {{ .pathRsyslogAuditConf }}
     systemctl restart rsyslog
@@ -40,12 +45,7 @@ else
   echo "auditd.service is not installed, skipping configuration"
 fi
 
-# TODO(plkokanov): due to an issue on gardenlinux, syslog.service is missing: https://github.com/gardenlinux/gardenlinux/issues/1864.
-# This means that for gardenlinux we have to skip the check if syslog.service exists for now.
-# As rsyslog.service comes preinstalled on gardenlinux, this should not lead to configuration problems.
-if grep -q gardenlinux /etc/os-release || \
-  systemctl list-unit-files syslog.service > /dev/null && \
-  systemctl list-unit-files rsyslog.service > /dev/null; then
+if systemctl list-unit-files rsyslog.service > /dev/null; then
   echo "Configuring rsyslog.service ..."
   configure_rsyslog
 else
