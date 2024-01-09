@@ -16,7 +16,7 @@ If you encounter difficulties, please open an issue so that we can make this pro
 make extension-up
 ```
 
-This will build the `shoot-rsyslog-relp`, `shoot-rsyslog-relp-admission` and `rsyslog-relp-echo-server` images and deploy the needed resources and configurations in the Garden cluster. The `rsyslog-relp-echo-server` will act as development replacement of a real rsyslog relp server.
+This will build the `shoot-rsyslog-relp`, `shoot-rsyslog-relp-admission` and `shoot-rsyslog-relp-echo-server` images and deploy the needed resources and configurations in the Garden cluster. The `shoot-rsyslog-relp-echo-server` will act as development replacement of a real rsyslog relp server.
 
 ## Creating a `Shoot` cluster
 
@@ -69,3 +69,23 @@ make extension-down
 
 This will delete the `ControllerRegistration` and `ControllerDeployment` of the extension, the `shoot-rsyslog-relp-admission` deployment and the `rsyslog-relp-echo-server` deployment.
 
+# Maintaining the publicly available image for the rsyslog-relp echo server
+
+The [testmachinery tests](../../test/testmachinery/shoot/) use an `rsyslog-relp-echo-server` image from a publicly available repository. The one which is currently used is `eu.gcr.io/gardener-project/gardener/extensions/shoot-rsyslog-relp-echo-server:v0.1.0`.
+
+Sometimes it might be necessary to update the image and publish it, e.g. when updating the `alpine` base image version specified in the repository's [Dokerfile](../../Dockerfile#L34).
+
+To do that:
+1. Bump the version with which the image is built in the [Makefile](../../Makefile#L14).
+1. Build the `shoot-rsyslog-relp-echo-server` image:
+   ```bash
+   make echo-server-docker-image
+   ```
+
+1. Once the image is built, push it to `gcr` with:
+   ```bash
+   make push-echo-server-image
+   ```
+
+1. Finally, bump the version of the image used by the `testmachinery` tests [here](../../test/testmachinery/shoot/common_test.go).
+1. Create a PR with the changes.

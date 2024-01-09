@@ -15,8 +15,10 @@ import (
 	"github.com/gardener/gardener/test/framework"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	autoscalingv1 "k8s.io/api/autoscaling/v1"
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/test/common"
 )
 
 var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
@@ -36,7 +38,9 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 			Expect(createNetworkPolicyForEchoServer(ctx, f.ShootFramework.SeedClient, f.ShootFramework.ShootSeedNamespace())).To(Succeed())
 
 			By("Install rsyslog-relp unit on Shoot nodes")
-			Expect(execInShootNode(ctx, f.ShootFramework.SeedClient, f.Logger, f.ShootFramework.ShootSeedNamespace(), "apt-get update && apt-get install -y rsyslog-relp")).To(Succeed())
+			common.ForEachNode(ctx, f.ShootFramework.ShootClient, func(ctx context.Context, node *corev1.Node) {
+				installRsyslogRelp(ctx, f.Logger, f.ShootFramework.ShootClient, node.Name)
+			})
 
 			By("Enable the shoot-rsyslog-relp extension")
 			ctx, cancel = context.WithTimeout(parentCtx, 15*time.Minute)
@@ -47,29 +51,27 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 			ctx, cancel = context.WithTimeout(parentCtx, 5*time.Minute)
 			DeferCleanup(cancel)
 
-			verifier, err := newVerifier(ctx, f.Logger, f.ShootFramework.SeedClient, f.ShootFramework.ShootSeedNamespace(), "local", f.Shoot.Name, string(f.Shoot.UID))
+			echoServerPodIf, echoServerPodName, err := common.GetEchoServerPodInterfaceAndName(ctx, f.ShootFramework.SeedClient)
 			Expect(err).NotTo(HaveOccurred())
+			verifier := common.NewVerifier(f.Logger, f.ShootFramework.ShootClient, echoServerPodIf, echoServerPodName, f.ShootFramework.Project.Name, f.Shoot.Name, string(f.Shoot.UID))
 
-			verifier.verifyThatLogsAreSentToEchoServer(ctx, "test-program", "1", "this should get sent to echo server")
-			verifier.verifyThatLogsAreNotSentToEchoServer(ctx, "other-program", "1", "this should not get sent to echo server")
-			verifier.verifyThatLogsAreNotSentToEchoServer(ctx, "test-program", "3", "this should not get sent to echo server")
+			common.ForEachNode(ctx, f.ShootFramework.ShootClient, func(ctx context.Context, node *corev1.Node) {
+				verifier.VerifyExtensionForNode(ctx, node.Name)
+			})
 
 			By("Disable the shoot-rsyslog-relp extension")
-			ctx, cancel = context.WithTimeout(parentCtx, 15*time.Minute)
-			DeferCleanup(cancel)
 			Expect(f.UpdateShoot(ctx, f.Shoot, func(shoot *gardencorev1beta1.Shoot) error {
-				for i, extension := range shoot.Spec.Extensions {
-					if extension.Type == "shoot-rsyslog-relp" {
-						shoot.Spec.Extensions = append(shoot.Spec.Extensions[:i], shoot.Spec.Extensions[i+1:]...)
-					}
-				}
+				common.RemoveRsyslogRelpExtension(shoot)
 				return nil
 			})).To(Succeed())
 
 			By("Verify that shoot-rsyslog-relp extension is disabled")
 			ctx, cancel = context.WithTimeout(parentCtx, 5*time.Minute)
 			DeferCleanup(cancel)
-			verifier.verifyThatLogsAreNotSentToEchoServer(ctx, "test-program", "1", "this should not get sent to echo server")
+
+			common.ForEachNode(ctx, f.ShootFramework.ShootClient, func(ctx context.Context, node *corev1.Node) {
+				verifier.VerifyExtensionDisabledForNode(ctx, node.Name)
+			})
 
 			By("Delete Shoot")
 			ctx, cancel = context.WithTimeout(parentCtx, 15*time.Minute)
@@ -83,7 +85,7 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 		f.Shoot = e2e.DefaultShoot("e2e-rslog-relp")
 
 		enableExtensionFunc := func(shoot *gardencorev1beta1.Shoot) error {
-			shoot.Spec.Extensions = append(shoot.Spec.Extensions, shootRsyslogRelpExtension())
+			common.AddOrUpdateRsyslogRelpExtension(shoot)
 			return nil
 		}
 
@@ -96,15 +98,8 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 		f.Shoot = e2e.DefaultShoot("e2e-rslog-tls")
 
 		enableExtensionFunc := func(shoot *gardencorev1beta1.Shoot) error {
-			shoot.Spec.Extensions = append(shoot.Spec.Extensions, shootRsyslogRelpExtension(withPort(443), withTLSWithSecretRefName("rsyslog-relp-tls")))
-			shoot.Spec.Resources = append(shoot.Spec.Resources, gardencorev1beta1.NamedResourceReference{
-				Name: "rsyslog-relp-tls",
-				ResourceRef: autoscalingv1.CrossVersionObjectReference{
-					Kind:       "Secret",
-					APIVersion: "v1",
-					Name:       "rsyslog-relp-tls",
-				},
-			})
+			common.AddOrUpdateRsyslogRelpExtension(shoot, common.WithPort(443), common.WithTLSWithSecretRefName("rsyslog-relp-tls"))
+			common.AddOrUpdateRsyslogTLSSecretResource(shoot, "rsyslog-relp-tls")
 			return nil
 		}
 
@@ -114,7 +109,7 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 
 			By("Create rsyslog-relp tls Secret")
 			var err error
-			createdResources, err = testutils.EnsureTestResources(ctx, f.GardenClient.Client(), f.ProjectNamespace, "testdata/tls")
+			createdResources, err = testutils.EnsureTestResources(ctx, f.GardenClient.Client(), f.ProjectNamespace, "../common/testdata/tls")
 			Expect(err).NotTo(HaveOccurred())
 		})
 

@@ -19,6 +19,8 @@ deploy:
         chartPath: example/local/charts/rsyslog-relp-echo-server
         setValueTemplates:
           images.rsyslog: '{{.IMAGE_FULLY_QUALIFIED_europe_docker_pkg_dev_gardener_project_public_gardener_extensions_rsyslog_relp_echo_server}}'
+        setValues:
+          service.clusterIP: 10.2.64.54
 ---
 apiVersion: skaffold/v4beta3
 kind: Config

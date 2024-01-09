@@ -14,9 +14,11 @@ spec:
   selector:
     app.kubernetes.io/name: rsyslog-relp-echo-server
     app.kubernetes.io/instance: {{ .Release.Name }}
-  clusterIP: 10.2.64.54
+  {{- if and .Values.service .Values.service.clusterIP }}
+  clusterIP: {{ .Values.service.clusterIP }}
   clusterIPs:
-    - 10.2.64.54
+    - {{ .Values.service.clusterIP }}
+  {{- end }}
   ports:
     - name: plain
       protocol: TCP

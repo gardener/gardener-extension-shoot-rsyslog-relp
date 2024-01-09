@@ -5,11 +5,13 @@
 EXTENSION_PREFIX            := gardener-extension
 NAME                        := shoot-rsyslog-relp
 NAME_ADMISSION              := $(NAME)-admission
+NAME_ECHO_SERVER            := $(NAME)-echo-server
 IMAGE                       := europe-docker.pkg.dev/gardener-project/public/gardener/extensions/shoot-rsyslog-relp
 REPO_ROOT                   := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 HACK_DIR                    := $(REPO_ROOT)/hack
 VERSION                     := $(shell cat "$(REPO_ROOT)/VERSION")
 EFFECTIVE_VERSION           := $(VERSION)-$(shell git rev-parse HEAD)
+ECHO_SERVER_VERSION         := v0.1.0
 IMAGE_TAG                   := $(EFFECTIVE_VERSION)
 LD_FLAGS                    := "-w $(shell EFFECTIVE_VERSION=$(EFFECTIVE_VERSION) $(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/get-build-ld-flags.sh k8s.io/component-base $(REPO_ROOT)/VERSION $(EXTENSION_PREFIX)-$(NAME))"
 PARALLEL_E2E_TESTS          := 2
@@ -46,6 +48,19 @@ docker-login:
 docker-images:
 	@docker build --build-arg EFFECTIVE_VERSION=$(EFFECTIVE_VERSION) -t $(IMAGE):$(IMAGE_TAG) -f Dockerfile -m 6g --target $(NAME) .
 	@docker build --build-arg EFFECTIVE_VERSION=$(EFFECTIVE_VERSION) -t $(IMAGE)-admission:$(IMAGE_TAG) -f Dockerfile -m 6g --target $(NAME_ADMISSION) .
+
+###################################################################
+# Rules related to the shoot-rsysog-relp-echo-server docker image #
+###################################################################
+
+.PHONY: echo-server-docker-image
+echo-server-docker-image:
+	@docker build --platform linux/amd64,linux/arm64 --build-arg EFFECTIVE_VERSION=$(ECHO_SERVER_VERSION) -t $(IMAGE)-echo-server:$(ECHO_SERVER_VERSION) -t $(IMAGE)-echo-server:latest -f Dockerfile -m 6g --target $(NAME_ECHO_SERVER) .
+
+.PHONY: push-echo-server-image
+push-echo-server-image:
+	@docker push $(IMAGE)-echo-server:$(ECHO_SERVER_VERSION)
+	@docker push $(IMAGE)-echo-server:latest
 
 #####################################################################
 # Rules for verification, formatting, linting, testing and cleaning #
