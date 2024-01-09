@@ -7,12 +7,10 @@ package shoot_test
 import (
 	"context"
 	"fmt"
-	"net"
 
 	"github.com/gardener/gardener/pkg/client/kubernetes"
 	"github.com/gardener/gardener/test/framework"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -36,17 +34,9 @@ func createRsyslogRelpEchoServer(ctx context.Context, f *framework.ShootFramewor
 		return "", err
 	}
 
-	clusterIP, err := findFreeClusterIPAddress(ctx, f, namespace.Name)
-	if err != nil {
-		return "", err
-	}
-
 	values := map[string]interface{}{
 		"images": map[string]interface{}{
 			"rsyslog": fmt.Sprintf("%s:%s", rsyslogRelpEchoServerRepo, rsyslogRelpEchoServerTag),
-		},
-		"service": map[string]interface{}{
-			"clusterIP": clusterIP,
 		},
 	}
 
@@ -58,59 +48,22 @@ func createRsyslogRelpEchoServer(ctx context.Context, f *framework.ShootFramewor
 		return "", err
 	}
 
-	return clusterIP, nil
-}
-
-func deleteRsyslogRelpEchoServer(ctx context.Context, f *framework.ShootFramework) error {
-	return f.ShootClient.ChartApplier().DeleteFromEmbeddedFS(ctx, local.Charts, local.RsyslogRelpEchoServerChartPath, rsyslogRelpEchoServerNamespace, rsyslogRelpEchoServerName)
-}
-
-func findFreeClusterIPAddress(ctx context.Context, f *framework.ShootFramework, namespace string) (string, error) {
-	existingService := &corev1.Service{
+	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: namespace,
+			Namespace: rsyslogRelpEchoServerNamespace,
 			Name:      rsyslogRelpEchoServerName,
 		},
 	}
 
-	if err := f.ShootClient.Client().Get(ctx, client.ObjectKeyFromObject(existingService), existingService); err == nil {
-		return existingService.Spec.ClusterIP, nil
-	} else if !errors.IsNotFound(err) {
+	if err := f.ShootClient.Client().Get(ctx, client.ObjectKeyFromObject(service), service); err != nil {
 		return "", err
 	}
-
-	clusterIPRange := *f.Shoot.Spec.Networking.Services
-
-	serviceList := &corev1.ServiceList{}
-	if err := f.ShootClient.Client().List(ctx, serviceList); err != nil {
-		return "", err
+	if len(service.Spec.ClusterIPs) == 0 {
+		return "", fmt.Errorf("service %s does not have a ClusterIP assigned", client.ObjectKeyFromObject(service).String())
 	}
+	return service.Spec.ClusterIPs[0], nil
+}
 
-	clusterIPsInUse := make(map[string]struct{}, len(serviceList.Items))
-	for _, service := range serviceList.Items {
-		clusterIPsInUse[service.Spec.ClusterIP] = struct{}{}
-	}
-
-	ip, ipnet, err := net.ParseCIDR(clusterIPRange)
-	if err != nil {
-		return "", err
-	}
-
-	inc := func(ip net.IP) {
-		for j := len(ip) - 1; j >= 0; j-- {
-			ip[j]++
-			if ip[j] > 0 {
-				break
-			}
-		}
-	}
-
-	// Increment the IP once at the start so that we skip the network address.
-	for inc(ip); ipnet.Contains(ip); inc(ip) {
-		if _, found := clusterIPsInUse[ip.String()]; !found {
-			return ip.String(), nil
-		}
-	}
-
-	return "", nil
+func deleteRsyslogRelpEchoServer(ctx context.Context, f *framework.ShootFramework) error {
+	return f.ShootClient.ChartApplier().DeleteFromEmbeddedFS(ctx, local.Charts, local.RsyslogRelpEchoServerChartPath, rsyslogRelpEchoServerNamespace, rsyslogRelpEchoServerName)
 }

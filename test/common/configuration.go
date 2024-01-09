@@ -101,6 +101,13 @@ func RemoveRsyslogTLSSecretResource(shoot *gardencorev1beta1.Shoot, secretRefNam
 	})
 }
 
+// HasRsyslogTLSSecretResource returns whether the shoot has an named resource reference with the given name.
+func HasRsyslogTLSSecretResource(shoot *gardencorev1beta1.Shoot, secretRefName string) bool {
+	return slices.ContainsFunc(shoot.Spec.Resources, func(resource gardencorev1beta1.NamedResourceReference) bool {
+		return resource.Name == secretRefName
+	})
+}
+
 // WithPort returns a function which sets the port of the rsyslog relp configuration to the given port.
 func WithPort(port int) func(rsyslogRelpConfig *rsyslogv1alpha1.RsyslogRelpConfig) {
 	return func(rsyslogRelpConfig *rsyslogv1alpha1.RsyslogRelpConfig) {

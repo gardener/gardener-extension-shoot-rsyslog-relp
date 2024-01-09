@@ -95,7 +95,7 @@ func (v *Verifier) setNodeName(nodeName string) {
 }
 
 func (v *Verifier) verifyThatRsyslogIsActiveAndConfigured(ctx context.Context, pollInterval, timeout time.Duration) {
-	EventuallyWithOffset(2, func(g Gomega) {
+	EventuallyWithOffset(2, ctx, func(g Gomega) {
 		response, _ := ExecCommand(ctx, v.log, v.rootPodExecutor, "systemctl is-active rsyslog.service &>/dev/null && echo 'active' || echo 'not active'")
 		g.Expect(string(response)).To(Equal("active\n"), fmt.Sprintf("Expected the rsyslog.service unit to be active on node %s", v.nodeName))
 
@@ -104,20 +104,20 @@ func (v *Verifier) verifyThatRsyslogIsActiveAndConfigured(ctx context.Context, p
 	}).WithTimeout(timeout).WithPolling(pollInterval).Should(Succeed())
 }
 
-func (v *Verifier) verifyThatLogsAreSentToEchoServer(ctx context.Context, programName, severity, logMessage string, args ...interface{}) {
-	EventuallyWithOffset(2, func(g Gomega) {
+func (v *Verifier) verifyThatLogsAreSentToEchoServer(ctx context.Context, programName, severity, logMessage string) {
+	EventuallyWithOffset(2, ctx, func(g Gomega) {
 		logLines, err := v.generateAndGetLogs(ctx, programName, severity, logMessage)
 		g.Expect(err).NotTo(HaveOccurred())
 		g.Expect(logLines).To(ContainElement(MatchRegexp(v.constructRegex(programName, logMessage))))
-	}, args...).Should(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s and logs to be present in rsyslog-relp-echo-server", v.nodeName))
+	}).Should(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s and logs to be present in rsyslog-relp-echo-server", v.nodeName))
 }
 
-func (v *Verifier) verifyThatLogsAreNotSentToEchoServer(ctx context.Context, programName, severity, logMessage string, args ...interface{}) {
-	ConsistentlyWithOffset(2, func(g Gomega) {
+func (v *Verifier) verifyThatLogsAreNotSentToEchoServer(ctx context.Context, programName, severity, logMessage string) {
+	ConsistentlyWithOffset(2, ctx, func(g Gomega) {
 		logLines, err := v.generateAndGetLogs(ctx, programName, severity, logMessage)
 		g.Expect(err).NotTo(HaveOccurred())
 		g.Expect(logLines).NotTo(ContainElement(MatchRegexp(v.constructRegex(programName, logMessage))))
-	}, args...).Should(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s and logs to NOT be present in rsyslog-relp-echo-server", v.nodeName))
+	}).Should(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s and logs to NOT be present in rsyslog-relp-echo-server", v.nodeName))
 }
 
 func (v *Verifier) generateAndGetLogs(ctx context.Context, programName, severity, logMessage string) ([]string, error) {

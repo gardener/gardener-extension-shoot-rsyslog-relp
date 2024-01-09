@@ -75,17 +75,17 @@ The [testmachinery tests](../../test/testmachinery/shoot/) use an `rsyslog-relp-
 
 Sometimes it might be necessary to update the image and publish it, e.g. when updating the `alpine` base image version specified in the repository's [Dokerfile](../../Dockerfile#L34).
 
-To do that, first bump the version with which the image is built in the [Makefile](../../Makefile#L14).
-Then run:
+To do that:
+1. Bump the version with which the image is built in the [Makefile](../../Makefile#L14).
+1. Build the `shoot-rsyslog-relp-echo-server` image:
+   ```bash
+   make echo-server-docker-image
+   ```
 
-```bash
-make echo-server-docker-image
-```
+1. Once the image is built, push it to `gcr` with:
+   ```bash
+   make push-echo-server-image
+   ```
 
-Once the image is built, push it to `gcr` with:
-
-```bash
-make push-echo-server-image
-```
-
-Finally, bump the version of the image used by the `testmachinery` tests [here](../../test/testmachinery/shoot/common_test.go).
+1. Finally, bump the version of the image used by the `testmachinery` tests [here](../../test/testmachinery/shoot/common_test.go).
+1. Create a PR with the changes.

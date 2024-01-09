@@ -15,7 +15,7 @@ import (
 	"github.com/gardener/gardener/test/framework"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/test/common"
@@ -38,7 +38,7 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 			Expect(createNetworkPolicyForEchoServer(ctx, f.ShootFramework.SeedClient, f.ShootFramework.ShootSeedNamespace())).To(Succeed())
 
 			By("Install rsyslog-relp unit on Shoot nodes")
-			common.ForEachNode(ctx, f.ShootFramework.ShootClient, func(ctx context.Context, node *v1.Node) {
+			common.ForEachNode(ctx, f.ShootFramework.ShootClient, func(ctx context.Context, node *corev1.Node) {
 				installRsyslogRelp(ctx, f.Logger, f.ShootFramework.ShootClient, node.Name)
 			})
 
@@ -55,7 +55,7 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 			Expect(err).NotTo(HaveOccurred())
 			verifier := common.NewVerifier(f.Logger, f.ShootFramework.ShootClient, echoServerPodIf, echoServerPodName, f.ShootFramework.Project.Name, f.Shoot.Name, string(f.Shoot.UID))
 
-			common.ForEachNode(ctx, f.ShootFramework.ShootClient, func(ctx context.Context, node *v1.Node) {
+			common.ForEachNode(ctx, f.ShootFramework.ShootClient, func(ctx context.Context, node *corev1.Node) {
 				verifier.VerifyExtensionForNode(ctx, node.Name)
 			})
 
@@ -69,7 +69,7 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 			ctx, cancel = context.WithTimeout(parentCtx, 5*time.Minute)
 			DeferCleanup(cancel)
 
-			common.ForEachNode(ctx, f.ShootFramework.ShootClient, func(ctx context.Context, node *v1.Node) {
+			common.ForEachNode(ctx, f.ShootFramework.ShootClient, func(ctx context.Context, node *corev1.Node) {
 				verifier.VerifyExtensionDisabledForNode(ctx, node.Name)
 			})
 

@@ -55,7 +55,7 @@ docker-images:
 
 .PHONY: echo-server-docker-image
 echo-server-docker-image:
-	@docker build --build-arg EFFECTIVE_VERSION=$(ECHO_SERVER_VERSION) -t $(IMAGE)-echo-server:$(ECHO_SERVER_VERSION) -t $(IMAGE)-echo-server:latest -f Dockerfile -m 6g --target $(NAME_ECHO_SERVER) .
+	@docker build --platform linux/amd64,linux/arm64 --build-arg EFFECTIVE_VERSION=$(ECHO_SERVER_VERSION) -t $(IMAGE)-echo-server:$(ECHO_SERVER_VERSION) -t $(IMAGE)-echo-server:latest -f Dockerfile -m 6g --target $(NAME_ECHO_SERVER) .
 
 .PHONY: push-echo-server-image
 push-echo-server-image:

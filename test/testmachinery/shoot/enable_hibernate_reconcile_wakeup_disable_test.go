@@ -24,7 +24,7 @@ const (
 	hibernationTestCleanupTimeout = 25 * time.Minute
 )
 
-var _ = Describe("Shoot rsyslog-relp  testing", func() {
+var _ = Describe("Shoot rsyslog-relp testing", func() {
 	f := framework.NewShootFramework(nil)
 
 	f.Serial().Beta().CIt("should enable and disable the shoot-rsyslog-relp extension", func(parentCtx context.Context) {

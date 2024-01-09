@@ -7,7 +7,4 @@ images:
   rsyslog: image-repository:image-tag
   pullPolicy: IfNotPresent
 
-service:
-  clusterIP: 10.2.64.54
-
 replicaCount: 1

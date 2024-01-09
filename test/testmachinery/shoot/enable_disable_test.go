@@ -25,7 +25,7 @@ const (
 	defaultTestCleanupTimeout = 10 * time.Minute
 )
 
-var _ = Describe("Shoot rsyslog-relp  testing", func() {
+var _ = Describe("Shoot rsyslog-relp testing", func() {
 	var (
 		f            = framework.NewShootFramework(nil)
 		echoServerIP string
@@ -72,7 +72,7 @@ var _ = Describe("Shoot rsyslog-relp  testing", func() {
 		Expect(deleteRsyslogRelpEchoServer(ctx, f))
 	}, time.Minute)
 
-	FContext("shoot-rsyslog-relp extension with tls disabled", Label("tls-disabled"), func() {
+	Context("shoot-rsyslog-relp extension with tls disabled", Label("tls-disabled"), func() {
 		f.Serial().Beta().CIt("should enable and disable the shoot-rsyslog-relp extension", func(parentCtx context.Context) {
 			test(parentCtx, func(shoot *gardencorev1beta1.Shoot) error {
 				common.AddOrUpdateRsyslogRelpExtension(shoot, common.WithTarget(echoServerIP))
@@ -91,6 +91,8 @@ var _ = Describe("Shoot rsyslog-relp  testing", func() {
 	})
 
 	Context("shoot-rsyslog-relp extension with tls enabled", Label("tls-enabled"), func() {
+		const secretReferenceName = "rsyslog-relp-tls"
+
 		var createdResources []client.Object
 
 		f.Serial().Beta().CIt("should enable and disable the shoot-rsyslog-relp extension", func(parentCtx context.Context) {
@@ -103,22 +105,22 @@ var _ = Describe("Shoot rsyslog-relp  testing", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			test(parentCtx, func(shoot *gardencorev1beta1.Shoot) error {
-				common.AddOrUpdateRsyslogRelpExtension(shoot, common.WithPort(443), common.WithTLSWithSecretRefName("rsyslog-relp-tls"), common.WithTarget(echoServerIP))
-				common.AddOrUpdateRsyslogTLSSecretResource(shoot, "rsyslog-relp-tls")
+				common.AddOrUpdateRsyslogRelpExtension(shoot, common.WithPort(443), common.WithTLSWithSecretRefName(secretReferenceName), common.WithTarget(echoServerIP))
+				common.AddOrUpdateRsyslogTLSSecretResource(shoot, secretReferenceName)
 				return nil
 			})
 		}, defaultTestTimeout, framework.WithCAfterTest(func(ctx context.Context) {
-			if common.HasRsyslogRelpExtension(f.Shoot) {
-				By("Disable the shoot-rsyslog-relp extension and remove rsyslog-relp-tls tls resource")
+			if common.HasRsyslogRelpExtension(f.Shoot) || common.HasRsyslogTLSSecretResource(f.Shoot, secretReferenceName) {
+				By("Disable the shoot-rsyslog-relp extension and remove rsyslog-relp-tls named resource reference")
 				Expect(f.UpdateShoot(ctx, func(shoot *gardencorev1beta1.Shoot) error {
 					common.RemoveRsyslogRelpExtension(shoot)
-					common.RemoveRsyslogTLSSecretResource(shoot, "rsyslog-relp-tls")
+					common.RemoveRsyslogTLSSecretResource(shoot, secretReferenceName)
 					return nil
 				})).To(Succeed())
 			}
 
+			By("Delete resources created for test")
 			for _, resource := range createdResources {
-				By("Delete rsyslog-relp-tls Secret")
 				Expect(f.GardenClient.Client().Delete(ctx, resource)).To(Or(Succeed(), BeNotFoundError()))
 			}
 		}, defaultTestCleanupTimeout))
