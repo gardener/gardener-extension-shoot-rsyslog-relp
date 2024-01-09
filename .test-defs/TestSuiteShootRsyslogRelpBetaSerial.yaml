@@ -6,7 +6,7 @@ spec:
   owner: gardener-oq@listserv.sap.com
   description: shoot-rsyslog-relp extension test suite that includes all serial beta tests
 
-  activeDeadlineSeconds: 7200
+  activeDeadlineSeconds: 10200
   labels: ["shoot", "beta"]
   behavior:
   - serial

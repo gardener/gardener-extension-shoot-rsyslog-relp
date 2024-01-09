@@ -29,9 +29,8 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 
 	f.Serial().Beta().CIt("should enable and disable the shoot-rsyslog-relp extension", func(parentCtx context.Context) {
 		By("Deploy the rsyslog-relp-echo-server in Shoot cluster")
-		ctx, cancel := context.WithTimeout(parentCtx, 2*time.Minute)
+		ctx, cancel := context.WithTimeout(parentCtx, time.Minute)
 		defer cancel()
-
 		echoServerIP, err := createRsyslogRelpEchoServer(ctx, f)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -44,6 +43,8 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 		})).To(Succeed())
 
 		By("Verify shoot-rsyslog-relp works")
+		ctx, cancel = context.WithTimeout(parentCtx, 2*time.Minute)
+		defer cancel()
 		echoServerPodIf, echoServerPodName, err := common.GetEchoServerPodInterfaceAndName(ctx, f.ShootClient)
 		Expect(err).NotTo(HaveOccurred())
 		verifier := common.NewVerifier(f.Logger, f.ShootClient, echoServerPodIf, echoServerPodName, f.Project.Name, f.Shoot.Name, string(f.Shoot.UID))
@@ -72,6 +73,8 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 		Expect(f.WakeUpShoot(ctx)).To(Succeed())
 
 		By("Verify shoot-rsyslog-relp works after Shoot is woken up")
+		ctx, cancel = context.WithTimeout(parentCtx, 2*time.Minute)
+		defer cancel()
 		echoServerPodIf, echoServerPodName, err = common.GetEchoServerPodInterfaceAndName(ctx, f.ShootClient)
 		Expect(err).NotTo(HaveOccurred())
 		verifier.SetEchoServerPodIfAndName(echoServerPodIf, echoServerPodName)

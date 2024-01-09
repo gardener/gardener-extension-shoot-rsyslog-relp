@@ -38,6 +38,8 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 		Expect(f.UpdateShoot(ctx, shootMutateFn)).To(Succeed())
 
 		By("Verify shoot-rsyslog-relp works")
+		ctx, cancel = context.WithTimeout(parentCtx, 2*time.Minute)
+		defer cancel()
 		echoServerPodIf, echoServerPodName, err := common.GetEchoServerPodInterfaceAndName(ctx, f.ShootClient)
 		Expect(err).NotTo(HaveOccurred())
 		verifier := common.NewVerifier(f.Logger, f.ShootClient, echoServerPodIf, echoServerPodName, f.Project.Name, f.Shoot.Name, string(f.Shoot.UID))
@@ -47,13 +49,15 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 		})
 
 		By("Disable the shoot-rsyslog-relp extension")
+		ctx, cancel = context.WithTimeout(parentCtx, 10*time.Minute)
+		defer cancel()
 		Expect(f.UpdateShoot(ctx, func(shoot *gardencorev1beta1.Shoot) error {
 			common.RemoveRsyslogRelpExtension(shoot)
 			return nil
 		})).To(Succeed())
 
 		By("Verify that shoot-rsyslog-relp extension is disabled")
-		ctx, cancel = context.WithTimeout(parentCtx, 5*time.Minute)
+		ctx, cancel = context.WithTimeout(parentCtx, 2*time.Minute)
 		DeferCleanup(cancel)
 		common.ForEachNode(ctx, f.ShootClient, func(ctx context.Context, node *corev1.Node) {
 			verifier.VerifyExtensionDisabledForNode(ctx, node.Name)
