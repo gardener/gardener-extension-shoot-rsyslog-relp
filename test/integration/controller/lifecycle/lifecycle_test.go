@@ -338,7 +338,7 @@ subjects:
 
 			configCleanerManagedResource := &resourcesv1alpha1.ManagedResource{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "extension-shoot-rsyslog-relp-configuration-cleaner-shoot",
+					Name:      "extension-shoot-rsyslog-relp-configuration-cleaner",
 					Namespace: shootSeedNamespace.Name,
 				},
 			}
@@ -360,9 +360,6 @@ subjects:
 				if pspDisabled {
 					g.Expect(string(configCleanerResourceSecret.Data["daemonset__kube-system__rsyslog-relp-configuration-cleaner.yaml"])).To(Equal(rsyslogConfigurationCleanerDaemonsetYaml("default")))
 				} else {
-					for key, value := range configCleanerResourceSecret.Data {
-						fmt.Printf("\n%s: %s\n", key, string(value))
-					}
 					g.Expect(string(configCleanerResourceSecret.Data["daemonset__kube-system__rsyslog-relp-configuration-cleaner.yaml"])).To(Equal(rsyslogConfigurationCleanerDaemonsetYaml("rsyslog-relp-configuration-cleaner")))
 					g.Expect(string(configCleanerResourceSecret.Data["clusterrole____gardener.cloud_psp_kube-system_rsyslog-relp-configuration-cleaner.yaml"])).To(Equal(rsyslogRelpPSPClusterRoleYaml))
 					g.Expect(string(configCleanerResourceSecret.Data["podsecuritypolicy____gardener.kube-system.rsyslog-relp-configuration-cleaner.yaml"])).To(Equal(rsyslogRelpPSPYaml))
