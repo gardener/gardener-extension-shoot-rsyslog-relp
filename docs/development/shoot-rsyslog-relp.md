@@ -28,11 +28,11 @@ This section outlines how the extension enablement/reconciliation works, e.g the
 This section outlines how the extension disablement works, i.e the extension has be removed from the Shoot spec.
 
 1. As part of the Shoot reconciliation flow, gardenlet destroys the [Extension](https://github.com/gardener/gardener/blob/v1.82.0/docs/extensions/extension.md) resource because it is no longer needed.
-   1. As part of the deletion flow, the shoot-rsyslog-relp extension deploys the [`rsyslog-relp-configuration-cleaner` chart](../../charts/internal/rsyslog-relp-configuration-cleaner) to the Shoot cluster to clean up the existing rsyslog configuration and revert the audit rules.
+   1. As part of the deletion flow, the shoot-rsyslog-relp extension deploys the [`rsyslog-relp-configuration-cleaner` DaemonSet](../../pkg/component/rsyslogrelpconfigcleaner/rsyslog_relp_config_cleaner.go) to the Shoot cluster to clean up the existing rsyslog configuration and revert the audit rules.
 
 ## Shoot deletion
 
 This section outlines how the deletion works for a Shoot with the shoot-rsyslog-relp extension enabled.
 
 1. As part of the Shoot deletion flow, gardenlet destroys the [Extension](https://github.com/gardener/gardener/blob/v1.82.0/docs/extensions/extension.md) resource.
-   1. In the Shoot deletion flow the Extension resource is deleted after the Worker resource. Hence, there is no need to deploy the  [`rsyslog-relp-configuration-cleaner` chart](../../charts/internal/rsyslog-relp-configuration-cleaner) to the Shoot cluster to clean up the existing rsyslog configuration and revert the audit rules.
+   1. In the Shoot deletion flow the Extension resource is deleted after the Worker resource. Hence, there is no need to deploy the  [`rsyslog-relp-configuration-cleaner` DaemonSet](../../pkg/component/rsyslogrelpconfigcleaner/rsyslog_relp_config_cleaner.go) to the Shoot cluster to clean up the existing rsyslog configuration and revert the audit rules.
