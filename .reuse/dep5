@@ -20,7 +20,6 @@ Files:
   charts/gardener-extension-shoot-rsyslog-relp-admission/templates/_helpers.tpl
   charts/gardener-extension-shoot-rsyslog-relp-admission/templates/_versions.tpl
   charts/internal/rsyslog-relp-configurator/templates/0helpers.tpl
-  charts/internal/rsyslog-relp-configuration-cleaner/templates/0helpers.tpl
   example/local/charts/rsyslog-relp-echo-server/.helmignore
   example/controller-registration.yaml
   go.mod
