@@ -31,7 +31,7 @@ COPY --from=builder /go/bin/gardener-extension-shoot-rsyslog-relp-admission /gar
 ENTRYPOINT ["/gardener-extension-shoot-rsyslog-relp-admission"]
 
 ############# rsyslog-relp-echo-server
-FROM alpine:3.18.4 AS shoot-rsyslog-relp-echo-server
+FROM europe-docker.pkg.dev/gardener-project/public/3rd/alpine:3.18.4 AS shoot-rsyslog-relp-echo-server
 RUN apk update && apk add rsyslog-relp
 ARG EFFECTIVE_VERSION
 RUN echo "$EFFECTIVE_VERSION" > /etc/VERSION
