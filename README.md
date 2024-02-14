@@ -1,6 +1,6 @@
 # [Gardener Extension to configure rsyslog with relp module](https://gardener.cloud)
 
-[![reuse compliant](https://reuse.software/badge/reuse-compliant.svg)](https://reuse.software/)
+[![REUSE status](https://api.reuse.software/badge/github.com/gardener/gardener-extension-shoot-rsyslog-relp)](https://api.reuse.software/info/github.com/gardener/gardener-extension-shoot-rsyslog-relp)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gardener/gardener-extension-shoot-rsyslog-relp)](https://goreportcard.com/report/github.com/gardener/gardener-extension-shoot-rsyslog-relp)
 
 Gardener extension controller which configures the rsyslog and auditd services installed on shoot nodes.
