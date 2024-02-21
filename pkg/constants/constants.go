@@ -15,11 +15,6 @@ const (
 	// ManagedResourceName is the name used to describe the managed shoot resources.
 	ManagedResourceName = "extension-" + ServiceName + "-shoot"
 
-	// PauseContainerImageName is the name of the pause container image.
-	PauseContainerImageName = "pause-container"
-	// AlpineImageName is the name of the alpine image.
-	AlpineImageName = "alpine"
-
 	// RsyslogCertifcateAuthorityKey is a key in a secret's data which holds the certificate authority used for the tls connection.
 	RsyslogCertifcateAuthorityKey = "ca"
 	// RsyslogClientCertificateKey is a key in a secret's data which holds the client certificate used for the tls connection.

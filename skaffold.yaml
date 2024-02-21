@@ -32,7 +32,6 @@ build:
       ko:
         dependencies:
           paths:
-            - charts
             - cmd/gardener-extension-shoot-rsyslog-relp/app
             - pkg/apis/config
             - pkg/apis/config/v1alpha1
@@ -44,7 +43,7 @@ build:
             - pkg/constants
             - pkg/controller/config
             - pkg/controller/lifecycle
-            - pkg/imagevector
+            - imagevector
             - pkg/utils
             - pkg/webhook/operatingsystemconfig
             - VERSION

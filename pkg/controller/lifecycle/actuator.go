@@ -20,10 +20,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/imagevector"
 	apisconfig "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/config"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/component/rsyslogrelpconfigcleaner"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/constants"
-	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/imagevector"
 )
 
 const (
@@ -97,7 +97,7 @@ func (a *actuator) Delete(ctx context.Context, _ logr.Logger, ex *extensionsv1al
 	}
 
 	// If the Shoot is in deletion, then there is no need to clean up the rsyslog configuration from Nodes.
-	// The Shoot deletion flows ensures that the Worker is deleted before the Extension deletion.
+	// The Shoot deletion flow ensures that the Worker is deleted before the Extension deletion.
 	// Hence, there are no Nodes, no need to clean up rsyslog configuration.
 	if cluster.Shoot.DeletionTimestamp != nil {
 		return nil
@@ -152,11 +152,11 @@ func cleanRsyslogRelpConfiguration(ctx context.Context, cluster *extensionscontr
 		return nil
 	}
 
-	alpineImage, err := imagevector.ImageVector().FindImage("alpine")
+	alpineImage, err := imagevector.ImageVector().FindImage(imagevector.ImageNameAlpine)
 	if err != nil {
 		return fmt.Errorf("failed to find the alpine image: %w", err)
 	}
-	pauseImage, err := imagevector.ImageVector().FindImage("pause-container")
+	pauseImage, err := imagevector.ImageVector().FindImage(imagevector.ImageNamePauseContainer)
 	if err != nil {
 		return fmt.Errorf("failed to find the pause image: %w", err)
 	}

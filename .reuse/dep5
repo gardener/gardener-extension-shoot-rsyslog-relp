@@ -25,6 +25,7 @@ Files:
   example/controller-registration.yaml
   hack/api-reference/*.json
   hack/cherry-pick-pull.sh
+  imagevector/images.go
   go.mod
   go.sum
   skaffold.yaml
