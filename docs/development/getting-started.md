@@ -36,16 +36,14 @@ Currently the shoot's nodes run Ubuntu which does not have the `rsyslog-relp` an
 Once the shoot is created, we have to manually install the `rsyslog-relp` and `auditd` packages:
 
 ```bash
-kubectl -n shoot--local--local exec -it <name of pod backing the shoot node> -- bash
+kubectl -n shoot--local--local exec -it $(kubectl -n shoot--local--local get po -l app=machine,machine-provider=local -o name) -- bash -c "
+   apt-get update && \
+   apt-get install -y rsyslog-relp auditd && \
+   systemctl enable rsyslog.service && \
+   systemctl start rsyslog.service"
 ```
 
-Then from inside the node:
-```bash
-apt-get update && apt-get install -y rsyslog-relp auditd
-systemctl start rsyslog
-```
-
-Once that is done we can verify that log messages are forwarded to the `rsyslog-relp-echo-server` by checking its logs.
+After that is done, we can verify that log messages are forwarded to the `rsyslog-relp-echo-server` by checking its logs.
 
 ```bash
 kubectl -n rsyslog-relp-echo-server logs deployment/rsyslog-relp-echo-server
