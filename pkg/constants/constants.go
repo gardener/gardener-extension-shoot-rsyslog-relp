@@ -11,7 +11,7 @@ const (
 	ServiceName = "shoot-rsyslog-relp"
 
 	// Origin is the origin used for the shoot-rsyslog-relp ManagedResources.
-	Origin = "shoot-rsyslog-cache"
+	Origin = "shoot-rsyslog-relp"
 	// ManagedResourceName is the name used to describe the managed shoot resources.
 	ManagedResourceName = "extension-" + ServiceName + "-shoot"
 
