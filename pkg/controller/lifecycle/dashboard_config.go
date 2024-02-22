@@ -2440,8 +2440,9 @@ const dashboardConfig = `{
   "schemaVersion": 27,
   "style": "dark",
   "tags": [
-    "image",
-    "cache"
+    "rsyslog",
+    "audit",
+    "shoot"
   ],
   "templating": {
     "list": [
