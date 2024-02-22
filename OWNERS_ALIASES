@@ -1,0 +1,10 @@
+# See the OWNERS docs at https://go.k8s.io/owners
+
+aliases:
+  rsyslog-relp-reviewers:
+  - ialidzhikov
+  - plkokanov
+  - Kostov6
+  rsyslog-relp-approvers:
+  - plkokanov
+  - Kostov6
