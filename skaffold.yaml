@@ -47,7 +47,6 @@ build:
             - pkg/imagevector
             - pkg/utils
             - pkg/webhook/operatingsystemconfig
-            - vendor
             - VERSION
         ldflags:
           - '{{.LD_FLAGS}}'
@@ -82,7 +81,6 @@ build:
             - pkg/apis/rsyslog/validation
             - pkg/constants
             - pkg/utils
-            - vendor
             - VERSION
         ldflags:
           - '{{.LD_FLAGS}}'
@@ -94,8 +92,6 @@ deploy:
         namespace: garden
         wait: true
         chartPath: charts/gardener-extension-shoot-rsyslog-relp-admission
-        valuesFiles:
-          - "example/local/admission/values.yaml"
         setValueTemplates:
           global.image.repository: '{{.IMAGE_REPO_europe_docker_pkg_dev_gardener_project_public_gardener_extensions_shoot_rsyslog_relp_admission}}'
           global.image.tag: '{{.IMAGE_TAG_europe_docker_pkg_dev_gardener_project_public_gardener_extensions_shoot_rsyslog_relp_admission}}@{{.IMAGE_DIGEST_europe_docker_pkg_dev_gardener_project_public_gardener_extensions_shoot_rsyslog_relp_admission}}'
