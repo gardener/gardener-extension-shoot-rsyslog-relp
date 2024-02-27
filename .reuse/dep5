@@ -25,6 +25,7 @@ Files:
   hack/api-reference/*.json
   hack/cherry-pick-pull.sh
   imagevector/images.go
+  test/integration/controller/lifecycle/resources/*.yaml
   go.mod
   go.sum
   skaffold.yaml
