@@ -19,7 +19,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/constants"
@@ -105,7 +105,7 @@ func (r *rsyslogRelpConfigCleaner) computeResourcesData() (map[string][]byte, er
 				Name:      serviceAccountName,
 				Namespace: metav1.NamespaceSystem,
 			},
-			AutomountServiceAccountToken: pointer.Bool(false),
+			AutomountServiceAccountToken: ptr.To(false),
 		}
 		podSecurityPolicy := &policyv1beta1.PodSecurityPolicy{
 			ObjectMeta: metav1.ObjectMeta{
@@ -198,7 +198,7 @@ func (r *rsyslogRelpConfigCleaner) computeResourcesData() (map[string][]byte, er
 					Labels: getLabels(),
 				},
 				Spec: corev1.PodSpec{
-					AutomountServiceAccountToken: pointer.Bool(false),
+					AutomountServiceAccountToken: ptr.To(false),
 					ServiceAccountName:           serviceAccountName,
 					PriorityClassName:            v1beta1constants.PriorityClassNameShootSystem700,
 					SecurityContext: &corev1.PodSecurityContext{

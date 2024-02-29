@@ -20,7 +20,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -64,7 +64,7 @@ var _ = Describe("Shoot", func() {
 		})
 
 		It("should not do anything because extension is disabled", func() {
-			shoot.Spec.Extensions[0].Disabled = pointer.Bool(true)
+			shoot.Spec.Extensions[0].Disabled = ptr.To(true)
 			Expect(shootValidator.Validate(ctx, shoot, nil)).To(Succeed())
 		})
 

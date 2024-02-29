@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/gomega/gstruct"
 	gomegatypes "github.com/onsi/gomega/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog/validation"
@@ -118,7 +118,7 @@ var _ = Describe("Validation", func() {
 				},
 
 				Entry("should allow config when all setting are correct",
-					rsyslog.RsyslogRelpConfig{Target: relpTarget, Port: relpTargetPort, TLS: &rsyslog.TLS{Enabled: true, SecretReferenceName: pointer.String("secretRef"), PermittedPeer: []string{"per"}, AuthMode: &authModeName}, LoggingRules: loggingRules, RebindInterval: pointer.Int(1000), Timeout: pointer.Int(90), ResumeRetryCount: pointer.Int(10), ReportSuspensionContinuation: pointer.Bool(true)},
+					rsyslog.RsyslogRelpConfig{Target: relpTarget, Port: relpTargetPort, TLS: &rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secretRef"), PermittedPeer: []string{"per"}, AuthMode: &authModeName}, LoggingRules: loggingRules, RebindInterval: ptr.To(1000), Timeout: ptr.To(90), ResumeRetryCount: ptr.To(10), ReportSuspensionContinuation: ptr.To(true)},
 					BeEmpty(),
 				),
 			)
@@ -141,7 +141,7 @@ var _ = Describe("Validation", func() {
 				),
 
 				Entry("should allow config when TLS is enabled and secretReferenceName is set",
-					rsyslog.TLS{Enabled: true, SecretReferenceName: pointer.String("secret-name")},
+					rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secret-name")},
 					BeEmpty(),
 				),
 
@@ -158,17 +158,17 @@ var _ = Describe("Validation", func() {
 				),
 
 				Entry("should allow config when TLS authMode is name",
-					rsyslog.TLS{Enabled: true, SecretReferenceName: pointer.String("secret-name"), AuthMode: &authModeName},
+					rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secret-name"), AuthMode: &authModeName},
 					BeEmpty(),
 				),
 
 				Entry("should allow config when TLS authMode is fingerprint",
-					rsyslog.TLS{Enabled: true, SecretReferenceName: pointer.String("secret-name"), AuthMode: &authModeFingerPrint},
+					rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secret-name"), AuthMode: &authModeFingerPrint},
 					BeEmpty(),
 				),
 
 				Entry("should forbid config when TLS authMode is invalid",
-					rsyslog.TLS{Enabled: true, SecretReferenceName: pointer.String("secret-name"), AuthMode: &authModeInvalid},
+					rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secret-name"), AuthMode: &authModeInvalid},
 					ConsistOf(
 						PointTo(MatchFields(IgnoreExtras, Fields{
 							"Type":     Equal(field.ErrorTypeNotSupported),
@@ -180,17 +180,17 @@ var _ = Describe("Validation", func() {
 				),
 
 				Entry("should allow config when tls lib is openssl",
-					rsyslog.TLS{Enabled: true, SecretReferenceName: pointer.String("secret-name"), TLSLib: &tlsLibOpenSSL},
+					rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secret-name"), TLSLib: &tlsLibOpenSSL},
 					BeEmpty(),
 				),
 
 				Entry("should allow config when tls lib is gnutls",
-					rsyslog.TLS{Enabled: true, SecretReferenceName: pointer.String("secret-name"), TLSLib: &tlsLibGnuTLS},
+					rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secret-name"), TLSLib: &tlsLibGnuTLS},
 					BeEmpty(),
 				),
 
 				Entry("should forbid config when tls lib is invalid",
-					rsyslog.TLS{Enabled: true, SecretReferenceName: pointer.String("secret-name"), TLSLib: &tlsLibInvalid},
+					rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secret-name"), TLSLib: &tlsLibInvalid},
 					ConsistOf(
 						PointTo(MatchFields(IgnoreExtras, Fields{
 							"Type":     Equal(field.ErrorTypeNotSupported),
@@ -202,12 +202,12 @@ var _ = Describe("Validation", func() {
 				),
 
 				Entry("should allow config when permittedPeer is specified",
-					rsyslog.TLS{Enabled: true, SecretReferenceName: pointer.String("secret-name"), PermittedPeer: []string{"peer1", "peer2"}},
+					rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secret-name"), PermittedPeer: []string{"peer1", "peer2"}},
 					BeEmpty(),
 				),
 
 				Entry("should forbid config if any permittedPeer is empty",
-					rsyslog.TLS{Enabled: true, SecretReferenceName: pointer.String("secret-name"), PermittedPeer: []string{"peer1", ""}},
+					rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secret-name"), PermittedPeer: []string{"peer1", ""}},
 					ConsistOf(
 						PointTo(MatchFields(IgnoreExtras, Fields{
 							"Type":     Equal(field.ErrorTypeRequired),

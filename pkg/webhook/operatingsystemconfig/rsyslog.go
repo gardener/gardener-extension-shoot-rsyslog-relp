@@ -22,7 +22,6 @@ import (
 	gardenerutils "github.com/gardener/gardener/pkg/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -128,7 +127,7 @@ func getRsyslogFiles(ctx context.Context, c client.Client, namespace string, rsy
 	rsyslogFiles = append(rsyslogFiles, []extensionsv1alpha1.File{
 		{
 			Path:        rsyslogConfigFromOSCPath,
-			Permissions: pointer.Int32(0744),
+			Permissions: ptr.To(int32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -138,7 +137,7 @@ func getRsyslogFiles(ctx context.Context, c client.Client, namespace string, rsy
 		},
 		{
 			Path:        configureRsyslogScriptPath,
-			Permissions: pointer.Int32(0744),
+			Permissions: ptr.To(int32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -148,7 +147,7 @@ func getRsyslogFiles(ctx context.Context, c client.Client, namespace string, rsy
 		},
 		{
 			Path:        processRsyslogPstatsScriptPath,
-			Permissions: pointer.Int32(0744),
+			Permissions: ptr.To(int32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -167,9 +166,9 @@ func getRsyslogValues(rsyslogRelpConfig *rsyslog.RsyslogRelpConfig, cluster *ext
 	var reportSuspensionContinuation *string
 	if rsyslogRelpConfig.ReportSuspensionContinuation != nil {
 		if *rsyslogRelpConfig.ReportSuspensionContinuation {
-			reportSuspensionContinuation = pointer.String("on")
+			reportSuspensionContinuation = ptr.To("on")
 		} else {
-			reportSuspensionContinuation = pointer.String("off")
+			reportSuspensionContinuation = ptr.To("off")
 		}
 	}
 
@@ -234,7 +233,7 @@ func getRsyslogTLSFiles(ctx context.Context, c client.Client, cluster *extension
 	return []extensionsv1alpha1.File{
 		{
 			Path:        rsyslogCaPath,
-			Permissions: pointer.Int32(0600),
+			Permissions: ptr.To(int32(0600)),
 			Content: extensionsv1alpha1.FileContent{
 				SecretRef: &extensionsv1alpha1.FileContentSecretRef{
 					Name:    refSecretName,
@@ -244,7 +243,7 @@ func getRsyslogTLSFiles(ctx context.Context, c client.Client, cluster *extension
 		},
 		{
 			Path:        rsyslogCertPath,
-			Permissions: pointer.Int32(0600),
+			Permissions: ptr.To(int32(0600)),
 			Content: extensionsv1alpha1.FileContent{
 				SecretRef: &extensionsv1alpha1.FileContentSecretRef{
 					Name:    refSecretName,
@@ -254,7 +253,7 @@ func getRsyslogTLSFiles(ctx context.Context, c client.Client, cluster *extension
 		},
 		{
 			Path:        rsyslogKeyPath,
-			Permissions: pointer.Int32(0600),
+			Permissions: ptr.To(int32(0600)),
 			Content: extensionsv1alpha1.FileContent{
 				SecretRef: &extensionsv1alpha1.FileContentSecretRef{
 					Name:    refSecretName,
@@ -269,8 +268,8 @@ func getRsyslogConfiguratorUnit() extensionsv1alpha1.Unit {
 	return extensionsv1alpha1.Unit{
 		Name:    "rsyslog-configurator.service",
 		Command: ptr.To(extensionsv1alpha1.CommandStart),
-		Enable:  pointer.Bool(true),
-		Content: pointer.String(`[Unit]
+		Enable:  ptr.To(true),
+		Content: ptr.To(`[Unit]
 Description=rsyslog configurator daemon
 Documentation=https://github.com/gardener/gardener-extension-shoot-rsyslog-relp
 [Service]
