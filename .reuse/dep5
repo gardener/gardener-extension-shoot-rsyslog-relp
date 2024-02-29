@@ -9,7 +9,6 @@ Comment:
 # --------------------------------------------------
 # source code
 Files:
-  .ci/hack
   .gitignore
   .golangci.yaml
   .test-defs

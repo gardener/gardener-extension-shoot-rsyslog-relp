@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -394,7 +395,7 @@ func getBasedOnCondition[T any](condition bool, whenTrue, whenFalse T) T {
 func getRsyslogConfiguratorUnit(useExpectedContent bool) extensionsv1alpha1.Unit {
 	return extensionsv1alpha1.Unit{
 		Name:    "rsyslog-configurator.service",
-		Command: extensionsv1alpha1.UnitCommandPtr(extensionsv1alpha1.CommandStart),
+		Command: ptr.To(extensionsv1alpha1.CommandStart),
 		Enable:  pointer.Bool(true),
 		Content: pointer.String(getBasedOnCondition(useExpectedContent, `[Unit]
 Description=rsyslog configurator daemon

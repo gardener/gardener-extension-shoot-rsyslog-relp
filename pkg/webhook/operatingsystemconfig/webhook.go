@@ -52,13 +52,13 @@ func New(mgr manager.Manager) (*extensionswebhook.Webhook, error) {
 	}
 
 	webhook := &extensionswebhook.Webhook{
-		Name:     "operating-system-config",
-		Provider: "",
-		Types:    types,
-		Target:   extensionswebhook.TargetSeed,
-		Path:     "/operating-system-config",
-		Webhook:  &admission.Webhook{Handler: handler},
-		Selector: namespaceSelector,
+		Name:              "operating-system-config",
+		Provider:          "",
+		Types:             types,
+		Target:            extensionswebhook.TargetSeed,
+		Path:              "/operating-system-config",
+		Webhook:           &admission.Webhook{Handler: handler},
+		NamespaceSelector: namespaceSelector,
 	}
 
 	return webhook, nil

@@ -14,7 +14,6 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig"
-	"github.com/gardener/gardener/extensions/pkg/controller"
 	extensionscontroller "github.com/gardener/gardener/extensions/pkg/controller"
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
@@ -24,6 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
@@ -268,7 +268,7 @@ func getRsyslogTLSFiles(ctx context.Context, c client.Client, cluster *extension
 func getRsyslogConfiguratorUnit() extensionsv1alpha1.Unit {
 	return extensionsv1alpha1.Unit{
 		Name:    "rsyslog-configurator.service",
-		Command: extensionsv1alpha1.UnitCommandPtr(extensionsv1alpha1.CommandStart),
+		Command: ptr.To(extensionsv1alpha1.CommandStart),
 		Enable:  pointer.Bool(true),
 		Content: pointer.String(`[Unit]
 Description=rsyslog configurator daemon
@@ -307,7 +307,7 @@ func validateReferencedSecret(ctx context.Context, c client.Client, ref *gardenc
 			Namespace: namespace,
 		},
 	}
-	if err := controller.GetObjectByReference(ctx, c, &ref.ResourceRef, namespace, refSecret); err != nil {
+	if err := extensionscontroller.GetObjectByReference(ctx, c, &ref.ResourceRef, namespace, refSecret); err != nil {
 		return fmt.Errorf("failed to read referenced secret %s%s for reference %s", v1beta1constants.ReferencedResourcesPrefix, ref.ResourceRef.Name, secretRefName)
 	}
 
