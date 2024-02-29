@@ -71,7 +71,7 @@ make extension-down
 
 This will delete the `ControllerRegistration` and `ControllerDeployment` of the extension, the `shoot-rsyslog-relp-admission` deployment, and the `rsyslog-relp-echo-server` deployment.
 
-## Maintaining the Publicly Available Image for the rsyslog-relp Echo Server
+# Maintaining the Publicly Available Image for the rsyslog-relp Echo Server
 
 The [testmachinery tests](../../test/testmachinery/shoot/) use an `rsyslog-relp-echo-server` image from a publicly available repository. The one which is currently used is `eu.gcr.io/gardener-project/gardener/extensions/shoot-rsyslog-relp-echo-server:v0.1.0`.
 
