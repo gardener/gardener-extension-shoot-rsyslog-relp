@@ -9,25 +9,23 @@ Comment:
 # --------------------------------------------------
 # source code
 Files:
-  .ci/hack
   .gitignore
   .golangci.yaml
-  .test-defs
   CODEOWNERS
-  OWNERS
-  OWNERS_ALIASES
   VERSION
   charts/gardener-extension-shoot-rsyslog-relp/.helmignore
   charts/gardener-extension-shoot-rsyslog-relp/templates/_helpers.tpl
+  charts/gardener-extension-shoot-rsyslog-relp/templates/_versions.tpl
   charts/gardener-extension-shoot-rsyslog-relp-admission/.helmignore
   charts/gardener-extension-shoot-rsyslog-relp-admission/templates/_helpers.tpl
+  charts/gardener-extension-shoot-rsyslog-relp-admission/templates/_versions.tpl
+  charts/internal/rsyslog-relp-configurator/templates/0helpers.tpl
   example/local/charts/rsyslog-relp-echo-server/.helmignore
   example/controller-registration.yaml
-  hack/api-reference/*.json
-  hack/cherry-pick-pull.sh
   go.mod
   go.sum
   skaffold.yaml
+  *.json
 Copyright: 2023 SAP SE or an SAP affiliate company and Gardener contributors
 License: Apache-2.0
 
@@ -38,3 +36,10 @@ Files:
   *.md
 Copyright: 2023 SAP SE or an SAP affiliate company and Gardener contributors
 License: CC-BY-4.0
+
+# --------------------------------------------------
+# source (vendored) dependencies
+#
+# Files: <relative path to vendored component>
+# Copyright: <vendored component's copyright>
+# License: <vendored component's license>
