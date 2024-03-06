@@ -222,6 +222,7 @@ tls:
 								Name:      "rsyslog-secret",
 								Namespace: "bar",
 							},
+							Immutable: pointer.Bool(true),
 							Data: map[string][]byte{
 								"ca":  []byte("data"),
 								"crt": []byte("data"),
