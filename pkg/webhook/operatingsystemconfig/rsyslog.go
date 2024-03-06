@@ -105,14 +105,14 @@ func init() {
 	}
 }
 
-func getRsyslogFiles(ctx context.Context, c client.Client, namespace string, rsyslogRelpConfig *rsyslog.RsyslogRelpConfig, cluster *extensionscontroller.Cluster) ([]extensionsv1alpha1.File, error) {
+func getRsyslogFiles(rsyslogRelpConfig *rsyslog.RsyslogRelpConfig, cluster *extensionscontroller.Cluster) ([]extensionsv1alpha1.File, error) {
 	var rsyslogFiles []extensionsv1alpha1.File
 
 	rsyslogValues := getRsyslogValues(rsyslogRelpConfig, cluster)
 
 	if rsyslogRelpConfig.TLS != nil && rsyslogRelpConfig.TLS.Enabled {
 		rsyslogValues["tls"] = getRsyslogTLSValues(rsyslogRelpConfig)
-		rsyslogTLSFiles, err := getRsyslogTLSFiles(ctx, c, cluster, *rsyslogRelpConfig.TLS.SecretReferenceName, namespace)
+		rsyslogTLSFiles, err := getRsyslogTLSFiles(cluster, *rsyslogRelpConfig.TLS.SecretReferenceName)
 		if err != nil {
 			return nil, err
 		}
@@ -215,7 +215,7 @@ func getRsyslogTLSValues(rsyslogRelpConfig *rsyslog.RsyslogRelpConfig) map[strin
 	}
 }
 
-func getRsyslogTLSFiles(ctx context.Context, c client.Client, cluster *extensionscontroller.Cluster, secretRefName, namespace string) ([]extensionsv1alpha1.File, error) {
+func getRsyslogTLSFiles(cluster *extensionscontroller.Cluster, secretRefName string) ([]extensionsv1alpha1.File, error) {
 	ref := v1beta1helper.GetResourceByName(cluster.Shoot.Spec.Resources, secretRefName)
 	if ref == nil || ref.ResourceRef.Kind != "Secret" {
 		return nil, fmt.Errorf("failed to find referenced resource with name %s and kind Secret", secretRefName)
