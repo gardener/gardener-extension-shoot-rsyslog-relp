@@ -76,15 +76,15 @@ Sometimes it might be necessary to update the image and publish it, e.g. when up
 
 To do that:
 1. Bump the version with which the image is built in the [Makefile](../../Makefile#L14).
-2. Build the `shoot-rsyslog-relp-echo-server` image:
+1. Build the `shoot-rsyslog-relp-echo-server` image:
    ```bash
    make echo-server-docker-image
    ```
 
-3. Once the image is built, push it to `gcr` with:
+1. Once the image is built, push it to `gcr` with:
    ```bash
    make push-echo-server-image
    ```
 
-4. Finally, bump the version of the image used by the `testmachinery` tests [here](../../test/testmachinery/shoot/common_test.go).
-5. Create a PR with the changes.
+1. Finally, bump the version of the image used by the `testmachinery` tests [here](../../test/testmachinery/shoot/common_test.go).
+1. Create a PR with the changes.
