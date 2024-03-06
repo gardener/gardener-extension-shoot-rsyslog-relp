@@ -14,7 +14,6 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig"
-	"github.com/gardener/gardener/extensions/pkg/controller"
 	extensionscontroller "github.com/gardener/gardener/extensions/pkg/controller"
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
@@ -128,7 +127,7 @@ func getRsyslogFiles(ctx context.Context, c client.Client, namespace string, rsy
 	rsyslogFiles = append(rsyslogFiles, []extensionsv1alpha1.File{
 		{
 			Path:        rsyslogConfigFromOSCPath,
-			Permissions: pointer.Int32(0744),
+			Permissions: pointer.Int32(0644),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -307,7 +306,7 @@ func validateReferencedSecret(ctx context.Context, c client.Client, ref *gardenc
 			Namespace: namespace,
 		},
 	}
-	if err := controller.GetObjectByReference(ctx, c, &ref.ResourceRef, namespace, refSecret); err != nil {
+	if err := extensionscontroller.GetObjectByReference(ctx, c, &ref.ResourceRef, namespace, refSecret); err != nil {
 		return fmt.Errorf("failed to read referenced secret %s%s for reference %s", v1beta1constants.ReferencedResourcesPrefix, ref.ResourceRef.Name, secretRefName)
 	}
 

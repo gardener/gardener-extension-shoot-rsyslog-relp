@@ -77,7 +77,14 @@ func (e *ensurer) EnsureAdditionalFiles(ctx context.Context, gctx gcontext.Garde
 		return err
 	}
 	additionalFiles = append(additionalFiles, rsyslogFiles...)
-	additionalFiles = append(additionalFiles, getAuditdFiles()...)
+
+	if shootRsyslogRelpConfig.AuditRulesConfig != nil && *shootRsyslogRelpConfig.AuditRulesConfig.Enabled {
+		auditdFiles, err := getAuditdFiles(ctx, e.client, extension.Namespace, shootRsyslogRelpConfig, cluster)
+		if err != nil {
+			return err
+		}
+		additionalFiles = append(additionalFiles, auditdFiles...)
+	}
 
 	mergeFiles(new, additionalFiles...)
 	return nil

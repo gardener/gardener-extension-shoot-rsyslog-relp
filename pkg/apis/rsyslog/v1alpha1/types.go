@@ -38,6 +38,9 @@ type RsyslogRelpConfig struct {
 	// should be reported.
 	// +optional
 	ReportSuspensionContinuation *bool `json:"reportSuspensionContinuation,omitempty"`
+	// AuditRulesConfig contains the config for the audit rules to be deployed on the shoot nodes.
+	// +optional
+	AuditRulesConfig *AuditRulesConfig `json:"auditRulesConfig,omitempty"`
 }
 
 // TLS contains options for the tls connection to the target server.
@@ -71,6 +74,19 @@ type LoggingRule struct {
 	ProgramNames []string `json:"programNames,omitempty"`
 	// Severity determines which logs are sent to the target server based on their severity.
 	Severity int `json:"severity"`
+}
+
+// AuditConfig contains options to configure the audit system.
+type AuditRulesConfig struct {
+	// Enabled determines whether audit configuration is enabled or not. If it is enabled,
+	// the audit rules on the system will be replaced.
+	// +optional
+	Enabled *bool `json:"enabled,omitempty"`
+	// ConfigMapReferenceName is the name of the reference for the configmap containing
+	// the audit rules to set on the shoot nodes. When this is not set, the following default
+	// rules are specified: TODO: add ref to default rules
+	// +optional
+	ConfigMapReferenceName *string `json:"configMapReferenceName,omitempty"`
 }
 
 // AuthMode is the type of authentication mode that can be used for the rsyslog relp connection to the target server.
