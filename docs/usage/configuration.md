@@ -125,7 +125,7 @@ loggingRules:
 
 The communication to the target server is not encrypted by default. To enable encryption, set the `.tls.enabled` field in the `shoot-rsyslog-relp` extension configuration to `true`. In this case, a secret which contains the TLS certificates used to establish the TLS connection to the server must be created in the same project namespace as your Shoot.
 
-An example secret is given below:
+An example Secret is given below:
 
 ```yaml
 kind: Secret
@@ -148,7 +148,7 @@ data:
     -----END RSA PRIVATE KEY-----
 ```
 
-The secret must be referenced in the Shoot's `.spec.resources` field and the corresponding resource entry must be referenced in the `.tls.secretReferenceName` of the `shoot-rsyslog-relp` extension configuration:
+The Secret must be referenced in the Shoot's `.spec.resources` field and the corresponding resource entry must be referenced in the `.tls.secretReferenceName` of the `shoot-rsyslog-relp` extension configuration:
 
 ```yaml
 kind: Shoot
