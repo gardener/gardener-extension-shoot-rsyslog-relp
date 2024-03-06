@@ -221,14 +221,6 @@ func getRsyslogTLSFiles(ctx context.Context, c client.Client, cluster *extension
 		return nil, fmt.Errorf("failed to find referenced resource with name %s and kind Secret", secretRefName)
 	}
 
-	// TODO(plkokanov): Remove this validation once the referenced secret in the project in
-	// the garden cluster is forced to be immutable. In that case updating the secret will require
-	// creating a new secret object and editing the shoot.spec.resources to refer to that new secret.
-	// This will trigger the secret validation in the shoot-rsyslog-relp admission.
-	if err := validateReferencedSecret(ctx, c, ref, secretRefName, namespace); err != nil {
-		return nil, fmt.Errorf("referenced secret is not valid: %w", err)
-	}
-
 	refSecretName := v1beta1constants.ReferencedResourcesPrefix + ref.ResourceRef.Name
 	return []extensionsv1alpha1.File{
 		{
