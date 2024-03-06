@@ -34,6 +34,9 @@ func ValidateRsyslogRelpSecret(secret *corev1.Secret) error {
 	if _, ok := secret.Data[constants.RsyslogPrivateKeyKey]; !ok {
 		return fmt.Errorf("secret %s is missing %s value", key.String(), constants.RsyslogPrivateKeyKey)
 	}
+	if secret.Immutable == nil || !*secret.Immutable {
+		return fmt.Errorf("secret %s should be immutable", key.String())
+	}
 	if len(secret.Data) != 3 {
 		return fmt.Errorf("secret %s should have only three data entries", key.String())
 	}
