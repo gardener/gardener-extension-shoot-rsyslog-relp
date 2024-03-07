@@ -6,7 +6,6 @@ package operatingsystemconfig
 
 import (
 	"bytes"
-	"context"
 	_ "embed"
 	"fmt"
 	"strconv"
@@ -15,15 +14,11 @@ import (
 
 	"github.com/Masterminds/sprig"
 	extensionscontroller "github.com/gardener/gardener/extensions/pkg/controller"
-	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	v1beta1helper "github.com/gardener/gardener/pkg/apis/core/v1beta1/helper"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenerutils "github.com/gardener/gardener/pkg/utils"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/constants"
@@ -289,18 +284,4 @@ func computeLogFilters(loggingRules []rsyslog.LoggingRule) []string {
 	}
 
 	return filters
-}
-
-func validateReferencedSecret(ctx context.Context, c client.Client, ref *gardencorev1beta1.NamedResourceReference, secretRefName, namespace string) error {
-	refSecret := &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      ref.ResourceRef.Name,
-			Namespace: namespace,
-		},
-	}
-	if err := extensionscontroller.GetObjectByReference(ctx, c, &ref.ResourceRef, namespace, refSecret); err != nil {
-		return fmt.Errorf("failed to read referenced secret %s%s for reference %s", v1beta1constants.ReferencedResourcesPrefix, ref.ResourceRef.Name, secretRefName)
-	}
-
-	return utils.ValidateRsyslogRelpSecret(refSecret)
 }
