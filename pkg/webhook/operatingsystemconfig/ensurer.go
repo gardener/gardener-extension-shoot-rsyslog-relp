@@ -9,13 +9,13 @@ import (
 	"errors"
 	"fmt"
 
+	extensionswebhook "github.com/gardener/gardener/extensions/pkg/webhook"
 	gcontext "github.com/gardener/gardener/extensions/pkg/webhook/context"
 	"github.com/gardener/gardener/extensions/pkg/webhook/controlplane/genericmutator"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/go-logr/logr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
@@ -70,50 +70,23 @@ func (e *ensurer) EnsureAdditionalFiles(ctx context.Context, gctx gcontext.Garde
 		}
 	}
 
-	var additionalFiles []extensionsv1alpha1.File
-
 	rsyslogFiles, err := getRsyslogFiles(ctx, e.client, extension.Namespace, shootRsyslogRelpConfig, cluster)
 	if err != nil {
 		return err
 	}
-	additionalFiles = append(additionalFiles, rsyslogFiles...)
-	additionalFiles = append(additionalFiles, getAuditdFiles()...)
 
-	mergeFiles(new, additionalFiles...)
+	for _, file := range rsyslogFiles {
+		*new = extensionswebhook.EnsureFileWithPath(*new, file)
+	}
+
+	for _, file := range getAuditdFiles() {
+		*new = extensionswebhook.EnsureFileWithPath(*new, file)
+	}
+
 	return nil
 }
 
 func (e *ensurer) EnsureAdditionalUnits(_ context.Context, _ gcontext.GardenContext, new, _ *[]extensionsv1alpha1.Unit) error {
-	unit := getRsyslogConfiguratorUnit()
-	mergeUnits(new, unit)
-
+	*new = extensionswebhook.EnsureUnitWithName(*new, getRsyslogConfiguratorUnit())
 	return nil
-}
-
-func mergeFiles(files *[]extensionsv1alpha1.File, newFiles ...extensionsv1alpha1.File) {
-	merge(func(f extensionsv1alpha1.File) string { return f.Path }, files, newFiles...)
-}
-
-func mergeUnits(units *[]extensionsv1alpha1.Unit, newUnits ...extensionsv1alpha1.Unit) {
-	merge(func(u extensionsv1alpha1.Unit) string { return u.Name }, units, newUnits...)
-}
-
-func merge[T any](getUniqueId func(t T) string, base *[]T, from ...T) {
-	var (
-		fromSet = sets.New[string]()
-		res     = make([]T, 0, len(*base))
-	)
-
-	for _, elem := range from {
-		fromSet.Insert(getUniqueId(elem))
-		res = append(res, elem)
-	}
-
-	for _, elem := range *base {
-		if !fromSet.Has(getUniqueId(elem)) {
-			res = append(res, elem)
-		}
-	}
-
-	*base = res
 }

@@ -5,7 +5,6 @@
 package operatingsystemconfig
 
 import (
-	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/constants"
 	extensionswebhook "github.com/gardener/gardener/extensions/pkg/webhook"
 	"github.com/gardener/gardener/extensions/pkg/webhook/controlplane/genericmutator"
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
@@ -17,6 +16,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
+
+	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/constants"
 )
 
 var logger = log.Log.WithName("operating-system-config-webhook")
@@ -52,13 +53,13 @@ func New(mgr manager.Manager) (*extensionswebhook.Webhook, error) {
 	}
 
 	webhook := &extensionswebhook.Webhook{
-		Name:     "operating-system-config",
-		Provider: "",
-		Types:    types,
-		Target:   extensionswebhook.TargetSeed,
-		Path:     "/operating-system-config",
-		Webhook:  &admission.Webhook{Handler: handler},
-		Selector: namespaceSelector,
+		Name:              "operating-system-config",
+		Provider:          "",
+		Types:             types,
+		Target:            extensionswebhook.TargetSeed,
+		Path:              "/operating-system-config",
+		Webhook:           &admission.Webhook{Handler: handler},
+		NamespaceSelector: namespaceSelector,
 	}
 
 	return webhook, nil

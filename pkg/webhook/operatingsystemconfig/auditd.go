@@ -9,7 +9,7 @@ import (
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenerutils "github.com/gardener/gardener/pkg/utils"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 const (
@@ -34,7 +34,7 @@ func getAuditdFiles() []extensionsv1alpha1.File {
 	return []extensionsv1alpha1.File{
 		{
 			Path:        baseConfigRulesPath,
-			Permissions: pointer.Int32(0744),
+			Permissions: ptr.To(int32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -44,7 +44,7 @@ func getAuditdFiles() []extensionsv1alpha1.File {
 		},
 		{
 			Path:        privilegeEscalationRulesPath,
-			Permissions: pointer.Int32(0744),
+			Permissions: ptr.To(int32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -54,7 +54,7 @@ func getAuditdFiles() []extensionsv1alpha1.File {
 		},
 		{
 			Path:        privilegeSpecialRulesPath,
-			Permissions: pointer.Int32(0744),
+			Permissions: ptr.To(int32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -64,7 +64,7 @@ func getAuditdFiles() []extensionsv1alpha1.File {
 		},
 		{
 			Path:        systemIntegrityRulesPath,
-			Permissions: pointer.Int32(0744),
+			Permissions: ptr.To(int32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
