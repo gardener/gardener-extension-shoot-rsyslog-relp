@@ -7,20 +7,14 @@ gardener-extension-shoot-rsyslog-relp:
     traits:
       version:
         preprocess: 'inject-commit-hash'
-      component_descriptor:
-        ocm_repository: europe-docker.pkg.dev/gardener-project/snapshots
   jobs:
     head-update:
       traits:
-        draft_release: ~
-        options:
-          public_build_logs: true
-    pull-request:
-      traits:
-        pull-request: ~
         component_descriptor:
+          ocm_repository: europe-docker.pkg.dev/gardener-project/snapshots
           ocm_repository_mappings:
             - repository: europe-docker.pkg.dev/gardener-project/releases
+        draft_release: ~
         options:
           public_build_logs: true
     release:

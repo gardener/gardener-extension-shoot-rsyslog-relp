@@ -8,7 +8,8 @@ EXTENSION_PREFIX            := gardener-extension
 NAME                        := shoot-rsyslog-relp
 NAME_ADMISSION              := $(NAME)-admission
 NAME_ECHO_SERVER            := $(NAME)-echo-server
-IMAGE                       := europe-docker.pkg.dev/gardener-project/releases/gardener/extensions/shoot-rsyslog-relp
+IMAGE                       := europe-docker.pkg.dev/gardener-project/public/gardener/extensions/shoot-rsyslog-relp
+ECHO_SERVER_IMAGE           := europe-docker.pkg.dev/gardener-project/releases/gardener/extensions/$(NAME_ECHO_SERVER)
 REPO_ROOT                   := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 HACK_DIR                    := $(REPO_ROOT)/hack
 VERSION                     := $(shell cat "$(REPO_ROOT)/VERSION")
@@ -57,7 +58,7 @@ docker-images:
 
 .PHONY: echo-server-docker-image
 echo-server-docker-image:
-	@docker build --platform linux/amd64,linux/arm64 --build-arg EFFECTIVE_VERSION=$(ECHO_SERVER_VERSION) -t $(IMAGE)-echo-server:$(ECHO_SERVER_VERSION) -t $(IMAGE)-echo-server:latest -f Dockerfile -m 6g --target $(NAME_ECHO_SERVER) .
+	@docker build --platform linux/amd64,linux/arm64 --build-arg EFFECTIVE_VERSION=$(ECHO_SERVER_VERSION) -t $(ECHO_SERVER_IMAGE):$(ECHO_SERVER_VERSION) -t $(ECHO_SERVER_IMAGE):latest -f Dockerfile -m 6g --target $(NAME_ECHO_SERVER) .
 
 .PHONY: push-echo-server-image
 push-echo-server-image:
