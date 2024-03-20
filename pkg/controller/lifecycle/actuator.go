@@ -96,13 +96,6 @@ func (a *actuator) Delete(ctx context.Context, _ logr.Logger, ex *extensionsv1al
 		return err
 	}
 
-	// If the Shoot is in deletion, then there is no need to clean up the rsyslog configuration from Nodes.
-	// The Shoot deletion flow ensures that the Worker is deleted before the Extension deletion.
-	// Hence, there are no Nodes, no need to clean up rsyslog configuration.
-	if cluster.Shoot.DeletionTimestamp != nil {
-		return nil
-	}
-
 	return cleanRsyslogRelpConfiguration(ctx, cluster, a.client, namespace)
 }
 
@@ -168,8 +161,17 @@ func cleanRsyslogRelpConfiguration(ctx context.Context, cluster *extensionscontr
 	}
 	cleaner := rsyslogrelpconfigcleaner.New(client, namespace, values)
 
-	if err := component.OpWait(cleaner).Deploy(ctx); err != nil {
-		return fmt.Errorf("failed to deploy the rsyslog relp configuration cleaner component: %w", err)
+	// If the Shoot is in deletion, then there is no need to deploy the component to clean up the rsyslog
+	// configuration from Nodes. The Shoot deletion flow ensures that the Worker is deleted before
+	// the Extension deletion. Hence, there are no Nodes, no need to deploy the configuration cleaner component.
+	//
+	// However, we should still try to destroy the
+	// configuration cleaner component, in case it failed to be cleaned up in a previous reconciliation
+	// where the extension was deleted before the shoot deletion was triggered.
+	if cluster.Shoot.DeletionTimestamp == nil {
+		if err := component.OpWait(cleaner).Deploy(ctx); err != nil {
+			return fmt.Errorf("failed to deploy the rsyslog relp configuration cleaner component: %w", err)
+		}
 	}
 
 	if err := component.OpDestroyAndWait(cleaner).Destroy(ctx); err != nil {
