@@ -87,10 +87,6 @@ func (r *rsyslogRelpConfigCleaner) WaitCleanup(ctx context.Context) error {
 }
 
 func (r *rsyslogRelpConfigCleaner) computeResourcesData() (map[string][]byte, error) {
-	var (
-		objects []client.Object
-	)
-
 	mountPropagationHostToContainer := corev1.MountPropagationHostToContainer
 
 	daemonSet := &appsv1.DaemonSet{
@@ -162,10 +158,8 @@ func (r *rsyslogRelpConfigCleaner) computeResourcesData() (map[string][]byte, er
 		},
 	}
 
-	objects = append(objects, daemonSet)
-
 	registry := managedresources.NewRegistry(kubernetes.ShootScheme, kubernetes.ShootCodec, kubernetes.ShootSerializer)
-	return registry.AddAllAndSerialize(objects...)
+	return registry.AddAllAndSerialize(daemonSet)
 }
 
 func getLabels() map[string]string {
