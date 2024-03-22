@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Masterminds/semver/v3"
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	resourcesv1alpha1 "github.com/gardener/gardener/pkg/apis/resources/v1alpha1"
@@ -16,7 +15,6 @@ import (
 	"github.com/gardener/gardener/pkg/utils/managedresources"
 	"github.com/gardener/gardener/pkg/utils/test"
 	. "github.com/gardener/gardener/pkg/utils/test/matchers"
-	versionutils "github.com/gardener/gardener/pkg/utils/version"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/autoscaling/v1"
@@ -32,8 +30,7 @@ import (
 
 var _ = Describe("Lifecycle controller tests", func() {
 	var (
-		rsyslogConfigurationCleanerDaemonsetYaml = func(serviceAccountName string) string {
-			return `apiVersion: apps/v1
+		rsyslogConfigurationCleanerDaemonsetYaml = `apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   creationTimestamp: null
@@ -107,7 +104,6 @@ spec:
       securityContext:
         seccompProfile:
           type: RuntimeDefault
-      serviceAccountName: ` + serviceAccountName + `
       volumes:
       - hostPath:
           path: /
@@ -118,76 +114,6 @@ status:
   desiredNumberScheduled: 0
   numberMisscheduled: 0
   numberReady: 0
-`
-		}
-
-		rsyslogRelpPSPYaml = `apiVersion: policy/v1beta1
-kind: PodSecurityPolicy
-metadata:
-  annotations:
-    seccomp.security.alpha.kubernetes.io/allowedProfileNames: runtime/default
-    seccomp.security.alpha.kubernetes.io/defaultProfileName: runtime/default
-  creationTimestamp: null
-  name: gardener.kube-system.rsyslog-relp-configuration-cleaner
-spec:
-  allowedHostPaths:
-  - pathPrefix: /
-  fsGroup:
-    rule: RunAsAny
-  hostPID: true
-  readOnlyRootFilesystem: true
-  runAsUser:
-    rule: RunAsAny
-  seLinux:
-    rule: RunAsAny
-  supplementalGroups:
-    rule: RunAsAny
-  volumes:
-  - hostPath
-`
-
-		rsyslogRelpPSPClusterRoleYaml = `apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  creationTimestamp: null
-  name: gardener.cloud:psp:kube-system:rsyslog-relp-configuration-cleaner
-rules:
-- apiGroups:
-  - policy
-  - extensions
-  resourceNames:
-  - gardener.kube-system.rsyslog-relp-configuration-cleaner
-  resources:
-  - podsecuritypolicies
-  verbs:
-  - use
-`
-
-		rsyslogRelpPSPServiceAccountYaml = `apiVersion: v1
-automountServiceAccountToken: false
-kind: ServiceAccount
-metadata:
-  creationTimestamp: null
-  name: rsyslog-relp-configuration-cleaner
-  namespace: kube-system
-`
-
-		rsyslogRelpPSPRoleBindingYaml = `apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  annotations:
-    resources.gardener.cloud/delete-on-invalid-update: "true"
-  creationTimestamp: null
-  name: gardener.cloud:psp:rsyslog-relp-configuration-cleaner
-  namespace: kube-system
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: gardener.cloud:psp:kube-system:rsyslog-relp-configuration-cleaner
-subjects:
-- kind: ServiceAccount
-  name: rsyslog-relp-configuration-cleaner
-  namespace: kube-system
 `
 
 		cluster  *extensionsv1alpha1.Cluster
@@ -319,96 +245,75 @@ subjects:
 		})
 	})
 
-	var test = func() {
-		It("should properly reconcile the extension resource", func() {
-			DeferCleanup(test.WithVars(
-				&managedresources.IntervalWait, time.Millisecond,
-			))
-			pspDisabled := versionutils.ConstraintK8sGreaterEqual125.Check(semver.MustParse(shoot.Spec.Kubernetes.Version))
+	It("should properly reconcile the extension resource", func() {
+		DeferCleanup(test.WithVars(
+			&managedresources.IntervalWait, time.Millisecond,
+		))
 
-			By("Verify that extension resource is reconciled successfully")
-			Eventually(func(g Gomega) {
-				g.Expect(mgrClient.Get(ctx, client.ObjectKeyFromObject(extensionResource), extensionResource)).To(Succeed())
-				g.Expect(extensionResource.Status.LastOperation).To(Not(BeNil()))
-				g.Expect(extensionResource.Status.LastOperation.State).To(Equal(gardencorev1beta1.LastOperationStateSucceeded))
-			}).Should(Succeed())
+		By("Verify that extension resource is reconciled successfully")
+		Eventually(func(g Gomega) {
+			g.Expect(mgrClient.Get(ctx, client.ObjectKeyFromObject(extensionResource), extensionResource)).To(Succeed())
+			g.Expect(extensionResource.Status.LastOperation).To(Not(BeNil()))
+			g.Expect(extensionResource.Status.LastOperation.State).To(Equal(gardencorev1beta1.LastOperationStateSucceeded))
+		}).Should(Succeed())
 
-			By("Delete shoot-rsyslog-relp Extension Resource")
-			Expect(testClient.Delete(ctx, extensionResource)).To(Succeed())
+		By("Delete shoot-rsyslog-relp Extension Resource")
+		Expect(testClient.Delete(ctx, extensionResource)).To(Succeed())
 
-			configCleanerManagedResource := &resourcesv1alpha1.ManagedResource{
+		configCleanerManagedResource := &resourcesv1alpha1.ManagedResource{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "extension-shoot-rsyslog-relp-configuration-cleaner",
+				Namespace: shootSeedNamespace.Name,
+			},
+		}
+		configCleanerResourceSecret := &corev1.Secret{}
+
+		By("Verify that managed resource used for configuration cleanup gets created")
+		Eventually(func(g Gomega) {
+			g.Expect(testClient.Get(ctx, client.ObjectKeyFromObject(configCleanerManagedResource), configCleanerManagedResource)).To(Succeed())
+
+			configCleanerResourceSecret = &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "extension-shoot-rsyslog-relp-configuration-cleaner",
-					Namespace: shootSeedNamespace.Name,
+					Name:      configCleanerManagedResource.Spec.SecretRefs[0].Name,
+					Namespace: configCleanerManagedResource.Namespace,
 				},
 			}
-			configCleanerResourceSecret := &corev1.Secret{}
 
-			By("Verify that managed resource used for configuration cleanup gets created")
-			Eventually(func(g Gomega) {
-				g.Expect(testClient.Get(ctx, client.ObjectKeyFromObject(configCleanerManagedResource), configCleanerManagedResource)).To(Succeed())
+			g.Expect(testClient.Get(ctx, client.ObjectKeyFromObject(configCleanerResourceSecret), configCleanerResourceSecret)).To(Succeed())
+			g.Expect(configCleanerResourceSecret.Type).To(Equal(corev1.SecretTypeOpaque))
+			g.Expect(string(configCleanerResourceSecret.Data["daemonset__kube-system__rsyslog-relp-configuration-cleaner.yaml"])).To(Equal(rsyslogConfigurationCleanerDaemonsetYaml))
+		}).Should(Succeed())
 
-				configCleanerResourceSecret = &corev1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      configCleanerManagedResource.Spec.SecretRefs[0].Name,
-						Namespace: configCleanerManagedResource.Namespace,
-					},
-				}
+		By("Ensure that managed resource used for configuration cleanup does not get deleted immediately")
+		Consistently(func(g Gomega) {
+			g.Expect(testClient.Get(ctx, client.ObjectKeyFromObject(configCleanerManagedResource), configCleanerManagedResource)).To(Succeed())
+			g.Expect(testClient.Get(ctx, client.ObjectKeyFromObject(configCleanerResourceSecret), configCleanerResourceSecret)).To(Succeed())
+		}).Should(Succeed())
 
-				g.Expect(testClient.Get(ctx, client.ObjectKeyFromObject(configCleanerResourceSecret), configCleanerResourceSecret)).To(Succeed())
-				g.Expect(configCleanerResourceSecret.Type).To(Equal(corev1.SecretTypeOpaque))
-				if pspDisabled {
-					g.Expect(string(configCleanerResourceSecret.Data["daemonset__kube-system__rsyslog-relp-configuration-cleaner.yaml"])).To(Equal(rsyslogConfigurationCleanerDaemonsetYaml("default")))
-				} else {
-					g.Expect(string(configCleanerResourceSecret.Data["daemonset__kube-system__rsyslog-relp-configuration-cleaner.yaml"])).To(Equal(rsyslogConfigurationCleanerDaemonsetYaml("rsyslog-relp-configuration-cleaner")))
-					g.Expect(string(configCleanerResourceSecret.Data["clusterrole____gardener.cloud_psp_kube-system_rsyslog-relp-configuration-cleaner.yaml"])).To(Equal(rsyslogRelpPSPClusterRoleYaml))
-					g.Expect(string(configCleanerResourceSecret.Data["podsecuritypolicy____gardener.kube-system.rsyslog-relp-configuration-cleaner.yaml"])).To(Equal(rsyslogRelpPSPYaml))
-					g.Expect(string(configCleanerResourceSecret.Data["rolebinding__kube-system__gardener.cloud_psp_rsyslog-relp-configuration-cleaner.yaml"])).To(Equal(rsyslogRelpPSPRoleBindingYaml))
-					g.Expect(string(configCleanerResourceSecret.Data["serviceaccount__kube-system__rsyslog-relp-configuration-cleaner.yaml"])).To(Equal(rsyslogRelpPSPServiceAccountYaml))
-				}
-			}).Should(Succeed())
+		By("Set managed resource used for configuration cleanup to healthy")
+		patch := client.MergeFrom(configCleanerManagedResource.DeepCopy())
+		configCleanerManagedResource.Status.Conditions = append(configCleanerManagedResource.Status.Conditions, []gardencorev1beta1.Condition{
+			{
+				Type:               resourcesv1alpha1.ResourcesApplied,
+				Status:             gardencorev1beta1.ConditionTrue,
+				LastTransitionTime: metav1.Now(),
+				LastUpdateTime:     metav1.Now(),
+			},
+			{
+				Type:               resourcesv1alpha1.ResourcesHealthy,
+				Status:             gardencorev1beta1.ConditionTrue,
+				LastTransitionTime: metav1.Now(),
+				LastUpdateTime:     metav1.Now(),
+			},
+		}...)
+		configCleanerManagedResource.Status.ObservedGeneration = 1
+		Expect(testClient.Status().Patch(ctx, configCleanerManagedResource, patch)).To(Succeed())
 
-			By("Ensure that managed resource used for configuration cleanup does not get deleted immediately")
-			Consistently(func(g Gomega) {
-				g.Expect(testClient.Get(ctx, client.ObjectKeyFromObject(configCleanerManagedResource), configCleanerManagedResource)).To(Succeed())
-				g.Expect(testClient.Get(ctx, client.ObjectKeyFromObject(configCleanerResourceSecret), configCleanerResourceSecret)).To(Succeed())
-			}).Should(Succeed())
-
-			By("Set managed resource used for configuration cleanup to healthy")
-			patch := client.MergeFrom(configCleanerManagedResource.DeepCopy())
-			configCleanerManagedResource.Status.Conditions = append(configCleanerManagedResource.Status.Conditions, []gardencorev1beta1.Condition{
-				{
-					Type:               resourcesv1alpha1.ResourcesApplied,
-					Status:             gardencorev1beta1.ConditionTrue,
-					LastTransitionTime: metav1.Now(),
-					LastUpdateTime:     metav1.Now(),
-				},
-				{
-					Type:               resourcesv1alpha1.ResourcesHealthy,
-					Status:             gardencorev1beta1.ConditionTrue,
-					LastTransitionTime: metav1.Now(),
-					LastUpdateTime:     metav1.Now(),
-				},
-			}...)
-			configCleanerManagedResource.Status.ObservedGeneration = 1
-			Expect(testClient.Status().Patch(ctx, configCleanerManagedResource, patch)).To(Succeed())
-
-			By("Verify that managed resource used for configuration cleanup gets deleted")
-			Eventually(func(g Gomega) {
-				g.Expect(testClient.Get(ctx, client.ObjectKeyFromObject(configCleanerManagedResource), configCleanerManagedResource)).To(BeNotFoundError())
-				g.Expect(testClient.Get(ctx, client.ObjectKeyFromObject(configCleanerResourceSecret), configCleanerResourceSecret)).To(BeNotFoundError())
-			}).Should(Succeed())
-		})
-	}
-
-	Context("when PSP is disabled", func() {
-		test()
+		By("Verify that managed resource used for configuration cleanup gets deleted")
+		Eventually(func(g Gomega) {
+			g.Expect(testClient.Get(ctx, client.ObjectKeyFromObject(configCleanerManagedResource), configCleanerManagedResource)).To(BeNotFoundError())
+			g.Expect(testClient.Get(ctx, client.ObjectKeyFromObject(configCleanerResourceSecret), configCleanerResourceSecret)).To(BeNotFoundError())
+		}).Should(Succeed())
 	})
 
-	Context("when PSP is enabled", func() {
-		BeforeEach(func() {
-			shoot.Spec.Kubernetes.Version = "1.24.8"
-		})
-		test()
-	})
 })
