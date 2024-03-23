@@ -53,7 +53,9 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 
 			echoServerPodIf, echoServerPodName, err := common.GetEchoServerPodInterfaceAndName(ctx, f.ShootFramework.SeedClient)
 			Expect(err).NotTo(HaveOccurred())
-			verifier := common.NewVerifier(f.Logger, f.ShootFramework.ShootClient, echoServerPodIf, echoServerPodName, f.ShootFramework.Project.Name, f.Shoot.Name, string(f.Shoot.UID))
+			verifier := common.NewVerifier(f.Logger, f.ShootFramework.ShootClient, echoServerPodIf, echoServerPodName, f.ShootFramework.Project.Name, f.Shoot.Name, string(f.Shoot.UID)).
+				WithConsistentlyArgs(20*time.Second, 10*time.Second).
+				WithEventuallyArgs(20*time.Second, 5*time.Second)
 
 			common.ForEachNode(ctx, f.ShootFramework.ShootClient, func(ctx context.Context, node *corev1.Node) {
 				verifier.VerifyExtensionForNode(ctx, node.Name)
@@ -92,13 +94,13 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 		test(f, enableExtensionFunc)
 	})
 
-	Context("shoot-rsyslog-relp extension with tls enabled", Label("tls-enabled"), func() {
+	Context("shoot-rsyslog-relp extension with tls and openssl enabled", Label("tls-enabled"), func() {
 		var createdResources []client.Object
 		f := defaultShootCreationFramework()
 		f.Shoot = e2e.DefaultShoot("e2e-rslog-tls")
 
 		enableExtensionFunc := func(shoot *gardencorev1beta1.Shoot) error {
-			common.AddOrUpdateRsyslogRelpExtension(shoot, common.WithPort(443), common.WithTLSWithSecretRefName("rsyslog-relp-tls"))
+			common.AddOrUpdateRsyslogRelpExtension(shoot, common.WithPort(443), common.WithTLSWithSecretRefNameAndTLSLib("rsyslog-relp-tls", "openssl"))
 			common.AddOrUpdateRsyslogTLSSecretResource(shoot, "rsyslog-relp-tls")
 			return nil
 		}
