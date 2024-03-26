@@ -70,7 +70,7 @@ func (e *ensurer) EnsureAdditionalFiles(ctx context.Context, gctx gcontext.Garde
 		}
 	}
 
-	rsyslogFiles, err := getRsyslogFiles(ctx, e.client, extension.Namespace, shootRsyslogRelpConfig, cluster)
+	rsyslogFiles, err := getRsyslogFiles(shootRsyslogRelpConfig, cluster)
 	if err != nil {
 		return err
 	}

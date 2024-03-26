@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/constants"
@@ -33,6 +34,9 @@ func ValidateRsyslogRelpSecret(secret *corev1.Secret) error {
 	}
 	if _, ok := secret.Data[constants.RsyslogPrivateKeyKey]; !ok {
 		return fmt.Errorf("secret %s is missing %s value", key.String(), constants.RsyslogPrivateKeyKey)
+	}
+	if !ptr.Deref(secret.Immutable, false) {
+		return fmt.Errorf("secret %s must be immutable", key.String())
 	}
 	if len(secret.Data) != 3 {
 		return fmt.Errorf("secret %s should have only three data entries", key.String())
