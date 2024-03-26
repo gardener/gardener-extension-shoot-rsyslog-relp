@@ -123,11 +123,11 @@ loggingRules:
 
 ### Securing the Communication to the Target Server with TLS
 
-The communication to the target server is not encrypted by default. To enable encryption, set the `.tls.enabled` field in the `shoot-rsyslog-relp` extension configuration to `true`. In this case, a immutable secret which contains the TLS certificates used to establish the TLS connection to the server must be created in the same project namespace as your Shoot.
+The communication to the target server is not encrypted by default. To enable encryption, set the `.tls.enabled` field in the `shoot-rsyslog-relp` extension configuration to `true`. In this case, an immutable secret which contains the TLS certificates used to establish the TLS connection to the server must be created in the same project namespace as your Shoot.
 
 An example Secret is given below:
 
-> **Note:**  The secret should be immutable
+> **Note:**  The secret must be immutable
 
 ```yaml
 kind: Secret

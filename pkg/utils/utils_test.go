@@ -77,7 +77,7 @@ var _ = Describe("Utils", func() {
 		Entry(
 			"should return error if secret is mutable",
 			[]byte("caData"), []byte("crtData"), []byte("tlsData"), []byte("extraData"), false,
-			MatchError(ContainSubstring("secret foo/rsyslog-secret should be immutable")),
+			MatchError(ContainSubstring("secret foo/rsyslog-secret must be immutable")),
 		),
 	)
 })
