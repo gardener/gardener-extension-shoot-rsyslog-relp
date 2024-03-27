@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gardener/gardener/pkg/client/kubernetes"
@@ -26,6 +27,7 @@ type Verifier struct {
 	client                     kubernetes.Interface
 	rsyslogRelpEchoServerPodIf clientcorev1.PodInterface
 	rsyslogEchoServerPodName   string
+	providerType               string
 	nodeName                   string
 	projectName                string
 	shootName                  string
@@ -37,12 +39,13 @@ type Verifier struct {
 func NewVerifier(log logr.Logger,
 	client kubernetes.Interface,
 	echoServerPodIf clientcorev1.PodInterface,
-	echoServerPodName, projectName, shootName, shootUID string) *Verifier {
+	echoServerPodName, providerType, projectName, shootName, shootUID string) *Verifier {
 	return &Verifier{
 		log:                        log,
 		client:                     client,
 		rsyslogRelpEchoServerPodIf: echoServerPodIf,
 		rsyslogEchoServerPodName:   echoServerPodName,
+		providerType:               providerType,
 		projectName:                projectName,
 		shootName:                  shootName,
 		shootUID:                   shootUID,
@@ -61,7 +64,7 @@ func (v *Verifier) VerifyExtensionForNode(ctx context.Context, nodeName string) 
 	v.setPodExecutor(framework.NewRootPodExecutor(v.log, v.client, &nodeName, "kube-system"))
 	v.setNodeName(nodeName)
 
-	v.verifyThatRsyslogIsActiveAndConfigured(ctx, 5*time.Second, 20*time.Second)
+	v.verifyThatRsyslogIsActiveAndConfigured(ctx)
 	v.verifyThatLogsAreSentToEchoServer(ctx, "test-program", "1", "this should get sent to echo server")
 	v.verifyThatLogsAreNotSentToEchoServer(ctx, "other-program", "1", "this should not get sent to echo server")
 	v.verifyThatLogsAreNotSentToEchoServer(ctx, "test-program", "3", "this should not get sent to echo server")
@@ -94,30 +97,30 @@ func (v *Verifier) setNodeName(nodeName string) {
 	v.nodeName = nodeName
 }
 
-func (v *Verifier) verifyThatRsyslogIsActiveAndConfigured(ctx context.Context, pollInterval, timeout time.Duration) {
-	EventuallyWithOffset(2, ctx, func(g Gomega) {
+func (v *Verifier) verifyThatRsyslogIsActiveAndConfigured(ctx context.Context) {
+	EventuallyWithOffset(2, func(g Gomega) {
 		response, _ := ExecCommand(ctx, v.log, v.rootPodExecutor, "systemctl is-active rsyslog.service &>/dev/null && echo 'active' || echo 'not active'")
 		g.Expect(string(response)).To(Equal("active\n"), fmt.Sprintf("Expected the rsyslog.service unit to be active on node %s", v.nodeName))
 
 		response, _ = ExecCommand(ctx, v.log, v.rootPodExecutor, "test -f /etc/rsyslog.d/60-audit.conf && echo 'configured' || echo 'not configured'")
 		g.Expect(string(response)).To(Equal("configured\n"), fmt.Sprintf("Expected the /etc/rsyslog.d/60-audit.conf file to exist on node %s", v.nodeName))
-	}).WithTimeout(timeout).WithPolling(pollInterval).Should(Succeed())
+	}).WithTimeout(1 * time.Minute).WithPolling(10 * time.Second).WithContext(ctx).Should(Succeed())
 }
 
 func (v *Verifier) verifyThatLogsAreSentToEchoServer(ctx context.Context, programName, severity, logMessage string) {
-	EventuallyWithOffset(2, ctx, func(g Gomega) {
+	EventuallyWithOffset(2, func(g Gomega) {
 		logLines, err := v.generateAndGetLogs(ctx, programName, severity, logMessage)
 		g.Expect(err).NotTo(HaveOccurred())
 		g.Expect(logLines).To(ContainElement(MatchRegexp(v.constructRegex(programName, logMessage))))
-	}).Should(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s and logs to be present in rsyslog-relp-echo-server", v.nodeName))
+	}).WithTimeout(1*time.Minute).WithPolling(10*time.Second).WithContext(ctx).Should(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s and logs to be present in rsyslog-relp-echo-server", v.nodeName))
 }
 
 func (v *Verifier) verifyThatLogsAreNotSentToEchoServer(ctx context.Context, programName, severity, logMessage string) {
-	ConsistentlyWithOffset(2, ctx, func(g Gomega) {
+	ConsistentlyWithOffset(2, func(g Gomega) {
 		logLines, err := v.generateAndGetLogs(ctx, programName, severity, logMessage)
 		g.Expect(err).NotTo(HaveOccurred())
 		g.Expect(logLines).NotTo(ContainElement(MatchRegexp(v.constructRegex(programName, logMessage))))
-	}).Should(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s and logs to NOT be present in rsyslog-relp-echo-server", v.nodeName))
+	}).WithTimeout(30*time.Second).WithPolling(10*time.Second).WithContext(ctx).Should(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s and logs to NOT be present in rsyslog-relp-echo-server", v.nodeName))
 }
 
 func (v *Verifier) generateAndGetLogs(ctx context.Context, programName, severity, logMessage string) ([]string, error) {
@@ -140,5 +143,22 @@ func (v *Verifier) generateAndGetLogs(ctx context.Context, programName, severity
 }
 
 func (v *Verifier) constructRegex(programName, logMessage string) string {
-	return fmt.Sprintf(` %s %s %s .* %s\[\d+\]: .* %s`, v.projectName, v.shootName, v.shootUID, programName, logMessage)
+	var expectedNodeHostName string
+
+	switch {
+	case v.providerType == "aws":
+		// On aws the nodes are named by adding the regional domain name after the instance, e.g.:
+		// `ip-xxx-xxx-xxx-xxx.ec2.<region>.internal`. However the rsyslog `hostname` property only returns the
+		// instance name - `ip-xxx-xxx-xxx-xxx`.
+		expectedNodeHostName = strings.SplitN(v.nodeName, ".", 2)[0]
+	case v.providerType == "alicloud":
+		// On alicloud the name of a node is made of lower case characters, e.g. `izgw846obiag360olq8sdaz`.
+		// However, the rsyslog `hostname` property can also contain upper case characters, e.g. `iZgw846obiag360olq8sdaZ`.
+		// This is why we use the (?i:...) - to turn on case-insensitive mode for the hostname matching.
+		expectedNodeHostName = "(?i:" + expectedNodeHostName + ")"
+	default:
+		expectedNodeHostName = v.nodeName
+	}
+
+	return fmt.Sprintf(`%s %s %s %s \d+ %s\[\d+\]: .* %s`, v.projectName, v.shootName, v.shootUID, expectedNodeHostName, programName, logMessage)
 }
