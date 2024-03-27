@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/gardener/gardener/pkg/client/kubernetes"
 	"github.com/gardener/gardener/test/framework"
@@ -26,53 +27,29 @@ type Verifier struct {
 	client                     kubernetes.Interface
 	rsyslogRelpEchoServerPodIf clientcorev1.PodInterface
 	rsyslogEchoServerPodName   string
+	providerType               string
 	nodeName                   string
 	projectName                string
 	shootName                  string
 	shootUID                   string
 	rootPodExecutor            framework.RootPodExecutor
-
-	// optional fields
-	consistentlyArgs []interface{}
-	eventuallyArgs   []interface{}
-	providerType     string
 }
 
 // NewVerifier creates a new Verifier.
 func NewVerifier(log logr.Logger,
 	client kubernetes.Interface,
 	echoServerPodIf clientcorev1.PodInterface,
-	echoServerPodName, projectName, shootName, shootUID string) *Verifier {
+	echoServerPodName, providerType, projectName, shootName, shootUID string) *Verifier {
 	return &Verifier{
 		log:                        log,
 		client:                     client,
 		rsyslogRelpEchoServerPodIf: echoServerPodIf,
 		rsyslogEchoServerPodName:   echoServerPodName,
+		providerType:               providerType,
 		projectName:                projectName,
 		shootName:                  shootName,
 		shootUID:                   shootUID,
 	}
-}
-
-// WithConsistentlyArgs specifies the arguments to pass to
-// `Consistently` calls made by the Verifier.
-func (v *Verifier) WithConsistentlyArgs(args ...interface{}) *Verifier {
-	v.consistentlyArgs = args
-	return v
-}
-
-// WithEventuallyArgs specifies the arguments to pass to
-// `Eventually` calls made by the Verifier.
-func (v *Verifier) WithEventuallyArgs(args ...interface{}) *Verifier {
-	v.eventuallyArgs = args
-	return v
-}
-
-// WithShootProviderType specifies the provider type of
-// the shoot currently used for the tests.
-func (v *Verifier) WithShootProviderType(providerType string) *Verifier {
-	v.providerType = providerType
-	return v
 }
 
 // SetEchoServerPodIfAndName sets the clientcorev1.PodInterface and the name of the rsyslog-relp-echo-server pod to the Verifier.
@@ -127,7 +104,7 @@ func (v *Verifier) verifyThatRsyslogIsActiveAndConfigured(ctx context.Context) {
 
 		response, _ = ExecCommand(ctx, v.log, v.rootPodExecutor, "test -f /etc/rsyslog.d/60-audit.conf && echo 'configured' || echo 'not configured'")
 		g.Expect(string(response)).To(Equal("configured\n"), fmt.Sprintf("Expected the /etc/rsyslog.d/60-audit.conf file to exist on node %s", v.nodeName))
-	}, v.eventuallyArgs...).WithContext(ctx).Should(Succeed())
+	}).WithTimeout(1 * time.Minute).WithPolling(10 * time.Second).WithContext(ctx).Should(Succeed())
 }
 
 func (v *Verifier) verifyThatLogsAreSentToEchoServer(ctx context.Context, programName, severity, logMessage string) {
@@ -135,7 +112,7 @@ func (v *Verifier) verifyThatLogsAreSentToEchoServer(ctx context.Context, progra
 		logLines, err := v.generateAndGetLogs(ctx, programName, severity, logMessage)
 		g.Expect(err).NotTo(HaveOccurred())
 		g.Expect(logLines).To(ContainElement(MatchRegexp(v.constructRegex(programName, logMessage))))
-	}, v.eventuallyArgs...).WithContext(ctx).Should(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s and logs to be present in rsyslog-relp-echo-server", v.nodeName))
+	}).WithTimeout(1*time.Minute).WithPolling(10*time.Second).WithContext(ctx).Should(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s and logs to be present in rsyslog-relp-echo-server", v.nodeName))
 }
 
 func (v *Verifier) verifyThatLogsAreNotSentToEchoServer(ctx context.Context, programName, severity, logMessage string) {
@@ -143,7 +120,7 @@ func (v *Verifier) verifyThatLogsAreNotSentToEchoServer(ctx context.Context, pro
 		logLines, err := v.generateAndGetLogs(ctx, programName, severity, logMessage)
 		g.Expect(err).NotTo(HaveOccurred())
 		g.Expect(logLines).NotTo(ContainElement(MatchRegexp(v.constructRegex(programName, logMessage))))
-	}, v.consistentlyArgs...).WithContext(ctx).Should(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s and logs to NOT be present in rsyslog-relp-echo-server", v.nodeName))
+	}).WithTimeout(30*time.Second).WithPolling(10*time.Second).WithContext(ctx).Should(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s and logs to NOT be present in rsyslog-relp-echo-server", v.nodeName))
 }
 
 func (v *Verifier) generateAndGetLogs(ctx context.Context, programName, severity, logMessage string) ([]string, error) {
@@ -166,10 +143,11 @@ func (v *Verifier) generateAndGetLogs(ctx context.Context, programName, severity
 }
 
 func (v *Verifier) constructRegex(programName, logMessage string) string {
-	expectedNodeHostName := v.nodeName
+	var expectedNodeHostName string
+
 	switch {
 	case v.providerType == "aws":
-		// On aws the the nodes ara named by adding the regional domain name after the instance, e.g.:
+		// On aws the nodes are named by adding the regional domain name after the instance, e.g.:
 		// `ip-xxx-xxx-xxx-xxx.ec2.<region>.internal`. However the rsyslog `hostname` property only returns the
 		// instance name - `ip-xxx-xxx-xxx-xxx`.
 		expectedNodeHostName = strings.SplitN(v.nodeName, ".", 2)[0]
@@ -178,6 +156,8 @@ func (v *Verifier) constructRegex(programName, logMessage string) string {
 		// However, the rsyslog `hostname` property can also contain upper case characters, e.g. `iZgw846obiag360olq8sdaZ`.
 		// This is why we use the (?i:...) - to turn on case-insensitive mode for the hostname matching.
 		expectedNodeHostName = "(?i:" + expectedNodeHostName + ")"
+	default:
+		expectedNodeHostName = v.nodeName
 	}
 
 	return fmt.Sprintf(`%s %s %s %s \d+ %s\[\d+\]: .* %s`, v.projectName, v.shootName, v.shootUID, expectedNodeHostName, programName, logMessage)
