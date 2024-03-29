@@ -122,13 +122,13 @@ func WithTarget(target string) func(rsyslogRelpConfig *rsyslogv1alpha1.RsyslogRe
 	}
 }
 
-// WithTLSWithSecretRefName returns a function which enables TLS for the rsyslog relp configuration and sets
-// the tls.secretRefName to the given secretRefName.
-func WithTLSWithSecretRefName(secretRefName string) func(rsyslogRelpConfig *rsyslogv1alpha1.RsyslogRelpConfig) {
+// WithTLSWithSecretRefNameAndTLSLib returns a function which enables TLS for the rsyslog relp configuration and sets
+// the tls.secretRefName to the given secretRefName and tls.tlsLib to the given tlsLib.
+func WithTLSWithSecretRefNameAndTLSLib(secretRefName, tlsLib string) func(rsyslogRelpConfig *rsyslogv1alpha1.RsyslogRelpConfig) {
 	return func(rsyslogRelpConfig *rsyslogv1alpha1.RsyslogRelpConfig) {
 		var (
 			authModeName  = rsyslogv1alpha1.AuthMode("name")
-			tlsLibOpenSSL = rsyslogv1alpha1.TLSLib("openssl")
+			tlsLibOpenSSL = rsyslogv1alpha1.TLSLib(tlsLib)
 		)
 
 		rsyslogRelpConfig.TLS = &rsyslogv1alpha1.TLS{

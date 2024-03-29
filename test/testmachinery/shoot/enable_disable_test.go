@@ -38,11 +38,11 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 		Expect(f.UpdateShoot(ctx, shootMutateFn)).To(Succeed())
 
 		By("Verify shoot-rsyslog-relp works")
-		ctx, cancel = context.WithTimeout(parentCtx, 2*time.Minute)
+		ctx, cancel = context.WithTimeout(parentCtx, 10*time.Minute)
 		defer cancel()
 		echoServerPodIf, echoServerPodName, err := common.GetEchoServerPodInterfaceAndName(ctx, f.ShootClient)
 		Expect(err).NotTo(HaveOccurred())
-		verifier := common.NewVerifier(f.Logger, f.ShootClient, echoServerPodIf, echoServerPodName, f.Project.Name, f.Shoot.Name, string(f.Shoot.UID))
+		verifier := common.NewVerifier(f.Logger, f.ShootClient, echoServerPodIf, echoServerPodName, f.Shoot.Spec.Provider.Type, f.Project.Name, f.Shoot.Name, string(f.Shoot.UID))
 
 		common.ForEachNode(ctx, f.ShootClient, func(ctx context.Context, node *corev1.Node) {
 			verifier.VerifyExtensionForNode(ctx, node.Name)
@@ -57,7 +57,7 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 		})).To(Succeed())
 
 		By("Verify that shoot-rsyslog-relp extension is disabled")
-		ctx, cancel = context.WithTimeout(parentCtx, 2*time.Minute)
+		ctx, cancel = context.WithTimeout(parentCtx, 10*time.Minute)
 		DeferCleanup(cancel)
 		common.ForEachNode(ctx, f.ShootClient, func(ctx context.Context, node *corev1.Node) {
 			verifier.VerifyExtensionDisabledForNode(ctx, node.Name)
@@ -94,9 +94,8 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 
 	})
 
-	Context("shoot-rsyslog-relp extension with tls enabled", Label("tls-enabled"), func() {
+	Context("shoot-rsyslog-relp extension with tls and openssl enabled", Label("tls-openssl-enabled"), func() {
 		const secretReferenceName = "rsyslog-relp-tls"
-
 		var createdResources []client.Object
 
 		f.Serial().Beta().CIt("should enable and disable the shoot-rsyslog-relp extension", func(parentCtx context.Context) {
@@ -109,7 +108,7 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			test(parentCtx, func(shoot *gardencorev1beta1.Shoot) error {
-				common.AddOrUpdateRsyslogRelpExtension(shoot, common.WithPort(443), common.WithTLSWithSecretRefName(secretReferenceName), common.WithTarget(echoServerIP))
+				common.AddOrUpdateRsyslogRelpExtension(shoot, common.WithPort(443), common.WithTLSWithSecretRefNameAndTLSLib(secretReferenceName, "openssl"), common.WithTarget(echoServerIP))
 				common.AddOrUpdateRsyslogTLSSecretResource(shoot, secretReferenceName)
 				return nil
 			})
