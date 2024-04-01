@@ -155,7 +155,7 @@ func (v *Verifier) constructRegex(programName, logMessage string) string {
 		// On alicloud the name of a node is made of lower case characters, e.g. `izgw846obiag360olq8sdaz`.
 		// However, the rsyslog `hostname` property can also contain upper case characters, e.g. `iZgw846obiag360olq8sdaZ`.
 		// This is why we use the (?i:...) - to turn on case-insensitive mode for the hostname matching.
-		expectedNodeHostName = "(?i:" + expectedNodeHostName + ")"
+		expectedNodeHostName = "(?i:" + v.nodeName + ")"
 	default:
 		expectedNodeHostName = v.nodeName
 	}
