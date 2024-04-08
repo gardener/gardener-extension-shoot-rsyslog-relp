@@ -24,6 +24,8 @@ Files:
   example/controller-registration.yaml
   hack/api-reference/*.json
   hack/cherry-pick-pull.sh
+  pkg/webhook/operatingsystemconfig/resources/auditrules/*.rules
+  pkg/webhook/operatingsystemconfig/testdata/*.rules
   test/integration/controller/lifecycle/resources/*.yaml
   go.mod
   go.sum

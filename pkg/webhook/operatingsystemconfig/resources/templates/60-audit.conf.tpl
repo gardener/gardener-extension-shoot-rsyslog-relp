@@ -53,6 +53,7 @@ ruleset(name="process_stats") {
 
 ruleset(name="relp_action_ruleset") {
   action(
+    name="rsyslog-relp"
     type="omrelp"
     target="{{ .target }}"
     port="{{ .port }}"
