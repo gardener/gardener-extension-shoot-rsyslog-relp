@@ -1,1 +1,8 @@
+## SPDX-FileCopyrightText: 2024 SAP SE or an SAP affiliate company and Gardener contributors
+##
+## SPDX-License-Identifier: Apache-2.0
+
+## This file is managed by the shoot-rsyslog-relp extension
+## The original file was moved to /etc/audit/rules.d.original
+
 -a exit,always -F arch=b64 -S mount -S mount_setattr -S umount2 -S mknod -S mknodat -S chroot -F auid!=-1 -F key=privileged_special
