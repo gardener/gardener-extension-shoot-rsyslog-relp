@@ -1,8 +1,8 @@
-name: Vendor Gardener
+name: Run Make Tidy on Gardener Updates
 on:
   push:
     branches:
-    - dependabot/go_modules/github.com/gardener/**
+    - dependabot/go_modules/github.com/gardener/gardener*
 permissions: write-all
 jobs:
   run:
