@@ -12,16 +12,26 @@ import (
 	"github.com/gardener/gardener/pkg/controllerutils"
 	"github.com/gardener/gardener/pkg/resourcemanager/controller/garbagecollector/references"
 	"github.com/gardener/gardener/pkg/utils"
-	kubernetesutils "github.com/gardener/gardener/pkg/utils/kubernetes"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/constants"
 )
 
-func deployMonitoringConfig(ctx context.Context, client client.Client, namespace string) error {
+func deployMonitoringConfig(ctx context.Context, c client.Client, namespace string) error {
+	// TODO(plkokanov): remove this in a future release.
+	// Refer to https://github.com/gardener/gardener-extension-shoot-rsyslog-relp/issues/89 for more details.
+	if err := c.DeleteAllOf(ctx, &corev1.ConfigMap{},
+		client.InNamespace(namespace),
+		client.MatchingLabels{
+			"component": constants.ServiceName,
+			"extensions.gardener.cloud/configuration": "monitoring",
+			references.LabelKeyGarbageCollectable:     references.LabelValueGarbageCollectable,
+		}); err != nil {
+		return fmt.Errorf("could not delete immutable monitoring configmaps for component %q in namespace %q: %w", constants.ServiceName, namespace, err)
+	}
+
 	monitoring := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-prometheus", constants.ServiceName),
@@ -34,12 +44,9 @@ func deployMonitoringConfig(ctx context.Context, client client.Client, namespace
 		},
 	}
 
-	utilruntime.Must(kubernetesutils.MakeUnique(monitoring))
-
-	_, err := controllerutils.GetAndCreateOrMergePatch(ctx, client, monitoring, func() error {
+	_, err := controllerutils.GetAndCreateOrMergePatch(ctx, c, monitoring, func() error {
 		metav1.SetMetaDataLabel(&monitoring.ObjectMeta, "component", constants.ServiceName)
 		metav1.SetMetaDataLabel(&monitoring.ObjectMeta, "extensions.gardener.cloud/configuration", "monitoring")
-		metav1.SetMetaDataLabel(&monitoring.ObjectMeta, references.LabelKeyGarbageCollectable, references.LabelValueGarbageCollectable)
 		return nil
 	})
 
