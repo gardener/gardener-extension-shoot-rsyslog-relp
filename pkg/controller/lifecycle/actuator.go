@@ -57,18 +57,32 @@ type actuator struct {
 func (a *actuator) Reconcile(ctx context.Context, _ logr.Logger, ex *extensionsv1alpha1.Extension) error {
 	namespace := ex.GetNamespace()
 
+	if err := deployMonitoringConfig(ctx, a.client, namespace); err != nil {
+		return err
+	}
+
+	cluster, err := extensionscontroller.GetCluster(ctx, a.client, namespace)
+	if err != nil {
+		return err
+	}
+
+	if cluster.Shoot == nil {
+		return errors.New("cluster.shoot is not yet populated")
+	}
+
 	// TODO(plkokanov): remove this after a couple releases.
 	if err := managedresources.DeleteForShoot(ctx, a.client, namespace, constants.ManagedResourceName); err != nil {
 		return err
 	}
 
-	timeoutCtx, cancelCtx := context.WithTimeout(ctx, deletionTimeout)
-	defer cancelCtx()
-	if err := managedresources.WaitUntilDeleted(timeoutCtx, a.client, namespace, constants.ManagedResourceName); err != nil {
-		return err
+	// Do not wait for the managed resource to be deleted
+	if extensionscontroller.IsHibernated(cluster) {
+		return nil
 	}
 
-	return deployMonitoringConfig(ctx, a.client, namespace)
+	timeoutCtx, cancelCtx := context.WithTimeout(ctx, deletionTimeout)
+	defer cancelCtx()
+	return managedresources.WaitUntilDeleted(timeoutCtx, a.client, namespace, constants.ManagedResourceName)
 }
 
 // Delete deletes the extension resource.
@@ -132,8 +146,7 @@ func (a *actuator) Migrate(ctx context.Context, _ logr.Logger, ex *extensionsv1a
 		return err
 	}
 
-	twoMinutes := time.Minute * 2
-	timeoutCtx, cancelCtx := context.WithTimeout(ctx, twoMinutes)
+	timeoutCtx, cancelCtx := context.WithTimeout(ctx, deletionTimeout)
 	defer cancelCtx()
 	return managedresources.WaitUntilDeleted(timeoutCtx, a.client, namespace, constants.ManagedResourceName)
 }
