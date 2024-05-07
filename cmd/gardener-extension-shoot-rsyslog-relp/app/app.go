@@ -32,7 +32,7 @@ func NewServiceControllerCommand() *cobra.Command {
 		Use:           "gardener-extension-shoot-rsyslog-relp",
 		Short:         "Rsyslog Relp Controller which manages the configuration of rsyslog-relp running on the shoot nodes",
 		SilenceErrors: true,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			verflag.PrintAndExitIfRequested()
 
 			if err := options.optionAggregator.Complete(); err != nil {

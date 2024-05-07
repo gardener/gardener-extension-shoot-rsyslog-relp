@@ -55,6 +55,6 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 		By("Force Delete Shoot")
 		ctx, cancel = context.WithTimeout(parentCtx, 15*time.Minute)
 		DeferCleanup(cancel)
-		Expect(f.ForceDeleteShootAndWaitForDeletion(ctx, f.Shoot)).To(Succeed())
+		Expect(f.ForceDeleteShootAndWaitForDeletion(ctx, f.Shoot, f.ShootFramework.SeedClient.Client())).To(Succeed())
 	})
 })
