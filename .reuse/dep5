@@ -10,6 +10,7 @@ Comment:
 # source code
 Files:
   .gitignore
+  .github
   .golangci.yaml
   .test-defs
   CODEOWNERS
@@ -20,6 +21,8 @@ Files:
   charts/gardener-extension-shoot-rsyslog-relp/templates/_helpers.tpl
   charts/gardener-extension-shoot-rsyslog-relp-admission/.helmignore
   charts/gardener-extension-shoot-rsyslog-relp-admission/templates/_helpers.tpl
+  example/extension/.gitignore
+  example/extension/extension-config-patch.yaml.tmpl
   example/local/charts/rsyslog-relp-echo-server/.helmignore
   example/controller-registration.yaml
   hack/api-reference/*.json
