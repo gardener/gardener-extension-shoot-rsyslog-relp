@@ -6,7 +6,6 @@ package operatingsystemconfig
 
 import (
 	"bytes"
-	"context"
 	_ "embed"
 	"fmt"
 	"strconv"
@@ -15,15 +14,11 @@ import (
 
 	"github.com/Masterminds/sprig"
 	extensionscontroller "github.com/gardener/gardener/extensions/pkg/controller"
-	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	v1beta1helper "github.com/gardener/gardener/pkg/apis/core/v1beta1/helper"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenerutils "github.com/gardener/gardener/pkg/utils"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/constants"
@@ -105,14 +100,14 @@ func init() {
 	}
 }
 
-func getRsyslogFiles(ctx context.Context, c client.Client, namespace string, rsyslogRelpConfig *rsyslog.RsyslogRelpConfig, cluster *extensionscontroller.Cluster) ([]extensionsv1alpha1.File, error) {
+func getRsyslogFiles(rsyslogRelpConfig *rsyslog.RsyslogRelpConfig, cluster *extensionscontroller.Cluster) ([]extensionsv1alpha1.File, error) {
 	var rsyslogFiles []extensionsv1alpha1.File
 
 	rsyslogValues := getRsyslogValues(rsyslogRelpConfig, cluster)
 
 	if rsyslogRelpConfig.TLS != nil && rsyslogRelpConfig.TLS.Enabled {
 		rsyslogValues["tls"] = getRsyslogTLSValues(rsyslogRelpConfig)
-		rsyslogTLSFiles, err := getRsyslogTLSFiles(ctx, c, cluster, *rsyslogRelpConfig.TLS.SecretReferenceName, namespace)
+		rsyslogTLSFiles, err := getRsyslogTLSFiles(cluster, *rsyslogRelpConfig.TLS.SecretReferenceName)
 		if err != nil {
 			return nil, err
 		}
@@ -215,18 +210,10 @@ func getRsyslogTLSValues(rsyslogRelpConfig *rsyslog.RsyslogRelpConfig) map[strin
 	}
 }
 
-func getRsyslogTLSFiles(ctx context.Context, c client.Client, cluster *extensionscontroller.Cluster, secretRefName, namespace string) ([]extensionsv1alpha1.File, error) {
+func getRsyslogTLSFiles(cluster *extensionscontroller.Cluster, secretRefName string) ([]extensionsv1alpha1.File, error) {
 	ref := v1beta1helper.GetResourceByName(cluster.Shoot.Spec.Resources, secretRefName)
 	if ref == nil || ref.ResourceRef.Kind != "Secret" {
 		return nil, fmt.Errorf("failed to find referenced resource with name %s and kind Secret", secretRefName)
-	}
-
-	// TODO(plkokanov): Remove this validation once the referenced secret in the project in
-	// the garden cluster is forced to be immutable. In that case updating the secret will require
-	// creating a new secret object and editing the shoot.spec.resources to refer to that new secret.
-	// This will trigger the secret validation in the shoot-rsyslog-relp admission.
-	if err := validateReferencedSecret(ctx, c, ref, secretRefName, namespace); err != nil {
-		return nil, fmt.Errorf("referenced secret is not valid: %w", err)
 	}
 
 	refSecretName := v1beta1constants.ReferencedResourcesPrefix + ref.ResourceRef.Name
@@ -297,18 +284,4 @@ func computeLogFilters(loggingRules []rsyslog.LoggingRule) []string {
 	}
 
 	return filters
-}
-
-func validateReferencedSecret(ctx context.Context, c client.Client, ref *gardencorev1beta1.NamedResourceReference, secretRefName, namespace string) error {
-	refSecret := &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      ref.ResourceRef.Name,
-			Namespace: namespace,
-		},
-	}
-	if err := extensionscontroller.GetObjectByReference(ctx, c, &ref.ResourceRef, namespace, refSecret); err != nil {
-		return fmt.Errorf("failed to read referenced secret %s%s for reference %s", v1beta1constants.ReferencedResourcesPrefix, ref.ResourceRef.Name, secretRefName)
-	}
-
-	return utils.ValidateRsyslogRelpSecret(refSecret)
 }

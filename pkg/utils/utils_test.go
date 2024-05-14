@@ -22,7 +22,7 @@ var _ = Describe("Utils", func() {
 	})
 
 	DescribeTable("#ValidateRsyslogRelpSecret",
-		func(caData, crtData, keyData, extraData []byte, matcher types.GomegaMatcher) {
+		func(caData, crtData, keyData, extraData []byte, immutable bool, matcher types.GomegaMatcher) {
 			var data = map[string][]byte{}
 
 			if len(caData) > 0 {
@@ -43,35 +43,41 @@ var _ = Describe("Utils", func() {
 					Name:      "rsyslog-secret",
 					Namespace: "foo",
 				},
-				Data: data,
+				Immutable: &immutable,
+				Data:      data,
 			}
 
 			Expect(ValidateRsyslogRelpSecret(secret)).To(matcher)
 		},
 		Entry(
 			"should return error if secret does not contain 'ca' data entry",
-			nil, nil, nil, nil,
+			nil, nil, nil, nil, true,
 			MatchError(ContainSubstring("secret foo/rsyslog-secret is missing ca value")),
 		),
 		Entry(
 			"should return error if secret does not contain 'crt' data entry",
-			[]byte("caData"), nil, nil, nil,
+			[]byte("caData"), nil, nil, nil, true,
 			MatchError(ContainSubstring("secret foo/rsyslog-secret is missing crt value")),
 		),
 		Entry(
 			"should return error if secret does not contain 'key' data entry",
-			[]byte("caData"), []byte("crtData"), nil, nil,
+			[]byte("caData"), []byte("crtData"), nil, nil, true,
 			MatchError(ContainSubstring("secret foo/rsyslog-secret is missing key value")),
 		),
 		Entry(
 			"should not return error if secret is valid",
-			[]byte("caData"), []byte("crtData"), []byte("keyData"), nil,
+			[]byte("caData"), []byte("crtData"), []byte("keyData"), nil, true,
 			Succeed(),
 		),
 		Entry(
 			"should return error if secret does not contain 'tls' data entry",
-			[]byte("caData"), []byte("crtData"), []byte("tlsData"), []byte("extraData"),
+			[]byte("caData"), []byte("crtData"), []byte("tlsData"), []byte("extraData"), true,
 			MatchError(ContainSubstring("secret foo/rsyslog-secret should have only three data entries")),
+		),
+		Entry(
+			"should return error if secret is mutable",
+			[]byte("caData"), []byte("crtData"), []byte("tlsData"), []byte("extraData"), false,
+			MatchError(ContainSubstring("secret foo/rsyslog-secret must be immutable")),
 		),
 	)
 })
