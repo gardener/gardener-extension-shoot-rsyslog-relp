@@ -73,7 +73,7 @@ func NewAdmissionCommand(ctx context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: fmt.Sprintf("gardener-extension-%s-admission", constants.ExtensionType),
 
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			verflag.PrintAndExitIfRequested()
 
 			if err := aggOption.Complete(); err != nil {

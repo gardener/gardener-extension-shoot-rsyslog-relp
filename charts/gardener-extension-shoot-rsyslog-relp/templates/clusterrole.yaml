@@ -75,3 +75,25 @@ rules:
   - create
   - list
   - watch
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - scrapeconfigs
+  - prometheusrules
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+# TODO(rfranzke): Remove this after August 2024.
+- apiGroups:
+  - apps
+  resources:
+  - statefulsets
+  verbs:
+  - get
+  - list
+  - watch

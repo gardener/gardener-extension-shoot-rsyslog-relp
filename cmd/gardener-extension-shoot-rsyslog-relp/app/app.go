@@ -12,6 +12,8 @@ import (
 	"github.com/gardener/gardener/extensions/pkg/controller/heartbeat"
 	"github.com/gardener/gardener/extensions/pkg/util"
 	gardenerhealthz "github.com/gardener/gardener/pkg/healthz"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	componentbaseconfig "k8s.io/component-base/config"
@@ -32,7 +34,7 @@ func NewServiceControllerCommand() *cobra.Command {
 		Use:           "gardener-extension-shoot-rsyslog-relp",
 		Short:         "Rsyslog Relp Controller which manages the configuration of rsyslog-relp running on the shoot nodes",
 		SilenceErrors: true,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			verflag.PrintAndExitIfRequested()
 
 			if err := options.optionAggregator.Complete(); err != nil {
@@ -83,6 +85,13 @@ func (o *Options) run(ctx context.Context) error {
 
 	if err := rsysloginstall.AddToScheme(mgr.GetScheme()); err != nil {
 		return fmt.Errorf("could not update manager scheme: %s", err)
+	}
+
+	if err := monitoringv1.AddToScheme(mgr.GetScheme()); err != nil {
+		return fmt.Errorf("could not update manager scheme: %w", err)
+	}
+	if err := monitoringv1alpha1.AddToScheme(mgr.GetScheme()); err != nil {
+		return fmt.Errorf("could not update manager scheme: %w", err)
 	}
 
 	ctrlConfig := o.rsyslogRelpOptions.Completed()
