@@ -12,6 +12,7 @@ If you encounter difficulties, please open an issue so that we can make this pro
 ## Prerequisites
 
 - Make sure that you have a running Gardener setup with provider extensions. The steps to complete this can be found in the [Deploying Gardener Locally and Enabling Provider-Extensions](https://github.com/gardener/gardener/blob/master/docs/deployment/getting_started_locally_with_extensions.md) guide.
+- Make sure you are running Gardener version `>= 1.95.0` or the latest version of the master branch.
 
 ## Setting up the Rsyslog Relp Extension
 
@@ -61,4 +62,4 @@ To tear down the development environment, delete the Shoot cluster or disable th
 make remote-extension-down
 ```
 
-The make target will delete the ControllerDeployment and ControllerRegistration of the extension, and the registry-cache admission helm deployment.
+The make target will delete the ControllerDeployment and ControllerRegistration of the extension, and the `shoot-rsyslog-relp` admission helm deployment.
