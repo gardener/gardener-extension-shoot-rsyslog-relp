@@ -33,12 +33,31 @@ function configure_rsyslog() {
     systemctl enable rsyslog.service
   fi
 
+  restart_rsyslog=false
+
   if [[ ! -f /etc/rsyslog.d/60-audit.conf ]] || ! diff -rq /var/lib/rsyslog-relp-configurator/rsyslog.d/60-audit.conf /etc/rsyslog.d/60-audit.conf ; then
     cp -fL /var/lib/rsyslog-relp-configurator/rsyslog.d/60-audit.conf /etc/rsyslog.d/60-audit.conf
-    systemctl restart rsyslog
-  elif ! systemctl is-active --quiet rsyslog.service ; then
+    restart_rsyslog=true
+  fi
+
+  if [[ -d /var/lib/rsyslog-relp-configurator/tls ]] && [[ -n "$(ls -A "/var/lib/rsyslog-relp-configurator/tls" )" ]]; then
+    if [[ ! -d /etc/ssl/rsyslog ]]; then
+      mkdir -m 0600 /etc/ssl/rsyslog
+    fi
+    if ! diff -rq /var/lib/rsyslog-relp-configurator/tls /etc/ssl/rsyslog ; then
+      rm -rf /etc/ssl/rsyslog/*
+      cp -L /var/lib/rsyslog-relp-configurator/tls/* /etc/ssl/rsyslog/
+      restart_rsyslog=true
+    fi
+  elif [[ -d /etc/ssl/rsyslog ]]; then
+    rm -rf /etc/ssl/rsyslog
+  fi
+
+  if ! systemctl is-active --quiet rsyslog.service ; then
     # Ensure that the rsyslog service is running.
     systemctl start rsyslog.service
+  elif [ "${restart_rsyslog}" = true ]; then
+    systemctl restart rsyslog.service
   fi
 }
 

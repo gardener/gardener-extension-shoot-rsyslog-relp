@@ -43,6 +43,8 @@ module(
   bracketing="on"
 )
 
+input(type="imuxsock" Socket="/run/systemd/journal/syslog")
+
 ruleset(name="process_stats") {
   action(
     type="omprog"
@@ -91,5 +93,3 @@ if {{ . }} then {
   stop
 }
 {{- end}}
-
-input(type="imuxsock" Socket="/run/systemd/journal/syslog")
