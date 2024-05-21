@@ -84,6 +84,10 @@ spec:
             chroot /host /bin/bash -c 'if systemctl list-unit-files rsyslog.service > /dev/null; then systemctl restart rsyslog; fi'
           fi
 
+          if [[ -d /host/etc/ssl/rsyslog ]]; then
+            rm -rf /host/etc/ssl/rsyslog
+          fi
+
           if [[ -d /host/var/lib/rsyslog-relp-configurator ]]; then
             rm -rf /host/var/lib/rsyslog-relp-configurator
           fi

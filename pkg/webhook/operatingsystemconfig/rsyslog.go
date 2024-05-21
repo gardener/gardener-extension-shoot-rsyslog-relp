@@ -31,18 +31,20 @@ import (
 )
 
 const (
-	rsyslogCaPath                  = "/var/lib/rsyslog-relp-configurator/tls/ca.crt"
-	rsyslogCertPath                = "/var/lib/rsyslog-relp-configurator/tls/tls.crt"
-	rsyslogKeyPath                 = "/var/lib/rsyslog-relp-configurator/tls/tls.key"
-	rsyslogConfigFromOSCPath       = "/var/lib/rsyslog-relp-configurator/rsyslog.d/60-audit.conf"
+	rsyslogOSCDir = "/var/lib/rsyslog-relp-configurator"
+
+	rsyslogTLSDir        = "/etc/ssl/rsyslog"
+	rsyslogTLSFromOSCDir = rsyslogOSCDir + "/tls"
+
 	rsyslogConfigPath              = "/etc/rsyslog.d/60-audit.conf"
-	configureRsyslogScriptPath     = "/var/lib/rsyslog-relp-configurator/configure-rsyslog.sh"
-	processRsyslogPstatsScriptPath = "/var/lib/rsyslog-relp-configurator/process-rsyslog-pstats.sh"
+	rsyslogConfigFromOSCPath       = rsyslogOSCDir + "/rsyslog.d/60-audit.conf"
+	configureRsyslogScriptPath     = rsyslogOSCDir + "/configure-rsyslog.sh"
+	processRsyslogPstatsScriptPath = rsyslogOSCDir + "/process-rsyslog-pstats.sh"
 
 	auditRulesDir         = "/etc/audit/rules.d"
 	auditRulesBackupDir   = "/etc/audit/rules.d.original"
-	auditRulesFromOSCDir  = "/var/lib/rsyslog-relp-configurator/audit/rules.d"
 	auditSyslogPluginPath = "/etc/audit/plugins.d/syslog.conf"
+	auditRulesFromOSCDir  = rsyslogOSCDir + "/audit/rules.d"
 
 	nodeExporterTextfileCollectorDir = "/var/lib/node-exporter/textfile-collector"
 )
@@ -80,6 +82,8 @@ func init() {
 	}
 
 	if err := configureRsyslogScriptTemplate.Execute(&configureRsyslogScript, map[string]interface{}{
+		"pathRsyslogTLSDir":           rsyslogTLSDir,
+		"pathRsyslogTLSFromOSCDir":    rsyslogTLSFromOSCDir,
 		"pathAuditRulesDir":           auditRulesDir,
 		"pathAuditRulesBackupDir":     auditRulesBackupDir,
 		"pathAuditRulesFromOSCDir":    auditRulesFromOSCDir,
@@ -205,9 +209,9 @@ func getRsyslogTLSValues(rsyslogRelpConfig *rsyslog.RsyslogRelpConfig) map[strin
 	}
 
 	return map[string]interface{}{
-		"caPath":        rsyslogCaPath,
-		"certPath":      rsyslogCertPath,
-		"keyPath":       rsyslogKeyPath,
+		"caPath":        rsyslogTLSDir + "/ca.crt",
+		"certPath":      rsyslogTLSDir + "/tls.crt",
+		"keyPath":       rsyslogTLSDir + "/tls.key",
 		"enabled":       rsyslogRelpConfig.TLS.Enabled,
 		"permittedPeer": strings.Join(permittedPeers, ","),
 		"authMode":      authMode,
@@ -232,7 +236,7 @@ func getRsyslogTLSFiles(ctx context.Context, c client.Client, cluster *extension
 	refSecretName := v1beta1constants.ReferencedResourcesPrefix + ref.ResourceRef.Name
 	return []extensionsv1alpha1.File{
 		{
-			Path:        rsyslogCaPath,
+			Path:        rsyslogTLSFromOSCDir + "/ca.crt",
 			Permissions: ptr.To(int32(0600)),
 			Content: extensionsv1alpha1.FileContent{
 				SecretRef: &extensionsv1alpha1.FileContentSecretRef{
@@ -242,7 +246,7 @@ func getRsyslogTLSFiles(ctx context.Context, c client.Client, cluster *extension
 			},
 		},
 		{
-			Path:        rsyslogCertPath,
+			Path:        rsyslogTLSFromOSCDir + "/tls.crt",
 			Permissions: ptr.To(int32(0600)),
 			Content: extensionsv1alpha1.FileContent{
 				SecretRef: &extensionsv1alpha1.FileContentSecretRef{
@@ -252,7 +256,7 @@ func getRsyslogTLSFiles(ctx context.Context, c client.Client, cluster *extension
 			},
 		},
 		{
-			Path:        rsyslogKeyPath,
+			Path:        rsyslogTLSFromOSCDir + "/tls.key",
 			Permissions: ptr.To(int32(0600)),
 			Content: extensionsv1alpha1.FileContent{
 				SecretRef: &extensionsv1alpha1.FileContentSecretRef{
