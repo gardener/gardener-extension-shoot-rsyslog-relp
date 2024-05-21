@@ -1,0 +1,37 @@
+spec:
+  extensions:
+  - type: shoot-rsyslog-relp
+    providerConfig:
+      apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
+      kind: RsyslogRelpConfig
+      # target will be assigned automatically based on the service IP
+      # of the rsyslog relp echo server deployed in the Shoot cluster.
+      target:
+      # If you want to enable tls, use port 443 instead.
+      port: 80
+      # These loggingRules will forward everything to the rsyslog
+      # relp echo server. Specify concrete programNames or reduce
+      # secerity to filter log messages
+      loggingRules:
+      - severity: 7
+      resumeRetryCount: -1
+      timeout: 90
+      rebindInterval: 1000
+      reportSuspensionContinuation: true
+      tls:
+        # If you enable the tls connection to the rsyslog relp echo server
+        # you also have to uncomment the resources array below. The rsyslog-relp-tls
+        # secret is automatically deployed in the local Garden cluster when you
+        # run `make configure-shoot`.
+        enabled: false
+        secretReferenceName: rsyslog-tls-certificates
+        authMode: name
+        tlsLib: openssl
+        permittedPeer:
+        - "rsyslog-server"
+# resources:
+# - name: rsyslog-tls-certificates
+#   resourceRef:
+#     kind: Secret
+#     name: rsyslog-relp-tls
+#     apiVersion: v1

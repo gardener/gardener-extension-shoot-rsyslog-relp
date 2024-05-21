@@ -4,10 +4,10 @@ metadata:
   name: rsyslog-relp-echo-server
 build:
   artifacts:
-    - image: europe-docker.pkg.dev/gardener-project/public/gardener/extensions/rsyslog-relp-echo-server
+    - image: europe-docker.pkg.dev/gardener-project/public/gardener/extensions/shoot-rsyslog-relp-echo-server
       docker:
         cacheFrom:
-          - europe-docker.pkg.dev/gardener-project/public/gardener/extensions/rsyslog-relp-echo-server
+          - europe-docker.pkg.dev/gardener-project/public/gardener/extensions/shoot-rsyslog-relp-echo-server
   local: {}
 deploy:
   helm:
@@ -18,7 +18,7 @@ deploy:
         wait: true
         chartPath: example/local/charts/rsyslog-relp-echo-server
         setValueTemplates:
-          images.rsyslog: '{{.IMAGE_FULLY_QUALIFIED_europe_docker_pkg_dev_gardener_project_public_gardener_extensions_rsyslog_relp_echo_server}}'
+          images.rsyslog: '{{.IMAGE_FULLY_QUALIFIED_europe_docker_pkg_dev_gardener_project_public_gardener_extensions_shoot_rsyslog_relp_echo_server}}'
         setValues:
           service.clusterIP: 10.2.64.54
 ---
@@ -96,3 +96,10 @@ deploy:
         setValueTemplates:
           global.image.repository: '{{.IMAGE_REPO_europe_docker_pkg_dev_gardener_project_public_gardener_extensions_shoot_rsyslog_relp_admission}}'
           global.image.tag: '{{.IMAGE_TAG_europe_docker_pkg_dev_gardener_project_public_gardener_extensions_shoot_rsyslog_relp_admission}}@{{.IMAGE_DIGEST_europe_docker_pkg_dev_gardener_project_public_gardener_extensions_shoot_rsyslog_relp_admission}}'
+profiles:
+  - name: remote-extension
+    patches:
+    - op: add
+      path: /deploy/helm/releases/0/setValues
+      value:
+        global.vpa.enabled: false
