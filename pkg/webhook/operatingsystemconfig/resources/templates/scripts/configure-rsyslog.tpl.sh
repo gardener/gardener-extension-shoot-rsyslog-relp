@@ -33,12 +33,31 @@ function configure_rsyslog() {
     systemctl enable rsyslog.service
   fi
 
+  restart_rsyslog=false
+
   if [[ ! -f {{ .pathRsyslogAuditConf }} ]] || ! diff -rq {{ .pathRsyslogAuditConfFromOSC }} {{ .pathRsyslogAuditConf }} ; then
     cp -fL {{ .pathRsyslogAuditConfFromOSC }} {{ .pathRsyslogAuditConf }}
-    systemctl restart rsyslog
-  elif ! systemctl is-active --quiet rsyslog.service ; then
+    restart_rsyslog=true
+  fi
+
+  if [[ -d {{ .pathRsyslogTLSFromOSCDir }} ]] && [[ -n "$(ls -A "{{ .pathRsyslogTLSFromOSCDir }}" )" ]]; then
+    if [[ ! -d {{ .pathRsyslogTLSDir }} ]]; then
+      mkdir -m 0600 {{ .pathRsyslogTLSDir }}
+    fi
+    if ! diff -rq {{ .pathRsyslogTLSFromOSCDir }} {{ .pathRsyslogTLSDir }} ; then
+      rm -rf {{ .pathRsyslogTLSDir }}/*
+      cp -L {{ .pathRsyslogTLSFromOSCDir }}/* {{ .pathRsyslogTLSDir }}/
+      restart_rsyslog=true
+    fi
+  elif [[ -d {{ .pathRsyslogTLSDir }} ]]; then
+    rm -rf {{ .pathRsyslogTLSDir }}
+  fi
+
+  if ! systemctl is-active --quiet rsyslog.service ; then
     # Ensure that the rsyslog service is running.
     systemctl start rsyslog.service
+  elif [ "${restart_rsyslog}" = true ]; then
+    systemctl restart rsyslog.service
   fi
 }
 
