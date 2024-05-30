@@ -42,7 +42,7 @@ function configure_rsyslog() {
 
   if [[ -d {{ .pathRsyslogTLSFromOSCDir }} ]] && [[ -n "$(ls -A "{{ .pathRsyslogTLSFromOSCDir }}" )" ]]; then
     if [[ ! -d {{ .pathRsyslogTLSDir }} ]]; then
-      mkdir -m 0600 {{ .pathRsyslogTLSDir }}
+      mkdir -p {{ .pathRsyslogTLSDir }}
     fi
     if ! diff -rq {{ .pathRsyslogTLSFromOSCDir }} {{ .pathRsyslogTLSDir }} ; then
       rm -rf {{ .pathRsyslogTLSDir }}/*
