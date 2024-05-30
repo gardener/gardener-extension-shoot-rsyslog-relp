@@ -42,7 +42,7 @@ function configure_rsyslog() {
 
   if [[ -d /var/lib/rsyslog-relp-configurator/tls ]] && [[ -n "$(ls -A "/var/lib/rsyslog-relp-configurator/tls" )" ]]; then
     if [[ ! -d /etc/ssl/rsyslog ]]; then
-      mkdir -m 0600 /etc/ssl/rsyslog
+      mkdir -p /etc/ssl/rsyslog
     fi
     if ! diff -rq /var/lib/rsyslog-relp-configurator/tls /etc/ssl/rsyslog ; then
       rm -rf /etc/ssl/rsyslog/*
