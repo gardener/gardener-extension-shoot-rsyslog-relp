@@ -36,6 +36,8 @@ const (
 	configureRsyslogScriptPath     = rsyslogOSCDir + "/configure-rsyslog.sh"
 	processRsyslogPstatsScriptPath = rsyslogOSCDir + "/process-rsyslog-pstats.sh"
 
+	rsyslogRelpQueueSpoolDir = "/var/log/rsyslog"
+
 	auditRulesDir         = "/etc/audit/rules.d"
 	auditRulesBackupDir   = "/etc/audit/rules.d.original"
 	auditSyslogPluginPath = "/etc/audit/plugins.d/syslog.conf"
@@ -77,6 +79,7 @@ func init() {
 	}
 
 	if err := configureRsyslogScriptTemplate.Execute(&configureRsyslogScript, map[string]interface{}{
+		"rsyslogRelpQueueSpoolDir":    rsyslogRelpQueueSpoolDir,
 		"pathRsyslogTLSDir":           rsyslogTLSDir,
 		"pathRsyslogTLSFromOSCDir":    rsyslogTLSFromOSCDir,
 		"pathAuditRulesDir":           auditRulesDir,
@@ -176,6 +179,7 @@ func getRsyslogValues(rsyslogRelpConfig *rsyslog.RsyslogRelpConfig, cluster *ext
 	return map[string]interface{}{
 		"target":                       rsyslogRelpConfig.Target,
 		"port":                         rsyslogRelpConfig.Port,
+		"rsyslogRelpQueueSpoolDir":     rsyslogRelpQueueSpoolDir,
 		"projectName":                  projectName,
 		"shootName":                    cluster.Shoot.Name,
 		"shootUID":                     cluster.Shoot.UID,

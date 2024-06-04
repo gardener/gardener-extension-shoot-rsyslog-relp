@@ -177,6 +177,10 @@ func computeCommand() []string {
   chroot /host /bin/bash -c 'systemctl disable rsyslog-configurator; systemctl stop rsyslog-configurator; rm -f /etc/systemd/system/rsyslog-configurator.service'
 fi
 
+if [[ -d /host/var/log/rsyslog ]]; then
+  rm -rf /host/var/log/rsyslog
+fi
+
 if [[ -f /host/etc/audit/plugins.d/syslog.conf ]]; then
   sed -i 's/yes/no/g' /host/etc/audit/plugins.d/syslog.conf
 fi

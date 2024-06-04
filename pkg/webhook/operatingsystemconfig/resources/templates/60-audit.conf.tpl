@@ -59,6 +59,12 @@ ruleset(name="relp_action_ruleset") {
     type="omrelp"
     target="{{ .target }}"
     port="{{ .port }}"
+    queue.type="linkedlist"
+    queue.size="100000"
+    queue.filename="rsyslog-relp-queue"
+    queue.saveOnShutdown="on"
+    queue.spoolDirectory="{{ .rsyslogRelpQueueSpoolDir }}"
+    queue.maxDiskSpace="48m"
     Template="SyslogForwarderTemplate"
     {{- if .rebindInterval }}
     rebindInterval="{{ .rebindInterval }}"

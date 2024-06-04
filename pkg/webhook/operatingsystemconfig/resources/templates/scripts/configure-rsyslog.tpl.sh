@@ -33,6 +33,10 @@ function configure_rsyslog() {
     systemctl enable rsyslog.service
   fi
 
+  if [[ ! -d {{ .rsyslogRelpQueueSpoolDir }} ]]; then
+    mkdir -p {{ .rsyslogRelpQueueSpoolDir }}
+  fi
+
   restart_rsyslog=false
 
   if [[ ! -f {{ .pathRsyslogAuditConf }} ]] || ! diff -rq {{ .pathRsyslogAuditConfFromOSC }} {{ .pathRsyslogAuditConf }} ; then
