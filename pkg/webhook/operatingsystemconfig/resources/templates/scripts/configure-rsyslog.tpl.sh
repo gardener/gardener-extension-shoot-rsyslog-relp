@@ -28,7 +28,7 @@ function configure_auditd() {
   if [[ -f {{ .pathSyslogAuditPlugin }} ]] && \
       grep -m 1 -qie  "^active\\>" "{{ .pathSyslogAuditPlugin }}" && \
       ! grep -m 1 -qie "^active\\> = yes" "{{ .pathSyslogAuditPlugin }}" ; then
-    sed -i "s/^active\\>.*/active = yes/gi" {{ .pathSyslogAuditPlugin }}
+    sed -i "s/^active\\>.*/active = yes/i" {{ .pathSyslogAuditPlugin }}
     export restart_auditd=true
   fi
 

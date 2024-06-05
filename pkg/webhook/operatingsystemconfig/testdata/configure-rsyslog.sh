@@ -28,7 +28,7 @@ function configure_auditd() {
   if [[ -f /etc/audit/plugins.d/syslog.conf ]] && \
       grep -m 1 -qie  "^active\\>" "/etc/audit/plugins.d/syslog.conf" && \
       ! grep -m 1 -qie "^active\\> = yes" "/etc/audit/plugins.d/syslog.conf" ; then
-    sed -i "s/^active\\>.*/active = yes/gi" /etc/audit/plugins.d/syslog.conf
+    sed -i "s/^active\\>.*/active = yes/i" /etc/audit/plugins.d/syslog.conf
     export restart_auditd=true
   fi
 
