@@ -29,7 +29,7 @@ function configure_auditd() {
       grep -m 1 -qie  "^active\\>" "/etc/audit/plugins.d/syslog.conf" && \
       ! grep -m 1 -qie "^active\\> = yes" "/etc/audit/plugins.d/syslog.conf" ; then
     sed -i "s/^active\\>.*/active = yes/i" /etc/audit/plugins.d/syslog.conf
-    export restart_auditd=true
+    restart_auditd=true
   fi
 
   if ! systemctl is-active --quiet auditd.service ; then

@@ -29,7 +29,7 @@ function configure_auditd() {
       grep -m 1 -qie  "^active\\>" "{{ .pathSyslogAuditPlugin }}" && \
       ! grep -m 1 -qie "^active\\> = yes" "{{ .pathSyslogAuditPlugin }}" ; then
     sed -i "s/^active\\>.*/active = yes/i" {{ .pathSyslogAuditPlugin }}
-    export restart_auditd=true
+    restart_auditd=true
   fi
 
   if ! systemctl is-active --quiet auditd.service ; then
