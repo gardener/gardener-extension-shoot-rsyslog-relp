@@ -13,17 +13,42 @@ function configure_auditd() {
     mv {{ .pathAuditRulesDir }} {{ .pathAuditRulesBackupDir }}
   fi
 
+  restart_auditd=false
+
   if [[ ! -d {{ .pathAuditRulesDir }} ]]; then
     mkdir -p {{ .pathAuditRulesDir }}
   fi
   if ! diff -rq {{ .pathAuditRulesFromOSCDir }} {{ .pathAuditRulesDir }} ; then
     rm -rf {{ .pathAuditRulesDir }}/*
     cp -L {{ .pathAuditRulesFromOSCDir }}/* {{ .pathAuditRulesDir }}/
-    if [[ -f {{ .pathSyslogAuditPlugin }} ]]; then
-      sed -i 's/no/yes/g' {{ .pathSyslogAuditPlugin }}
-    fi
     augenrules --load
-    systemctl restart auditd
+    restart_auditd=true
+  fi
+
+  if [[ -f {{ .pathSyslogAuditPlugin }} ]] && \
+      grep -m 1 -qie  "^active\\>" "{{ .pathSyslogAuditPlugin }}" && \
+      ! grep -m 1 -qie "^active\\> = yes" "{{ .pathSyslogAuditPlugin }}" ; then
+    sed -i "s/^active\\>.*/active = yes/i" {{ .pathSyslogAuditPlugin }}
+    restart_auditd=true
+  fi
+
+  if ! systemctl is-active --quiet auditd.service ; then
+    # Ensure that the auditd service is running.
+    systemctl start auditd.service
+  elif [ "${restart_auditd}" = true ]; then
+    systemctl restart auditd.service
+  fi
+
+  # If the `systemd-journald-audit.socket` socket exists and is enabled, then journald also fetches audit logs from it.
+  # To avoid duplication we disable it and only rely on the syslog audit plugin.
+  if systemctl list-unit-files systemd-journald-audit.socket > /dev/null ; then
+    if systemctl is-enabled --quiet systemd-journald-audit.socket ; then
+      systemctl disable systemd-journald-audit.socket
+    fi
+    if systemctl is-active --quiet systemd-journald-audit.socket ; then
+      systemctl stop systemd-journald-audit.socket
+      systemctl restart systemd-journald
+    fi
   fi
 }
 

@@ -68,8 +68,14 @@ spec:
           fi
 
           if [[ -f /host/etc/audit/plugins.d/syslog.conf ]]; then
-            sed -i 's/yes/no/g' /host/etc/audit/plugins.d/syslog.conf
+            sed -i "s/^active\\>.*/active = no/i" /host/etc/audit/plugins.d/syslog.conf
           fi
+
+          chroot /host /bin/bash -c 'if systemctl list-unit-files systemd-journald-audit.socket > /dev/null; then \
+            systemctl enable systemd-journald-audit.socket; \
+            systemctl start systemd-journald-audit.socket; \
+            systemctl restart systemd-journald; \
+          fi'
 
           if [[ -d /host/etc/audit/rules.d.original ]]; then
             if [[ -d /host/etc/audit/rules.d ]]; then
