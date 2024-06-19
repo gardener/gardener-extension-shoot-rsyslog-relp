@@ -58,6 +58,10 @@ function configure_rsyslog() {
     systemctl enable rsyslog.service
   fi
 
+  if [[ ! -d /var/log/rsyslog ]]; then
+    mkdir -p /var/log/rsyslog
+  fi
+
   restart_rsyslog=false
 
   if [[ ! -f /etc/rsyslog.d/60-audit.conf ]] || ! diff -rq /var/lib/rsyslog-relp-configurator/rsyslog.d/60-audit.conf /etc/rsyslog.d/60-audit.conf ; then
