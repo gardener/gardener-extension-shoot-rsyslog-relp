@@ -25,10 +25,14 @@ function configure_auditd() {
     restart_auditd=true
   fi
 
-  if [[ -f /etc/audit/plugins.d/syslog.conf ]] && \
-      grep -m 1 -qie  "^active\\>" "/etc/audit/plugins.d/syslog.conf" && \
-      ! grep -m 1 -qie "^active\\> = yes" "/etc/audit/plugins.d/syslog.conf" ; then
-    sed -i "s/^active\\>.*/active = yes/i" /etc/audit/plugins.d/syslog.conf
+  path_syslog_audit_plugin=/etc/audit/plugins.d/syslog.conf
+  if [[ -f /etc/audisp/plugins.d/syslog.conf ]]; then
+    path_syslog_audit_plugin=/etc/audisp/plugins.d/syslog.conf
+  fi
+  if [[ -f "$path_syslog_audit_plugin" ]] && \
+      grep -m 1 -qie  "^active\\>" "$path_syslog_audit_plugin" && \
+      ! grep -m 1 -qie "^active\\> = yes" "$path_syslog_audit_plugin" ; then
+    sed -i "s/^active\\>.*/active = yes/i" "$path_syslog_audit_plugin"
     restart_auditd=true
   fi
 

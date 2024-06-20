@@ -25,10 +25,14 @@ function configure_auditd() {
     restart_auditd=true
   fi
 
-  if [[ -f {{ .pathSyslogAuditPlugin }} ]] && \
-      grep -m 1 -qie  "^active\\>" "{{ .pathSyslogAuditPlugin }}" && \
-      ! grep -m 1 -qie "^active\\> = yes" "{{ .pathSyslogAuditPlugin }}" ; then
-    sed -i "s/^active\\>.*/active = yes/i" {{ .pathSyslogAuditPlugin }}
+  path_syslog_audit_plugin={{ .pathSyslogAuditPlugin }}
+  if [[ -f {{ .pathSyslogAuditPluginAlternative }} ]]; then
+    path_syslog_audit_plugin={{ .pathSyslogAuditPluginAlternative }}
+  fi
+  if [[ -f "$path_syslog_audit_plugin" ]] && \
+      grep -m 1 -qie  "^active\\>" "$path_syslog_audit_plugin" && \
+      ! grep -m 1 -qie "^active\\> = yes" "$path_syslog_audit_plugin" ; then
+    sed -i "s/^active\\>.*/active = yes/i" "$path_syslog_audit_plugin"
     restart_auditd=true
   fi
 
