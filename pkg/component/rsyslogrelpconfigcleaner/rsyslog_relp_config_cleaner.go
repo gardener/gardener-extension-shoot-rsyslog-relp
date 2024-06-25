@@ -185,7 +185,7 @@ if [[ -f /host/etc/audit/plugins.d/syslog.conf ]]; then
   sed -i "s/^active\\>.*/active = no/i" /host/etc/audit/plugins.d/syslog.conf
 fi
 if [[ -f /host/etc/audisp/plugins.d/syslog.conf ]]; then
-  sed -i "s/^active\\>.*/active = no/i" /host/etc/audit/plugins.d/syslog.conf
+  sed -i "s/^active\\>.*/active = no/i" /host/etc/audisp/plugins.d/syslog.conf
 fi
 
 chroot /host /bin/bash -c 'if systemctl list-unit-files systemd-journald-audit.socket > /dev/null; then \
