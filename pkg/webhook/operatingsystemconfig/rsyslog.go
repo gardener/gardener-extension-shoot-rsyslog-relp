@@ -41,7 +41,7 @@ const (
 	auditRulesDir                    = "/etc/audit/rules.d"
 	auditRulesBackupDir              = "/etc/audit/rules.d.original"
 	auditSyslogPluginPath            = "/etc/audit/plugins.d/syslog.conf"
-	auditSyslogPluginPathAlternative = "/etc/audisp/plugins.d/syslog.conf"
+	audispSyslogPluginPath = "/etc/audisp/plugins.d/syslog.conf"
 	auditRulesFromOSCDir             = rsyslogOSCDir + "/audit/rules.d"
 
 	nodeExporterTextfileCollectorDir = "/var/lib/node-exporter/textfile-collector"
