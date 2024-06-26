@@ -122,6 +122,13 @@ func WithTarget(target string) func(rsyslogRelpConfig *rsyslogv1alpha1.RsyslogRe
 	}
 }
 
+// AppendLoggingRule appends the given loggingRule to the logging rules of the rsyslog relp configuration.
+func AppendLoggingRule(loggingRule rsyslogv1alpha1.LoggingRule) func(rsyslogRelpConfig *rsyslogv1alpha1.RsyslogRelpConfig) {
+	return func(rsyslogRelpConfig *rsyslogv1alpha1.RsyslogRelpConfig) {
+		rsyslogRelpConfig.LoggingRules = append(rsyslogRelpConfig.LoggingRules, loggingRule)
+	}
+}
+
 // WithTLSWithSecretRefNameAndTLSLib returns a function which enables TLS for the rsyslog relp configuration and sets
 // the tls.secretRefName to the given secretRefName and tls.tlsLib to the given tlsLib.
 func WithTLSWithSecretRefNameAndTLSLib(secretRefName, tlsLib string) func(rsyslogRelpConfig *rsyslogv1alpha1.RsyslogRelpConfig) {

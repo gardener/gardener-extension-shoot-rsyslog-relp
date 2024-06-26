@@ -48,7 +48,7 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 
 		echoServerPodIf, echoServerPodName, err := common.GetEchoServerPodInterfaceAndName(ctx, f.ShootClient)
 		Expect(err).NotTo(HaveOccurred())
-		verifier := common.NewVerifier(f.Logger, f.ShootClient, echoServerPodIf, echoServerPodName, f.Shoot.Spec.Provider.Type, f.Project.Name, f.Shoot.Name, string(f.Shoot.UID))
+		verifier := common.NewVerifier(f.Logger, f.ShootClient, echoServerPodIf, echoServerPodName, f.Shoot.Spec.Provider.Type, f.Project.Name, f.Shoot.Name, string(f.Shoot.UID), false)
 
 		common.ForEachNode(ctx, f.ShootClient, func(ctx context.Context, node *corev1.Node) {
 			verifier.VerifyExtensionForNode(ctx, node.Name)

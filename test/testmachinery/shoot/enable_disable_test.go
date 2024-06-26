@@ -17,6 +17,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	rsyslogv1alpha1 "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog/v1alpha1"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/test/common"
 )
 
@@ -42,7 +43,7 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 		defer cancel()
 		echoServerPodIf, echoServerPodName, err := common.GetEchoServerPodInterfaceAndName(ctx, f.ShootClient)
 		Expect(err).NotTo(HaveOccurred())
-		verifier := common.NewVerifier(f.Logger, f.ShootClient, echoServerPodIf, echoServerPodName, f.Shoot.Spec.Provider.Type, f.Project.Name, f.Shoot.Name, string(f.Shoot.UID))
+		verifier := common.NewVerifier(f.Logger, f.ShootClient, echoServerPodIf, echoServerPodName, f.Shoot.Spec.Provider.Type, f.Project.Name, f.Shoot.Name, string(f.Shoot.UID), true)
 
 		common.ForEachNode(ctx, f.ShootClient, func(ctx context.Context, node *corev1.Node) {
 			verifier.VerifyExtensionForNode(ctx, node.Name)
@@ -79,7 +80,11 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 	FContext("shoot-rsyslog-relp extension with tls disabled", Label("tls-disabled"), func() {
 		f.Serial().Beta().CIt("should enable and disable the shoot-rsyslog-relp extension", func(parentCtx context.Context) {
 			test(parentCtx, func(shoot *gardencorev1beta1.Shoot) error {
-				common.AddOrUpdateRsyslogRelpExtension(shoot, common.WithTarget(echoServerIP))
+				common.AddOrUpdateRsyslogRelpExtension(
+					shoot,
+					common.WithTarget(echoServerIP),
+					common.AppendLoggingRule(rsyslogv1alpha1.LoggingRule{ProgramNames: []string{"audisp-syslog", "audispd"}, Severity: 7}),
+				)
 				return nil
 			})
 		}, defaultTestTimeout, framework.WithCAfterTest(func(ctx context.Context) {
@@ -108,7 +113,13 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			test(parentCtx, func(shoot *gardencorev1beta1.Shoot) error {
-				common.AddOrUpdateRsyslogRelpExtension(shoot, common.WithPort(443), common.WithTLSWithSecretRefNameAndTLSLib(secretReferenceName, "openssl"), common.WithTarget(echoServerIP))
+				common.AddOrUpdateRsyslogRelpExtension(
+					shoot,
+					common.WithPort(443),
+					common.WithTLSWithSecretRefNameAndTLSLib(secretReferenceName, "openssl"),
+					common.WithTarget(echoServerIP),
+					common.AppendLoggingRule(rsyslogv1alpha1.LoggingRule{ProgramNames: []string{"audisp-syslog", "audispd"}, Severity: 7}),
+				)
 				common.AddOrUpdateRsyslogTLSSecretResource(shoot, secretReferenceName)
 				return nil
 			})
