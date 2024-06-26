@@ -35,6 +35,13 @@ type Verifier struct {
 	rootPodExecutor            framework.RootPodExecutor
 }
 
+type logEntry struct {
+	program           string
+	severity          string
+	message           string
+	shouldBeForwarded bool
+}
+
 // NewVerifier creates a new Verifier.
 func NewVerifier(log logr.Logger,
 	client kubernetes.Interface,
@@ -62,27 +69,64 @@ func (v *Verifier) SetEchoServerPodIfAndName(echoServerPodIf clientcorev1.PodInt
 // the rsyslog service running on the given node.
 func (v *Verifier) VerifyExtensionForNode(ctx context.Context, nodeName string) {
 	v.setPodExecutor(framework.NewRootPodExecutor(v.log, v.client, &nodeName, "kube-system"))
+	defer v.cleanPodExecutor(ctx)
+
 	v.setNodeName(nodeName)
+	defer v.setNodeName("")
 
 	v.verifyThatRsyslogIsActiveAndConfigured(ctx)
-	v.verifyThatLogsAreSentToEchoServer(ctx, "test-program", "1", "this should get sent to echo server")
-	v.verifyThatLogsAreNotSentToEchoServer(ctx, "other-program", "1", "this should not get sent to echo server")
-	v.verifyThatLogsAreNotSentToEchoServer(ctx, "test-program", "3", "this should not get sent to echo server")
-
-	v.cleanPodExecutor(ctx)
-	v.setNodeName("")
+	v.verifyLogForwarding(
+		ctx,
+		logEntry{program: "test-program", severity: "1", message: "this should get sent to echo server", shouldBeForwarded: true},
+		logEntry{program: "test-program", severity: "3", message: "this should not get sent to echo server", shouldBeForwarded: false},
+		logEntry{program: "other-program", severity: "1", message: "this should not get sent to echo server", shouldBeForwarded: false},
+	)
 }
 
 // VerifyExtensionDisabledForNode verifies whether the configuration done by the shoot-rsyslog-relp extension
 // has been properly cleaned up from the given node after the extension is disabled.
 func (v *Verifier) VerifyExtensionDisabledForNode(ctx context.Context, nodeName string) {
 	v.setPodExecutor(framework.NewRootPodExecutor(v.log, v.client, &nodeName, "kube-system"))
+	defer v.cleanPodExecutor(ctx)
+
 	v.setNodeName(nodeName)
+	defer v.setNodeName("")
 
-	v.verifyThatLogsAreNotSentToEchoServer(ctx, "test-program", "1", "this should not get sent to echo server")
+	v.verifyLogForwarding(ctx,
+		logEntry{program: "test-program", severity: "1", message: "this should not get sent to echo server", shouldBeForwarded: false},
+	)
+}
 
-	v.cleanPodExecutor(ctx)
-	v.setNodeName("")
+func (v *Verifier) verifyThatRsyslogIsActiveAndConfigured(ctx context.Context) {
+	EventuallyWithOffset(2, func(g Gomega) {
+		response, _ := ExecCommand(ctx, v.log, v.rootPodExecutor, "sh -c 'test -f /etc/rsyslog.d/60-audit.conf && systemctl is-active rsyslog.service' &>/dev/null && echo 'configured' || echo 'not configured'")
+		g.Expect(string(response)).To(Equal("configured\n"), fmt.Sprintf("Expected the /etc/rsyslog.d/60-audit.conf file to exist and the rsyslog service to be active on node %s", v.nodeName))
+	}).WithTimeout(1 * time.Minute).WithPolling(10 * time.Second).WithContext(ctx).Should(Succeed())
+}
+
+func (v *Verifier) verifyLogForwarding(ctx context.Context, logEntries ...logEntry) {
+	timeBeforeLogGeneration := metav1.Now()
+	ExpectWithOffset(2, v.generateLogs(ctx, logEntries)).To(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s", v.nodeName))
+
+	forwardedLogMatchers, notForwardedLogMatchers := v.constructRegexMatchers(logEntries)
+	if len(forwardedLogMatchers) > 0 {
+		EventuallyWithOffset(2, func(g Gomega) {
+			logLines, err := v.getLogs(ctx, timeBeforeLogGeneration)
+			g.Expect(err).NotTo(HaveOccurred())
+			g.Expect(logLines).To(ContainElements(forwardedLogMatchers...))
+		}).WithTimeout(1*time.Minute).WithPolling(10*time.Second).WithContext(ctx).Should(Succeed(), fmt.Sprintf("Expected logs for node %s to be present in rsyslog-relp-echo-server", v.nodeName))
+	}
+
+	if len(notForwardedLogMatchers) > 0 {
+		ConsistentlyWithOffset(2, func(g Gomega) {
+			logLines, err := v.getLogs(ctx, timeBeforeLogGeneration)
+			g.Expect(err).NotTo(HaveOccurred())
+			// Iterate over all matchers to ensure that none of them are contained in the log lines.
+			for _, notSentLogsMatcher := range notForwardedLogMatchers {
+				g.Expect(logLines).NotTo(ContainElement(notSentLogsMatcher))
+			}
+		}).WithTimeout(30*time.Second).WithPolling(10*time.Second).WithContext(ctx).Should(Succeed(), fmt.Sprintf("Expected logs for node %s to NOT be present in rsyslog-relp-echo-server", v.nodeName))
+	}
 }
 
 func (v *Verifier) setPodExecutor(rootPodExecutor framework.RootPodExecutor) {
@@ -97,38 +141,20 @@ func (v *Verifier) setNodeName(nodeName string) {
 	v.nodeName = nodeName
 }
 
-func (v *Verifier) verifyThatRsyslogIsActiveAndConfigured(ctx context.Context) {
-	EventuallyWithOffset(2, func(g Gomega) {
-		response, _ := ExecCommand(ctx, v.log, v.rootPodExecutor, "systemctl is-active rsyslog.service &>/dev/null && echo 'active' || echo 'not active'")
-		g.Expect(string(response)).To(Equal("active\n"), fmt.Sprintf("Expected the rsyslog.service unit to be active on node %s", v.nodeName))
-
-		response, _ = ExecCommand(ctx, v.log, v.rootPodExecutor, "test -f /etc/rsyslog.d/60-audit.conf && echo 'configured' || echo 'not configured'")
-		g.Expect(string(response)).To(Equal("configured\n"), fmt.Sprintf("Expected the /etc/rsyslog.d/60-audit.conf file to exist on node %s", v.nodeName))
-	}).WithTimeout(1 * time.Minute).WithPolling(10 * time.Second).WithContext(ctx).Should(Succeed())
-}
-
-func (v *Verifier) verifyThatLogsAreSentToEchoServer(ctx context.Context, programName, severity, logMessage string) {
-	EventuallyWithOffset(2, func(g Gomega) {
-		logLines, err := v.generateAndGetLogs(ctx, programName, severity, logMessage)
-		g.Expect(err).NotTo(HaveOccurred())
-		g.Expect(logLines).To(ContainElement(MatchRegexp(v.constructRegex(programName, logMessage))))
-	}).WithTimeout(1*time.Minute).WithPolling(10*time.Second).WithContext(ctx).Should(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s and logs to be present in rsyslog-relp-echo-server", v.nodeName))
-}
-
-func (v *Verifier) verifyThatLogsAreNotSentToEchoServer(ctx context.Context, programName, severity, logMessage string) {
-	ConsistentlyWithOffset(2, func(g Gomega) {
-		logLines, err := v.generateAndGetLogs(ctx, programName, severity, logMessage)
-		g.Expect(err).NotTo(HaveOccurred())
-		g.Expect(logLines).NotTo(ContainElement(MatchRegexp(v.constructRegex(programName, logMessage))))
-	}).WithTimeout(30*time.Second).WithPolling(10*time.Second).WithContext(ctx).Should(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s and logs to NOT be present in rsyslog-relp-echo-server", v.nodeName))
-}
-
-func (v *Verifier) generateAndGetLogs(ctx context.Context, programName, severity, logMessage string) ([]string, error) {
-	command := fmt.Sprintf("sh -c 'echo %s | systemd-cat -t %s -p %s'", logMessage, programName, severity)
-	timeBeforeLogGeneration := metav1.Now()
-	if _, err := ExecCommand(ctx, v.log, v.rootPodExecutor, command); err != nil {
-		return nil, err
+func (v *Verifier) generateLogs(ctx context.Context, logEntries []logEntry) error {
+	command := "sh -c '"
+	for _, logEntry := range logEntries {
+		command += fmt.Sprintf("echo %s | systemd-cat -t %s -p %s; ", logEntry.message, logEntry.program, logEntry.severity)
 	}
+	command += "'"
+
+	if _, err := ExecCommand(ctx, v.log, v.rootPodExecutor, command); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (v *Verifier) getLogs(ctx context.Context, timeBeforeLogGeneration metav1.Time) ([]string, error) {
 	logs, err := kubernetes.GetPodLogs(ctx, v.rsyslogRelpEchoServerPodIf, v.rsyslogEchoServerPodName, &corev1.PodLogOptions{SinceTime: &timeBeforeLogGeneration})
 	if err != nil {
 		return nil, err
@@ -142,8 +168,12 @@ func (v *Verifier) generateAndGetLogs(ctx context.Context, programName, severity
 	return logLines, nil
 }
 
-func (v *Verifier) constructRegex(programName, logMessage string) string {
-	var expectedNodeHostName string
+func (v *Verifier) constructRegexMatchers(logEntries []logEntry) ([]interface{}, []interface{}) {
+	var (
+		expectedNodeHostName    string
+		forwardedLogMatchers    []interface{}
+		notForwardedLogMatchers []interface{}
+	)
 
 	switch {
 	case v.providerType == "aws":
@@ -160,5 +190,13 @@ func (v *Verifier) constructRegex(programName, logMessage string) string {
 		expectedNodeHostName = v.nodeName
 	}
 
-	return fmt.Sprintf(`%s %s %s %s \d+ %s\[\d+\]: .* %s`, v.projectName, v.shootName, v.shootUID, expectedNodeHostName, programName, logMessage)
+	for _, logEntry := range logEntries {
+		matchRegexp := MatchRegexp(fmt.Sprintf(`%s %s %s %s \d+ %s\[\d+\]: .* %s`, v.projectName, v.shootName, v.shootUID, expectedNodeHostName, logEntry.program, logEntry.message))
+		if logEntry.shouldBeForwarded {
+			forwardedLogMatchers = append(forwardedLogMatchers, matchRegexp)
+		} else {
+			notForwardedLogMatchers = append(notForwardedLogMatchers, matchRegexp)
+		}
+	}
+	return forwardedLogMatchers, notForwardedLogMatchers
 }
