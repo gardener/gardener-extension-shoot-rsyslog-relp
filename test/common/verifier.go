@@ -33,6 +33,7 @@ type Verifier struct {
 	shootName                  string
 	shootUID                   string
 	rootPodExecutor            framework.RootPodExecutor
+	testAuditLogging           bool
 }
 
 type logEntry struct {
@@ -46,7 +47,8 @@ type logEntry struct {
 func NewVerifier(log logr.Logger,
 	client kubernetes.Interface,
 	echoServerPodIf clientcorev1.PodInterface,
-	echoServerPodName, providerType, projectName, shootName, shootUID string) *Verifier {
+	echoServerPodName, providerType, projectName, shootName, shootUID string,
+	testAuditLogging bool) *Verifier {
 	return &Verifier{
 		log:                        log,
 		client:                     client,
@@ -56,6 +58,7 @@ func NewVerifier(log logr.Logger,
 		projectName:                projectName,
 		shootName:                  shootName,
 		shootUID:                   shootUID,
+		testAuditLogging:           testAuditLogging,
 	}
 }
 
@@ -146,6 +149,10 @@ func (v *Verifier) generateLogs(ctx context.Context, logEntries []logEntry) erro
 	for _, logEntry := range logEntries {
 		command += fmt.Sprintf("echo %s | systemd-cat -t %s -p %s; ", logEntry.message, logEntry.program, logEntry.severity)
 	}
+	if v.testAuditLogging {
+		// Create a file under /etc directory so that an audit event is generated.
+		command += "echo some-content > /etc/newfile; rm -f /etc/newfile"
+	}
 	command += "'"
 
 	if _, err := ExecCommand(ctx, v.log, v.rootPodExecutor, command); err != nil {
@@ -198,5 +205,10 @@ func (v *Verifier) constructRegexMatchers(logEntries []logEntry) ([]interface{},
 			notForwardedLogMatchers = append(notForwardedLogMatchers, matchRegexp)
 		}
 	}
+
+	if v.testAuditLogging {
+		forwardedLogMatchers = append(forwardedLogMatchers, MatchRegexp("/etc/newfile.sh"))
+	}
+
 	return forwardedLogMatchers, notForwardedLogMatchers
 }
