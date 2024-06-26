@@ -26,8 +26,8 @@ function configure_auditd() {
   fi
 
   path_syslog_audit_plugin={{ .pathSyslogAuditPlugin }}
-  if [[ -f {{ .pathSyslogAuditPluginAlternative }} ]]; then
-    path_syslog_audit_plugin={{ .pathSyslogAuditPluginAlternative }}
+  if [[ -f {{ .audispSyslogPluginPath }} ]]; then
+    path_syslog_audit_plugin={{ .audispSyslogPluginPath }}
   fi
   if [[ -f "$path_syslog_audit_plugin" ]] && \
       grep -m 1 -qie  "^active\\>" "$path_syslog_audit_plugin" && \
