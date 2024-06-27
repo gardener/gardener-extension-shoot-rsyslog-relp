@@ -38,10 +38,11 @@ const (
 
 	rsyslogRelpQueueSpoolDir = "/var/log/rsyslog"
 
-	auditRulesDir         = "/etc/audit/rules.d"
-	auditRulesBackupDir   = "/etc/audit/rules.d.original"
-	auditSyslogPluginPath = "/etc/audit/plugins.d/syslog.conf"
-	auditRulesFromOSCDir  = rsyslogOSCDir + "/audit/rules.d"
+	auditRulesDir          = "/etc/audit/rules.d"
+	auditRulesBackupDir    = "/etc/audit/rules.d.original"
+	auditSyslogPluginPath  = "/etc/audit/plugins.d/syslog.conf"
+	audispSyslogPluginPath = "/etc/audisp/plugins.d/syslog.conf"
+	auditRulesFromOSCDir   = rsyslogOSCDir + "/audit/rules.d"
 
 	nodeExporterTextfileCollectorDir = "/var/lib/node-exporter/textfile-collector"
 )
@@ -86,6 +87,7 @@ func init() {
 		"pathAuditRulesBackupDir":     auditRulesBackupDir,
 		"pathAuditRulesFromOSCDir":    auditRulesFromOSCDir,
 		"pathSyslogAuditPlugin":       auditSyslogPluginPath,
+		"audispSyslogPluginPath":      audispSyslogPluginPath,
 		"pathRsyslogAuditConf":        rsyslogConfigPath,
 		"pathRsyslogAuditConfFromOSC": rsyslogConfigFromOSCPath,
 	}); err != nil {
