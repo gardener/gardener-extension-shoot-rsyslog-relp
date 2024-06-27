@@ -21,6 +21,8 @@ import (
 	clientcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
+const fileForAuditEvent = "/etc/newfile"
+
 // Verifier is a struct that can be used to verify whether the shoot-rsyslog-relp extension is working as expected.
 type Verifier struct {
 	log                        logr.Logger
@@ -78,7 +80,7 @@ func (v *Verifier) VerifyExtensionForNode(ctx context.Context, nodeName string) 
 	defer v.setNodeName("")
 
 	v.verifyThatRsyslogIsActiveAndConfigured(ctx)
-	v.verifyLogForwarding(
+	v.verifyLogsAreForwardedToEchoServer(
 		ctx,
 		logEntry{program: "test-program", severity: "1", message: "this should get sent to echo server", shouldBeForwarded: true},
 		logEntry{program: "test-program", severity: "3", message: "this should not get sent to echo server", shouldBeForwarded: false},
@@ -95,8 +97,8 @@ func (v *Verifier) VerifyExtensionDisabledForNode(ctx context.Context, nodeName 
 	v.setNodeName(nodeName)
 	defer v.setNodeName("")
 
-	v.verifyLogForwarding(ctx,
-		logEntry{program: "test-program", severity: "1", message: "this should not get sent to echo server", shouldBeForwarded: false},
+	v.verifyThatLogsAreNotForwardedToEchoServer(ctx,
+		logEntry{program: "test-program", severity: "1", message: "this should not get sent to echo server"},
 	)
 }
 
@@ -107,9 +109,11 @@ func (v *Verifier) verifyThatRsyslogIsActiveAndConfigured(ctx context.Context) {
 	}).WithTimeout(1 * time.Minute).WithPolling(10 * time.Second).WithContext(ctx).Should(Succeed())
 }
 
-func (v *Verifier) verifyLogForwarding(ctx context.Context, logEntries ...logEntry) {
+func (v *Verifier) verifyLogsAreForwardedToEchoServer(ctx context.Context, logEntries ...logEntry) {
 	timeBeforeLogGeneration := metav1.Now()
-	ExpectWithOffset(2, v.generateLogs(ctx, logEntries)).To(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s", v.nodeName))
+	EventuallyWithOffset(2, func() error {
+		return v.generateLogs(ctx, logEntries)
+	}).WithTimeout(30*time.Second).WithPolling(10*time.Second).WithContext(ctx).Should(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s", v.nodeName))
 
 	forwardedLogMatchers, notForwardedLogMatchers := v.constructRegexMatchers(logEntries)
 	if len(forwardedLogMatchers) > 0 {
@@ -132,6 +136,19 @@ func (v *Verifier) verifyLogForwarding(ctx context.Context, logEntries ...logEnt
 	}
 }
 
+func (v *Verifier) verifyThatLogsAreNotForwardedToEchoServer(ctx context.Context, logEntries ...logEntry) {
+	timeBeforeLogGeneration := metav1.Now()
+	EventuallyWithOffset(2, func() error {
+		return v.generateLogs(ctx, logEntries)
+	}).WithTimeout(30*time.Second).WithPolling(10*time.Second).WithContext(ctx).Should(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s", v.nodeName))
+
+	ConsistentlyWithOffset(2, func(g Gomega) {
+		logLines, err := v.getLogs(ctx, timeBeforeLogGeneration)
+		g.Expect(err).NotTo(HaveOccurred())
+		g.Expect(logLines).To(BeEmpty())
+	}).WithTimeout(30*time.Second).WithPolling(10*time.Second).WithContext(ctx).Should(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s and logs to NOT be present in rsyslog-relp-echo-server", v.nodeName))
+}
+
 func (v *Verifier) setPodExecutor(rootPodExecutor framework.RootPodExecutor) {
 	v.rootPodExecutor = rootPodExecutor
 }
@@ -151,7 +168,7 @@ func (v *Verifier) generateLogs(ctx context.Context, logEntries []logEntry) erro
 	}
 	if v.testAuditLogging {
 		// Create a file under /etc directory so that an audit event is generated.
-		command += "echo some-content > /etc/newfile; rm -f /etc/newfile"
+		command += "echo some-content > " + fileForAuditEvent + "; rm -f " + fileForAuditEvent
 	}
 	command += "'"
 
@@ -207,7 +224,7 @@ func (v *Verifier) constructRegexMatchers(logEntries []logEntry) ([]interface{},
 	}
 
 	if v.testAuditLogging {
-		forwardedLogMatchers = append(forwardedLogMatchers, MatchRegexp("/etc/newfile.sh"))
+		forwardedLogMatchers = append(forwardedLogMatchers, MatchRegexp(fileForAuditEvent))
 	}
 
 	return forwardedLogMatchers, notForwardedLogMatchers
