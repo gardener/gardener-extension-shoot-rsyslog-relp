@@ -77,7 +77,7 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 		Expect(deleteRsyslogRelpEchoServer(ctx, f))
 	}, time.Minute)
 
-	FContext("shoot-rsyslog-relp extension with tls disabled", Label("tls-disabled"), func() {
+	Context("shoot-rsyslog-relp extension with tls disabled", Label("tls-disabled"), func() {
 		f.Serial().Beta().CIt("should enable and disable the shoot-rsyslog-relp extension", func(parentCtx context.Context) {
 			test(parentCtx, func(shoot *gardencorev1beta1.Shoot) error {
 				common.AddOrUpdateRsyslogRelpExtension(
