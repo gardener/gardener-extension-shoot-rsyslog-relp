@@ -6,4 +6,8 @@
 ## The original file was moved to /etc/audit/rules.d.original
 
 -a exit,always -F arch=b64 -S mount -S umount2 -S mknod -S mknodat -S chroot -F auid!=-1 -F key=privileged_special
+
+## The mount_setattr kernel function is available only linux kernel versions >= 5.12.
+## It is specified in a separate rule so that the rule for the system
+## calls above can be safely loaded on kernel versions < 5.12.
 -a exit,always -F arch=b64 -S mount_setattr -F auid!=-1 -F key=privileged_special
