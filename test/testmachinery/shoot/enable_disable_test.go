@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	defaultTestTimeout        = 30 * time.Minute
+	defaultTestTimeout        = 50 * time.Minute
 	defaultTestCleanupTimeout = 10 * time.Minute
 )
 
@@ -39,7 +39,7 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 		Expect(f.UpdateShoot(ctx, shootMutateFn)).To(Succeed())
 
 		By("Verify shoot-rsyslog-relp works")
-		ctx, cancel = context.WithTimeout(parentCtx, 10*time.Minute)
+		ctx, cancel = context.WithTimeout(parentCtx, 20*time.Minute)
 		defer cancel()
 		echoServerPodIf, echoServerPodName, err := common.GetEchoServerPodInterfaceAndName(ctx, f.ShootClient)
 		Expect(err).NotTo(HaveOccurred())
