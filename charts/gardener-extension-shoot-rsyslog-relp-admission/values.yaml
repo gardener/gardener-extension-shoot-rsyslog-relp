@@ -12,6 +12,7 @@ global:
     repository: europe-docker.pkg.dev/gardener-project/public/gardener/extensions/shoot-rsyslog-relp-admission
     tag: latest
     pullPolicy: IfNotPresent
+# priorityClassName: gardener-garden-system-400
   replicaCount: 1
   resources:
     requests:
