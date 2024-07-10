@@ -110,7 +110,7 @@ func deployMonitoringConfig(ctx context.Context, c client.Client, namespace stri
 				ScrapeTimeout: ptr.To(monitoringv1.Duration("30s")),
 				Scheme:        ptr.To("HTTPS"),
 				// This is needed because the kubelets' certificates are not are generated for a specific pod IP
-				TLSConfig: &monitoringv1.SafeTLSConfig{InsecureSkipVerify: true},
+				TLSConfig: &monitoringv1.SafeTLSConfig{InsecureSkipVerify: ptr.To(true)},
 				Authorization: &monitoringv1.SafeAuthorization{Credentials: &corev1.SecretKeySelector{
 					LocalObjectReference: corev1.LocalObjectReference{Name: "shoot-access-prometheus-shoot"},
 					Key:                  "token",
@@ -124,18 +124,18 @@ func deployMonitoringConfig(ctx context.Context, c client.Client, namespace stri
 						Key:                  "token",
 					}},
 					// This is needed because we do not fetch the correct cluster CA bundle right now
-					TLSConfig:       &monitoringv1.SafeTLSConfig{InsecureSkipVerify: true},
+					TLSConfig:       &monitoringv1.SafeTLSConfig{InsecureSkipVerify: ptr.To(true)},
 					FollowRedirects: ptr.To(true),
 				}},
-				RelabelConfigs: []*monitoringv1.RelabelConfig{
+				RelabelConfigs: []monitoringv1.RelabelConfig{
 					{
 						Action:      "replace",
-						Replacement: "rsyslog-metrics",
+						Replacement: ptr.To("rsyslog-metrics"),
 						TargetLabel: "job",
 					},
 					{
 						TargetLabel: "type",
-						Replacement: "shoot",
+						Replacement: ptr.To("shoot"),
 					},
 					{
 						SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_service_name", "__meta_kubernetes_endpoint_port_name"},
@@ -156,13 +156,13 @@ func deployMonitoringConfig(ctx context.Context, c client.Client, namespace stri
 					},
 					{
 						TargetLabel: "__address__",
-						Replacement: "kube-apiserver:443",
+						Replacement: ptr.To("kube-apiserver:443"),
 					},
 					{
 						SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_name", "__meta_kubernetes_pod_container_port_number"},
 						Regex:        `(.+);(.+)`,
 						TargetLabel:  "__metrics_path__",
-						Replacement:  "/api/v1/namespaces/kube-system/pods/${1}:${2}/proxy/metrics",
+						Replacement:  ptr.To("/api/v1/namespaces/kube-system/pods/${1}:${2}/proxy/metrics"),
 					},
 				},
 				MetricRelabelConfigs: monitoringutils.StandardMetricRelabelConfig("rsyslog_.+"),
