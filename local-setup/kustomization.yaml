@@ -7,8 +7,8 @@ resources:
 patches:
 - patch: |
     - op: replace
-      path: /providerConfig/values/image
-      value: local-skaffold/gardener/extensions/shoot-rsyslog-relp
+      path: /helm/values/image
+      value: local-skaffold/gardener-extension-shoot-rsyslog-relp
   target:
     group: core.gardener.cloud
     kind: ControllerDeployment
