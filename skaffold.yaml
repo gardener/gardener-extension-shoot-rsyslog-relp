@@ -4,10 +4,10 @@ metadata:
   name: rsyslog-relp-echo-server
 build:
   artifacts:
-    - image: local-skaffold/gardener/extensions/shoot-rsyslog-relp-echo-server
+    - image: local-skaffold/gardener-extension-shoot-rsyslog-relp-echo-server
       docker:
         cacheFrom:
-          - local-skaffold/gardener/extensions/shoot-rsyslog-relp-echo-server
+          - local-skaffold/gardener-extension-shoot-rsyslog-relp-echo-server
   local: {}
 deploy:
   helm:
@@ -18,7 +18,7 @@ deploy:
         wait: true
         chartPath: example/local/charts/rsyslog-relp-echo-server
         setValueTemplates:
-          images.rsyslog: '{{.IMAGE_FULLY_QUALIFIED_local_skaffold_gardener_extensions_shoot_rsyslog_relp_echo_server}}'
+          images.rsyslog: '{{.IMAGE_FULLY_QUALIFIED_local_skaffold_gardener_extension_shoot_rsyslog_relp_echo_server}}'
         setValues:
           service.clusterIP: 10.2.64.54
 ---
@@ -28,7 +28,7 @@ metadata:
   name: extension
 build:
   artifacts:
-    - image: local-skaffold/gardener/extensions/shoot-rsyslog-relp
+    - image: local-skaffold/gardener-extension-shoot-rsyslog-relp
       ko:
         dependencies:
           paths:
@@ -45,8 +45,16 @@ build:
             - pkg/controller/config
             - pkg/controller/lifecycle
             - imagevector
+            - imagevector/images.yaml
             - pkg/utils
             - pkg/webhook/operatingsystemconfig
+            - pkg/webhook/operatingsystemconfig/resources/auditrules/00-base-config.rules
+            - pkg/webhook/operatingsystemconfig/resources/auditrules/10-privilege-escalation.rules
+            - pkg/webhook/operatingsystemconfig/resources/auditrules/11-privileged-special.rules
+            - pkg/webhook/operatingsystemconfig/resources/auditrules/12-system-integrity.rules
+            - pkg/webhook/operatingsystemconfig/resources/templates/60-audit.conf.tpl
+            - pkg/webhook/operatingsystemconfig/resources/templates/scripts/configure-rsyslog.tpl.sh
+            - pkg/webhook/operatingsystemconfig/resources/templates/scripts/process-rsyslog-pstats.tpl.sh
             - VERSION
         ldflags:
           - '{{.LD_FLAGS}}'
@@ -69,7 +77,7 @@ metadata:
   name: admission
 build:
   artifacts:
-    - image: local-skaffold/gardener/extensions/shoot-rsyslog-relp-admission
+    - image: local-skaffold/gardener-extension-shoot-rsyslog-relp-admission
       ko:
         dependencies:
           paths:
@@ -95,12 +103,12 @@ deploy:
         wait: true
         chartPath: charts/gardener-extension-shoot-rsyslog-relp-admission
         setValueTemplates:
-          global.image.repository: '{{.IMAGE_REPO_local_skaffold_gardener_extensions_shoot_rsyslog_relp_admission}}'
-          global.image.tag: '{{.IMAGE_TAG_local_skaffold_gardener_extensions_shoot_rsyslog_relp_admission}}@{{.IMAGE_DIGEST_local_skaffold_gardener_extensions_shoot_rsyslog_relp_admission}}'
+          global.image.repository: '{{.IMAGE_REPO_local_skaffold_gardener_extension_shoot_rsyslog_relp_admission}}'
+          global.image.tag: '{{.IMAGE_TAG_local_skaffold_gardener_extension_shoot_rsyslog_relp_admission}}@{{.IMAGE_DIGEST_local_skaffold_gardener_extension_shoot_rsyslog_relp_admission}}'
 profiles:
   - name: remote-extension
     patches:
-    - op: add
-      path: /deploy/helm/releases/0/setValues
-      value:
-        global.vpa.enabled: false
+      - op: add
+        path: /deploy/helm/releases/0/setValues
+        value:
+          global.vpa.enabled: false

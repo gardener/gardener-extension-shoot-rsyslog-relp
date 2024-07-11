@@ -17,12 +17,16 @@ import (
 	. "github.com/gardener/gardener/pkg/utils/test/matchers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	v1 "k8s.io/api/autoscaling/v1"
+	"github.com/onsi/gomega/types"
+	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
+	apimachinerytypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/uuid"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
@@ -30,112 +34,132 @@ import (
 
 var _ = Describe("Lifecycle controller tests", func() {
 	var (
-		rsyslogConfigurationCleanerDaemonsetYaml = `apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  creationTimestamp: null
-  labels:
-    app.kubernetes.io/instance: rsyslog-relp-configuration-cleaner
-    app.kubernetes.io/name: rsyslog-relp-configuration-cleaner
-  name: rsyslog-relp-configuration-cleaner
-  namespace: kube-system
-spec:
-  selector:
-    matchLabels:
-      app.kubernetes.io/instance: rsyslog-relp-configuration-cleaner
-      app.kubernetes.io/name: rsyslog-relp-configuration-cleaner
-  template:
-    metadata:
-      creationTimestamp: null
-      labels:
-        app.kubernetes.io/instance: rsyslog-relp-configuration-cleaner
-        app.kubernetes.io/name: rsyslog-relp-configuration-cleaner
-    spec:
-      automountServiceAccountToken: false
-      containers:
-      - image: registry.k8s.io/pause:3.9
-        imagePullPolicy: IfNotPresent
-        name: pause-container
-        resources: {}
-      hostPID: true
-      initContainers:
-      - command:
-        - sh
-        - -c
-        - |-
-          if [[ -f /host/etc/systemd/system/rsyslog-configurator.service ]]; then
-            chroot /host /bin/bash -c 'systemctl disable rsyslog-configurator; systemctl stop rsyslog-configurator; rm -f /etc/systemd/system/rsyslog-configurator.service'
-          fi
+		rsyslogConfigurationCleanerDaemonset = &appsv1.DaemonSet{
+			ObjectMeta: metav1.ObjectMeta{
+				Labels: map[string]string{
+					"app.kubernetes.io/instance": "rsyslog-relp-configuration-cleaner",
+					"app.kubernetes.io/name":     "rsyslog-relp-configuration-cleaner",
+				},
+				Name:      "rsyslog-relp-configuration-cleaner",
+				Namespace: "kube-system",
+			},
+			Spec: appsv1.DaemonSetSpec{
+				Selector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"app.kubernetes.io/instance": "rsyslog-relp-configuration-cleaner",
+						"app.kubernetes.io/name":     "rsyslog-relp-configuration-cleaner",
+					},
+				},
+				Template: corev1.PodTemplateSpec{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: map[string]string{
+							"app.kubernetes.io/instance": "rsyslog-relp-configuration-cleaner",
+							"app.kubernetes.io/name":     "rsyslog-relp-configuration-cleaner",
+						},
+					},
+					Spec: corev1.PodSpec{
+						AutomountServiceAccountToken: ptr.To(false),
+						Containers: []corev1.Container{
+							{
+								Image:           "registry.k8s.io/pause:3.9",
+								ImagePullPolicy: corev1.PullIfNotPresent,
+								Name:            "pause-container",
+							},
+						},
+						InitContainers: []corev1.Container{
+							{
+								Command: []string{
+									"sh",
+									"-c",
+									`if [[ -f /host/etc/systemd/system/rsyslog-configurator.service ]]; then
+  chroot /host /bin/bash -c 'systemctl disable rsyslog-configurator; systemctl stop rsyslog-configurator; rm -f /etc/systemd/system/rsyslog-configurator.service'
+fi
 
-          if [[ -d /host/var/log/rsyslog ]]; then
-            rm -rf /host/var/log/rsyslog
-          fi
+if [[ -d /host/var/log/rsyslog ]]; then
+  rm -rf /host/var/log/rsyslog
+fi
 
-          if [[ -f /host/etc/audit/plugins.d/syslog.conf ]]; then
-            sed -i "s/^active\\>.*/active = no/i" /host/etc/audit/plugins.d/syslog.conf
-          fi
-          if [[ -f /host/etc/audisp/plugins.d/syslog.conf ]]; then
-            sed -i "s/^active\\>.*/active = no/i" /host/etc/audisp/plugins.d/syslog.conf
-          fi
+if [[ -f /host/etc/audit/plugins.d/syslog.conf ]]; then
+  sed -i "s/^active\\>.*/active = no/i" /host/etc/audit/plugins.d/syslog.conf
+fi
+if [[ -f /host/etc/audisp/plugins.d/syslog.conf ]]; then
+  sed -i "s/^active\\>.*/active = no/i" /host/etc/audisp/plugins.d/syslog.conf
+fi
 
-          chroot /host /bin/bash -c 'if systemctl list-unit-files systemd-journald-audit.socket > /dev/null; then \
-            systemctl enable systemd-journald-audit.socket; \
-            systemctl start systemd-journald-audit.socket; \
-            systemctl restart systemd-journald; \
-          fi'
+chroot /host /bin/bash -c 'if systemctl list-unit-files systemd-journald-audit.socket > /dev/null; then \
+  systemctl enable systemd-journald-audit.socket; \
+  systemctl start systemd-journald-audit.socket; \
+  systemctl restart systemd-journald; \
+fi'
 
-          if [[ -d /host/etc/audit/rules.d.original ]]; then
-            if [[ -d /host/etc/audit/rules.d ]]; then
-              rm -rf /host/etc/audit/rules.d
-            fi
-            mv /host/etc/audit/rules.d.original /host/etc/audit/rules.d
-            chroot /host /bin/bash -c 'if systemctl list-unit-files auditd.service > /dev/null; then augenrules --load; systemctl restart auditd; fi'
-          fi
+if [[ -d /host/etc/audit/rules.d.original ]]; then
+  if [[ -d /host/etc/audit/rules.d ]]; then
+    rm -rf /host/etc/audit/rules.d
+  fi
+  mv /host/etc/audit/rules.d.original /host/etc/audit/rules.d
+  chroot /host /bin/bash -c 'if systemctl list-unit-files auditd.service > /dev/null; then augenrules --load; systemctl restart auditd; fi'
+fi
 
-          if [[ -f /host/etc/rsyslog.d/60-audit.conf ]]; then
-            rm -f /host/etc/rsyslog.d/60-audit.conf
-            chroot /host /bin/bash -c 'if systemctl list-unit-files rsyslog.service > /dev/null; then systemctl restart rsyslog; fi'
-          fi
+if [[ -f /host/etc/rsyslog.d/60-audit.conf ]]; then
+  rm -f /host/etc/rsyslog.d/60-audit.conf
+  chroot /host /bin/bash -c 'if systemctl list-unit-files rsyslog.service > /dev/null; then systemctl restart rsyslog; fi'
+fi
 
-          if [[ -d /host/etc/ssl/rsyslog ]]; then
-            rm -rf /host/etc/ssl/rsyslog
-          fi
+if [[ -d /host/etc/ssl/rsyslog ]]; then
+  rm -rf /host/etc/ssl/rsyslog
+fi
 
-          if [[ -d /host/var/lib/rsyslog-relp-configurator ]]; then
-            rm -rf /host/var/lib/rsyslog-relp-configurator
-          fi
-        image: europe-docker.pkg.dev/gardener-project/releases/3rd/alpine:3.18.4
-        imagePullPolicy: IfNotPresent
-        name: rsyslog-relp-configuration-cleaner
-        resources:
-          limits:
-            memory: 32Mi
-          requests:
-            cpu: 2m
-            memory: 8Mi
-        volumeMounts:
-        - mountPath: /host
-          mountPropagation: HostToContainer
-          name: host-root-volume
-      priorityClassName: gardener-shoot-system-700
-      securityContext:
-        seccompProfile:
-          type: RuntimeDefault
-      volumes:
-      - hostPath:
-          path: /
-        name: host-root-volume
-  updateStrategy: {}
-status:
-  currentNumberScheduled: 0
-  desiredNumberScheduled: 0
-  numberMisscheduled: 0
-  numberReady: 0
-`
+if [[ -d /host/var/lib/rsyslog-relp-configurator ]]; then
+  rm -rf /host/var/lib/rsyslog-relp-configurator
+fi`,
+								},
+								Image:           "europe-docker.pkg.dev/gardener-project/releases/3rd/alpine:3.18.4",
+								ImagePullPolicy: corev1.PullIfNotPresent,
+								Name:            "rsyslog-relp-configuration-cleaner",
+								Resources: corev1.ResourceRequirements{
+									Requests: corev1.ResourceList{
+										corev1.ResourceCPU:    resource.MustParse("2m"),
+										corev1.ResourceMemory: resource.MustParse("8Mi"),
+									},
+									Limits: corev1.ResourceList{
+										corev1.ResourceMemory: resource.MustParse("32Mi"),
+									},
+								},
+								VolumeMounts: []corev1.VolumeMount{
+									{
+										Name:             "host-root-volume",
+										MountPath:        "/host",
+										MountPropagation: ptr.To(corev1.MountPropagationHostToContainer),
+									},
+								},
+							},
+						},
+						HostPID:           true,
+						PriorityClassName: "gardener-shoot-system-700",
+						SecurityContext: &corev1.PodSecurityContext{
+							SeccompProfile: &corev1.SeccompProfile{
+								Type: corev1.SeccompProfileTypeRuntimeDefault,
+							},
+						},
+						Volumes: []corev1.Volume{
+							{
+								VolumeSource: corev1.VolumeSource{
+									HostPath: &corev1.HostPathVolumeSource{
+										Path: "/",
+									},
+								},
+								Name: "host-root-volume",
+							},
+						},
+					},
+				},
+			},
+		}
 
-		cluster  *extensionsv1alpha1.Cluster
-		shoot    *gardencorev1beta1.Shoot
-		shootUID types.UID
+		consistOf func(...client.Object) types.GomegaMatcher
+		cluster   *extensionsv1alpha1.Cluster
+		shoot     *gardencorev1beta1.Shoot
+		shootUID  apimachinerytypes.UID
 
 		extensionProviderConfig *rsyslog.RsyslogRelpConfig
 		extensionResource       *extensionsv1alpha1.Extension
@@ -146,6 +170,8 @@ status:
 		projectName = "test-" + utils.ComputeSHA256Hex([]byte(uuid.NewUUID()))[:5]
 		shootUID = uuid.NewUUID()
 		shootTechnicalID = fmt.Sprintf("shoot--%s--%s", projectName, shootName)
+
+		consistOf = NewManagedResourceConsistOfObjectsMatcher(testClient)
 
 		By("Create test Namespace")
 		shootSeedNamespace = &corev1.Namespace{
@@ -177,7 +203,7 @@ status:
 				Resources: []gardencorev1beta1.NamedResourceReference{
 					{
 						Name: "rsyslog-tls",
-						ResourceRef: v1.CrossVersionObjectReference{
+						ResourceRef: autoscalingv1.CrossVersionObjectReference{
 							Kind: "Secret",
 							Name: "rsyslog-tls",
 						},
@@ -298,7 +324,7 @@ status:
 
 			g.Expect(testClient.Get(ctx, client.ObjectKeyFromObject(configCleanerResourceSecret), configCleanerResourceSecret)).To(Succeed())
 			g.Expect(configCleanerResourceSecret.Type).To(Equal(corev1.SecretTypeOpaque))
-			g.Expect(string(configCleanerResourceSecret.Data["daemonset__kube-system__rsyslog-relp-configuration-cleaner.yaml"])).To(Equal(rsyslogConfigurationCleanerDaemonsetYaml))
+			g.Expect(configCleanerManagedResource).To(consistOf(rsyslogConfigurationCleanerDaemonset))
 		}).Should(Succeed())
 
 		By("Ensure that managed resource used for configuration cleanup does not get deleted immediately")

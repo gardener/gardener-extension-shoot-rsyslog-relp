@@ -25,9 +25,11 @@ Files:
   example/extension/extension-config-patch.yaml.tmpl
   example/local/charts/rsyslog-relp-echo-server/.helmignore
   example/controller-registration.yaml
+  example/kustomization.yaml
   hack/api-reference/*.json
   hack/cherry-pick-pull.sh
   test/integration/controller/lifecycle/resources/*.yaml
+  local-setup
   go.mod
   go.sum
   skaffold.yaml
