@@ -115,7 +115,7 @@ func (v *Verifier) verifyLogsAreForwardedToEchoServer(ctx context.Context, logEn
 		return v.generateLogs(ctx, logEntries)
 	}).WithTimeout(30*time.Second).WithPolling(10*time.Second).WithContext(ctx).Should(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s", v.nodeName))
 
-	forwardedLogMatchers, notForwardedLogMatchers := v.constructRegexMatchers(logEntries)
+	forwardedLogMatchers, notForwardedLogMatchers := v.constructLogMatchers(logEntries)
 	if len(forwardedLogMatchers) > 0 {
 		EventuallyWithOffset(2, func(g Gomega) {
 			logLines, err := v.getLogs(ctx, timeBeforeLogGeneration)
@@ -164,7 +164,7 @@ func (v *Verifier) setNodeName(nodeName string) {
 func (v *Verifier) generateLogs(ctx context.Context, logEntries []logEntry) error {
 	command := "sh -c '"
 	for _, logEntry := range logEntries {
-		command += fmt.Sprintf("echo %s | systemd-cat -t %s -p %s; ", logEntry.message, logEntry.program, logEntry.severity)
+		command += "echo " + logEntry.message + " | systemd-cat -t " + logEntry.program + " -p " + logEntry.severity + "; "
 	}
 	if v.testAuditLogging {
 		// Create a file under /etc directory so that an audit event is generated.
@@ -192,7 +192,7 @@ func (v *Verifier) getLogs(ctx context.Context, timeBeforeLogGeneration metav1.T
 	return logLines, nil
 }
 
-func (v *Verifier) constructRegexMatchers(logEntries []logEntry) ([]interface{}, []interface{}) {
+func (v *Verifier) constructLogMatchers(logEntries []logEntry) ([]interface{}, []interface{}) {
 	var (
 		expectedNodeHostName    string
 		forwardedLogMatchers    []interface{}
@@ -224,7 +224,7 @@ func (v *Verifier) constructRegexMatchers(logEntries []logEntry) ([]interface{},
 	}
 
 	if v.testAuditLogging {
-		forwardedLogMatchers = append(forwardedLogMatchers, MatchRegexp(fileForAuditEvent))
+		forwardedLogMatchers = append(forwardedLogMatchers, ContainSubstring(fileForAuditEvent))
 	}
 
 	return forwardedLogMatchers, notForwardedLogMatchers

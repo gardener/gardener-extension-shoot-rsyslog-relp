@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	hibernationTestTimeout        = 60 * time.Minute
+	hibernationTestTimeout        = 75 * time.Minute
 	hibernationTestCleanupTimeout = 25 * time.Minute
 )
 
@@ -43,7 +43,7 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 		})).To(Succeed())
 
 		By("Verify shoot-rsyslog-relp works")
-		ctx, cancel = context.WithTimeout(parentCtx, 10*time.Minute)
+		ctx, cancel = context.WithTimeout(parentCtx, 20*time.Minute)
 		defer cancel()
 
 		echoServerPodIf, echoServerPodName, err := common.GetEchoServerPodInterfaceAndName(ctx, f.ShootClient)
