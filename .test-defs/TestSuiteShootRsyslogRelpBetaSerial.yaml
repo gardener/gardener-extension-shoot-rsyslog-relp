@@ -6,7 +6,7 @@ spec:
   owner: gardener-oq@listserv.sap.com
   description: shoot-rsyslog-relp extension test suite that includes all serial beta tests
 
-  activeDeadlineSeconds: 12300
+  activeDeadlineSeconds: 13200
   labels: ["shoot", "beta"]
   behavior:
   - serial
@@ -21,6 +21,6 @@ spec:
       -shoot-name=$SHOOT_NAME
       -ginkgo.focus="\[BETA\].*\[SERIAL\]"
       -ginkgo.skip="\[DISRUPTIVE\]"
-      -ginkgo.timeout=2h
+      -ginkgo.timeout=13200s
 
   image: golang:1.22.5
