@@ -31,6 +31,8 @@ const (
 	rsyslogTLSDir        = "/etc/ssl/rsyslog"
 	rsyslogTLSFromOSCDir = rsyslogOSCDir + "/tls"
 
+	rsyslogServiceMemoryLimitsDropInPath = "/etc/systemd/system/rsyslog.service.d/10-shoot-rsyslog-relp-memory-limits.conf"
+
 	rsyslogConfigPath              = "/etc/rsyslog.d/60-audit.conf"
 	rsyslogConfigFromOSCPath       = rsyslogOSCDir + "/rsyslog.d/60-audit.conf"
 	configureRsyslogScriptPath     = rsyslogOSCDir + "/configure-rsyslog.sh"
@@ -156,6 +158,19 @@ func getRsyslogFiles(rsyslogRelpConfig *rsyslog.RsyslogRelpConfig, cluster *exte
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
 					Data:     gardenerutils.EncodeBase64(processRsyslogPstatsScript.Bytes()),
+				},
+			},
+		},
+		{
+			Path:        rsyslogServiceMemoryLimitsDropInPath,
+			Permissions: ptr.To(int32(0644)),
+			Content: extensionsv1alpha1.FileContent{
+				Inline: &extensionsv1alpha1.FileContentInline{
+					Data: `[Service]
+MemoryMin=15M
+MemoryHigh=150M
+MemoryMax=300M
+MemorySwapMax=0`,
 				},
 			},
 		},

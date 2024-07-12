@@ -346,6 +346,19 @@ func getRsyslogFiles(rsyslogConfig []byte, useExpectedContent bool) []extensions
 				},
 			},
 		},
+		{
+			Path:        "/etc/systemd/system/rsyslog.service.d/10-shoot-rsyslog-relp-memory-limits.conf",
+			Permissions: ptr.To(int32(0644)),
+			Content: extensionsv1alpha1.FileContent{
+				Inline: &extensionsv1alpha1.FileContentInline{
+					Data: getBasedOnCondition(useExpectedContent, `[Service]
+MemoryMin=15M
+MemoryHigh=150M
+MemoryMax=300M
+MemorySwapMax=0`, "old"),
+				},
+			},
+		},
 	}
 }
 
