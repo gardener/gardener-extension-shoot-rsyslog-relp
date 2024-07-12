@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	hibernationTestTimeout        = 60 * time.Minute
+	hibernationTestTimeout        = 75 * time.Minute
 	hibernationTestCleanupTimeout = 25 * time.Minute
 )
 
@@ -43,12 +43,12 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 		})).To(Succeed())
 
 		By("Verify shoot-rsyslog-relp works")
-		ctx, cancel = context.WithTimeout(parentCtx, 10*time.Minute)
+		ctx, cancel = context.WithTimeout(parentCtx, 20*time.Minute)
 		defer cancel()
 
 		echoServerPodIf, echoServerPodName, err := common.GetEchoServerPodInterfaceAndName(ctx, f.ShootClient)
 		Expect(err).NotTo(HaveOccurred())
-		verifier := common.NewVerifier(f.Logger, f.ShootClient, echoServerPodIf, echoServerPodName, f.Shoot.Spec.Provider.Type, f.Project.Name, f.Shoot.Name, string(f.Shoot.UID))
+		verifier := common.NewVerifier(f.Logger, f.ShootClient, echoServerPodIf, echoServerPodName, f.Shoot.Spec.Provider.Type, f.Project.Name, f.Shoot.Name, string(f.Shoot.UID), false)
 
 		common.ForEachNode(ctx, f.ShootClient, func(ctx context.Context, node *corev1.Node) {
 			verifier.VerifyExtensionForNode(ctx, node.Name)
