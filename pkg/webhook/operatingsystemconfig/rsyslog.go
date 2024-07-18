@@ -26,27 +26,8 @@ import (
 )
 
 const (
-	rsyslogOSCDir = "/var/lib/rsyslog-relp-configurator"
-
-	rsyslogTLSDir        = "/etc/ssl/rsyslog"
-	rsyslogTLSFromOSCDir = rsyslogOSCDir + "/tls"
-
 	rsyslogServiceMemoryLimitsDropInPath = "/etc/systemd/system/rsyslog.service.d/10-shoot-rsyslog-relp-memory-limits.conf"
-
-	rsyslogConfigPath              = "/etc/rsyslog.d/60-audit.conf"
-	rsyslogConfigFromOSCPath       = rsyslogOSCDir + "/rsyslog.d/60-audit.conf"
-	configureRsyslogScriptPath     = rsyslogOSCDir + "/configure-rsyslog.sh"
-	processRsyslogPstatsScriptPath = rsyslogOSCDir + "/process-rsyslog-pstats.sh"
-
-	rsyslogRelpQueueSpoolDir = "/var/log/rsyslog"
-
-	auditRulesDir          = "/etc/audit/rules.d"
-	auditRulesBackupDir    = "/etc/audit/rules.d.original"
-	auditSyslogPluginPath  = "/etc/audit/plugins.d/syslog.conf"
-	audispSyslogPluginPath = "/etc/audisp/plugins.d/syslog.conf"
-	auditRulesFromOSCDir   = rsyslogOSCDir + "/audit/rules.d"
-
-	nodeExporterTextfileCollectorDir = "/var/lib/node-exporter/textfile-collector"
+	nodeExporterTextfileCollectorDir     = "/var/lib/node-exporter/textfile-collector"
 )
 
 var (
@@ -82,17 +63,17 @@ func init() {
 	}
 
 	if err := configureRsyslogScriptTemplate.Execute(&configureRsyslogScript, map[string]interface{}{
-		"rsyslogRelpQueueSpoolDir":         rsyslogRelpQueueSpoolDir,
-		"pathRsyslogTLSDir":                rsyslogTLSDir,
-		"pathRsyslogTLSFromOSCDir":         rsyslogTLSFromOSCDir,
-		"pathAuditRulesDir":                auditRulesDir,
-		"pathAuditRulesBackupDir":          auditRulesBackupDir,
-		"pathAuditRulesFromOSCDir":         auditRulesFromOSCDir,
-		"pathSyslogAuditPlugin":            auditSyslogPluginPath,
-		"audispSyslogPluginPath":           audispSyslogPluginPath,
+		"rsyslogRelpQueueSpoolDir":         constants.RsyslogRelpQueueSpoolDir,
+		"pathRsyslogTLSDir":                constants.RsyslogTLSDir,
+		"pathRsyslogTLSFromOSCDir":         constants.RsyslogTLSFromOSCDir,
+		"pathAuditRulesDir":                constants.AuditRulesDir,
+		"pathAuditRulesBackupDir":          constants.AuditRulesBackupDir,
+		"pathAuditRulesFromOSCDir":         constants.AuditRulesFromOSCDir,
+		"pathSyslogAuditPlugin":            constants.AuditSyslogPluginPath,
+		"audispSyslogPluginPath":           constants.AudispSyslogPluginPath,
+		"pathRsyslogAuditConf":             constants.RsyslogConfigPath,
+		"pathRsyslogAuditConfFromOSC":      constants.RsyslogConfigFromOSCPath,
 		"nodeExporterTextfileCollectorDir": nodeExporterTextfileCollectorDir,
-		"pathRsyslogAuditConf":             rsyslogConfigPath,
-		"pathRsyslogAuditConfFromOSC":      rsyslogConfigFromOSCPath,
 	}); err != nil {
 		panic(err)
 	}
@@ -133,7 +114,7 @@ func getRsyslogFiles(rsyslogRelpConfig *rsyslog.RsyslogRelpConfig, cluster *exte
 
 	rsyslogFiles = append(rsyslogFiles, []extensionsv1alpha1.File{
 		{
-			Path:        rsyslogConfigFromOSCPath,
+			Path:        constants.RsyslogConfigFromOSCPath,
 			Permissions: ptr.To(int32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
@@ -143,7 +124,7 @@ func getRsyslogFiles(rsyslogRelpConfig *rsyslog.RsyslogRelpConfig, cluster *exte
 			},
 		},
 		{
-			Path:        configureRsyslogScriptPath,
+			Path:        constants.ConfigureRsyslogScriptPath,
 			Permissions: ptr.To(int32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
@@ -153,7 +134,7 @@ func getRsyslogFiles(rsyslogRelpConfig *rsyslog.RsyslogRelpConfig, cluster *exte
 			},
 		},
 		{
-			Path:        processRsyslogPstatsScriptPath,
+			Path:        constants.ProcessRsyslogPstatsScriptPath,
 			Permissions: ptr.To(int32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
@@ -197,7 +178,7 @@ func getRsyslogValues(rsyslogRelpConfig *rsyslog.RsyslogRelpConfig, cluster *ext
 	return map[string]interface{}{
 		"target":                       rsyslogRelpConfig.Target,
 		"port":                         rsyslogRelpConfig.Port,
-		"rsyslogRelpQueueSpoolDir":     rsyslogRelpQueueSpoolDir,
+		"rsyslogRelpQueueSpoolDir":     constants.RsyslogRelpQueueSpoolDir,
 		"projectName":                  projectName,
 		"shootName":                    cluster.Shoot.Name,
 		"shootUID":                     cluster.Shoot.UID,
@@ -226,9 +207,9 @@ func getRsyslogTLSValues(rsyslogRelpConfig *rsyslog.RsyslogRelpConfig) map[strin
 	}
 
 	return map[string]interface{}{
-		"caPath":        rsyslogTLSDir + "/ca.crt",
-		"certPath":      rsyslogTLSDir + "/tls.crt",
-		"keyPath":       rsyslogTLSDir + "/tls.key",
+		"caPath":        constants.RsyslogTLSDir + "/ca.crt",
+		"certPath":      constants.RsyslogTLSDir + "/tls.crt",
+		"keyPath":       constants.RsyslogTLSDir + "/tls.key",
 		"enabled":       rsyslogRelpConfig.TLS.Enabled,
 		"permittedPeer": strings.Join(permittedPeers, ","),
 		"authMode":      authMode,
@@ -245,7 +226,7 @@ func getRsyslogTLSFiles(cluster *extensionscontroller.Cluster, secretRefName str
 	refSecretName := v1beta1constants.ReferencedResourcesPrefix + ref.ResourceRef.Name
 	return []extensionsv1alpha1.File{
 		{
-			Path:        rsyslogTLSFromOSCDir + "/ca.crt",
+			Path:        constants.RsyslogTLSFromOSCDir + "/ca.crt",
 			Permissions: ptr.To(int32(0600)),
 			Content: extensionsv1alpha1.FileContent{
 				SecretRef: &extensionsv1alpha1.FileContentSecretRef{
@@ -255,7 +236,7 @@ func getRsyslogTLSFiles(cluster *extensionscontroller.Cluster, secretRefName str
 			},
 		},
 		{
-			Path:        rsyslogTLSFromOSCDir + "/tls.crt",
+			Path:        constants.RsyslogTLSFromOSCDir + "/tls.crt",
 			Permissions: ptr.To(int32(0600)),
 			Content: extensionsv1alpha1.FileContent{
 				SecretRef: &extensionsv1alpha1.FileContentSecretRef{
@@ -265,7 +246,7 @@ func getRsyslogTLSFiles(cluster *extensionscontroller.Cluster, secretRefName str
 			},
 		},
 		{
-			Path:        rsyslogTLSFromOSCDir + "/tls.key",
+			Path:        constants.RsyslogTLSFromOSCDir + "/tls.key",
 			Permissions: ptr.To(int32(0600)),
 			Content: extensionsv1alpha1.FileContent{
 				SecretRef: &extensionsv1alpha1.FileContentSecretRef{
@@ -289,7 +270,7 @@ Documentation=https://github.com/gardener/gardener-extension-shoot-rsyslog-relp
 Type=simple
 Restart=always
 RestartSec=15
-ExecStart=` + configureRsyslogScriptPath + `
+ExecStart=` + constants.ConfigureRsyslogScriptPath + `
 [Install]
 WantedBy=multi-user.target`),
 	}

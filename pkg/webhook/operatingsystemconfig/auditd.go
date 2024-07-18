@@ -78,7 +78,7 @@ func getAuditConfigFromConfigMap(ctx context.Context, c client.Client, decoder r
 	}
 
 	return []extensionsv1alpha1.File{{
-		Path:        fmt.Sprintf("%s/%s", auditRulesFromOSCDir, "00_shoot_rsyslog_relp.rules"),
+		Path:        fmt.Sprintf("%s/%s", constants.AuditRulesFromOSCDir, "00_shoot_rsyslog_relp.rules"),
 		Permissions: ptr.To(int32(0644)),
 		Content: extensionsv1alpha1.FileContent{
 			Inline: &extensionsv1alpha1.FileContentInline{
