@@ -5,9 +5,13 @@
 package rsyslogrelpconfigcleaner
 
 import (
+	"bytes"
 	"context"
+	_ "embed"
+	"text/template"
 	"time"
 
+	"github.com/Masterminds/sprig"
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	"github.com/gardener/gardener/pkg/client/kubernetes"
 	"github.com/gardener/gardener/pkg/component"
@@ -169,50 +173,64 @@ func getLabels() map[string]string {
 	}
 }
 
+var (
+	//go:embed resources/templates/scripts/clean-rsyslog.tpl.sh
+	cleanRsyslogScriptTemplateContent string
+	cleanRsyslogScript                bytes.Buffer
+)
+
+const (
+	rsyslogOSCDir = "/var/lib/rsyslog-relp-configurator"
+
+	rsyslogTLSDir        = "/etc/ssl/rsyslog"
+	rsyslogTLSFromOSCDir = rsyslogOSCDir + "/tls"
+
+	rsyslogConfigPath              = "/etc/rsyslog.d/60-audit.conf"
+	rsyslogConfigFromOSCPath       = rsyslogOSCDir + "/rsyslog.d/60-audit.conf"
+	configureRsyslogScriptPath     = rsyslogOSCDir + "/configure-rsyslog.sh"
+	processRsyslogPstatsScriptPath = rsyslogOSCDir + "/process-rsyslog-pstats.sh"
+
+	rsyslogRelpQueueSpoolDir = "/var/log/rsyslog"
+
+	auditRulesDir          = "/etc/audit/rules.d"
+	auditRulesBackupDir    = "/etc/audit/rules.d.original"
+	auditSyslogPluginPath  = "/etc/audit/plugins.d/syslog.conf"
+	audispSyslogPluginPath = "/etc/audisp/plugins.d/syslog.conf"
+	auditRulesFromOSCDir   = rsyslogOSCDir + "/audit/rules.d"
+)
+
+func init() {
+	var err error
+
+	cleanRsyslogScriptTemplate, err := template.
+		New("clean-rsyslog.sh").
+		Funcs(sprig.TxtFuncMap()).
+		Parse(cleanRsyslogScriptTemplateContent)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := cleanRsyslogScriptTemplate.Execute(&cleanRsyslogScript, map[string]interface{}{
+		"rsyslogRelpQueueSpoolDir":    "/host" + rsyslogRelpQueueSpoolDir,
+		"pathRsyslogTLSDir":           "/host" + rsyslogTLSDir,
+		"pathRsyslogTLSFromOSCDir":    "/host" + rsyslogTLSFromOSCDir,
+		"pathAuditRulesDir":           "/host" + auditRulesDir,
+		"pathAuditRulesBackupDir":     "/host" + auditRulesBackupDir,
+		"pathAuditRulesFromOSCDir":    "/host" + auditRulesFromOSCDir,
+		"pathSyslogAuditPlugin":       "/host" + auditSyslogPluginPath,
+		"audispSyslogPluginPath":      "/host" + audispSyslogPluginPath,
+		"pathRsyslogAuditConf":        "/host" + rsyslogConfigPath,
+		"pathRsyslogAuditConfFromOSC": "/host" + rsyslogConfigFromOSCPath,
+		"pathRsyslogOSCDir":           "/host" + rsyslogOSCDir,
+	}); err != nil {
+		panic(err)
+	}
+}
+
 func computeCommand() []string {
 	return []string{
 		"sh",
 		"-c",
-		`if [[ -f /host/etc/systemd/system/rsyslog-configurator.service ]]; then
-  chroot /host /bin/bash -c 'systemctl disable rsyslog-configurator; systemctl stop rsyslog-configurator; rm -f /etc/systemd/system/rsyslog-configurator.service'
-fi
-
-if [[ -d /host/var/log/rsyslog ]]; then
-  rm -rf /host/var/log/rsyslog
-fi
-
-if [[ -f /host/etc/audit/plugins.d/syslog.conf ]]; then
-  sed -i "s/^active\\>.*/active = no/i" /host/etc/audit/plugins.d/syslog.conf
-fi
-if [[ -f /host/etc/audisp/plugins.d/syslog.conf ]]; then
-  sed -i "s/^active\\>.*/active = no/i" /host/etc/audisp/plugins.d/syslog.conf
-fi
-
-chroot /host /bin/bash -c 'if systemctl list-unit-files systemd-journald-audit.socket > /dev/null; then \
-  systemctl enable systemd-journald-audit.socket; \
-  systemctl start systemd-journald-audit.socket; \
-  systemctl restart systemd-journald; \
-fi'
-
-if [[ -d /host/etc/audit/rules.d.original ]]; then
-  if [[ -d /host/etc/audit/rules.d ]]; then
-    rm -rf /host/etc/audit/rules.d
-  fi
-  mv /host/etc/audit/rules.d.original /host/etc/audit/rules.d
-  chroot /host /bin/bash -c 'if systemctl list-unit-files auditd.service > /dev/null; then augenrules --load; systemctl restart auditd; fi'
-fi
-
-if [[ -f /host/etc/rsyslog.d/60-audit.conf ]]; then
-  rm -f /host/etc/rsyslog.d/60-audit.conf
-  chroot /host /bin/bash -c 'if systemctl list-unit-files rsyslog.service > /dev/null; then systemctl restart rsyslog; fi'
-fi
-
-if [[ -d /host/etc/ssl/rsyslog ]]; then
-  rm -rf /host/etc/ssl/rsyslog
-fi
-
-if [[ -d /host/var/lib/rsyslog-relp-configurator ]]; then
-  rm -rf /host/var/lib/rsyslog-relp-configurator
-fi`,
+		cleanRsyslogScript.String(),
 	}
 }

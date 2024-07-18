@@ -71,7 +71,13 @@ var _ = Describe("Lifecycle controller tests", func() {
 								Command: []string{
 									"sh",
 									"-c",
-									`if [[ -f /host/etc/systemd/system/rsyslog-configurator.service ]]; then
+									`#!/bin/bash
+
+# SPDX-FileCopyrightText: 2024 SAP SE or an SAP affiliate company and Gardener contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+if [[ -f /host/etc/systemd/system/rsyslog-configurator.service ]]; then
   chroot /host /bin/bash -c 'systemctl disable rsyslog-configurator; systemctl stop rsyslog-configurator; rm -f /etc/systemd/system/rsyslog-configurator.service'
 fi
 
