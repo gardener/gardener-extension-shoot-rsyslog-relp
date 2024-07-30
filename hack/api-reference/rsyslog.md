@@ -10,8 +10,53 @@
 </p>
 Resource Types:
 <ul><li>
+<a href="#rsyslog-relp.extensions.gardener.cloud/v1alpha1.Auditd">Auditd</a>
+</li><li>
 <a href="#rsyslog-relp.extensions.gardener.cloud/v1alpha1.RsyslogRelpConfig">RsyslogRelpConfig</a>
 </li></ul>
+<h3 id="rsyslog-relp.extensions.gardener.cloud/v1alpha1.Auditd">Auditd
+</h3>
+<p>
+<p>Auditd contains configuration for the audit daemon.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+rsyslog-relp.extensions.gardener.cloud/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>Auditd</code></td>
+</tr>
+<tr>
+<td>
+<code>auditRules</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>AuditRules contains the audit rules that will be placed under /etc/audit/rules.d.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="rsyslog-relp.extensions.gardener.cloud/v1alpha1.RsyslogRelpConfig">RsyslogRelpConfig
 </h3>
 <p>
