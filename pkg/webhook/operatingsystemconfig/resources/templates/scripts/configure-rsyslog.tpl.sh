@@ -8,7 +8,32 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+function remove_auditd_config() {
+  if [[ -d {{ .pathAuditRulesBackupDir }} ]]; then
+    if [[ -f {{ .pathSyslogAuditPlugin }} ]]; then
+      sed -i "s/^active\\>.*/active = no/i" {{ .pathSyslogAuditPlugin }}
+    fi
+    if [[ -f {{ .audispSyslogPluginPath }} ]]; then
+      sed -i "s/^active\\>.*/active = no/i" {{ .audispSyslogPluginPath }}
+    fi
+
+    if [[ -d {{ .pathAuditRulesDir }} ]]; then
+      rm -rf {{ .pathAuditRulesDir }}
+    fi
+    cp -fa {{ .pathAuditRulesBackupDir }} {{ .pathAuditRulesDir }}
+    ## The original audit rules might be erroneus so we ignore any errors here.
+    augenrules --load || true
+    systemctl restart auditd
+    rm -rf {{ .pathAuditRulesBackupDir }}
+  fi
+}
+
 function configure_auditd() {
+  if [[ ! -d {{ .pathAuditRulesFromOSCDir }} ]] || [ -z "$( ls -A '{{ .pathAuditRulesFromOSCDir }}' )" ] ; then
+    remove_auditd_config
+    return 0
+  fi
+
   if [[ ! -d {{ .pathAuditRulesBackupDir }} ]] && [[ -d {{ .pathAuditRulesDir }} ]]; then
     mv {{ .pathAuditRulesDir }} {{ .pathAuditRulesBackupDir }}
   fi
@@ -20,8 +45,12 @@ function configure_auditd() {
   fi
   if ! diff -rq {{ .pathAuditRulesFromOSCDir }} {{ .pathAuditRulesDir }} ; then
     rm -rf {{ .pathAuditRulesDir }}/*
-    cp -L {{ .pathAuditRulesFromOSCDir }}/* {{ .pathAuditRulesDir }}/
-    augenrules --load
+    cp -fL {{ .pathAuditRulesFromOSCDir }}/* {{ .pathAuditRulesDir }}/
+
+    error=$(augenrules --load 2>&1 > /dev/null)
+    if [[ -n "$error" ]]; then
+      logger -p error "Error loading audit rules: $error"
+    fi
     restart_auditd=true
   fi
 
@@ -79,7 +108,7 @@ function configure_rsyslog() {
     fi
     if ! diff -rq {{ .pathRsyslogTLSFromOSCDir }} {{ .pathRsyslogTLSDir }} ; then
       rm -rf {{ .pathRsyslogTLSDir }}/*
-      cp -L {{ .pathRsyslogTLSFromOSCDir }}/* {{ .pathRsyslogTLSDir }}/
+      cp -fL {{ .pathRsyslogTLSFromOSCDir }}/* {{ .pathRsyslogTLSDir }}/
       restart_rsyslog=true
     fi
   elif [[ -d {{ .pathRsyslogTLSDir }} ]]; then
