@@ -21,4 +21,7 @@ const (
 	RsyslogClientCertificateKey = "crt"
 	// RsyslogPrivateKeyKey is a key in a secret's data which holds the private key used for the tls connection.
 	RsyslogPrivateKeyKey = "key"
+
+	// AuditdConfigMapDataKey is a key in a ConfigMap's data which holds the configuration for the auditd service.
+	AuditdConfigMapDataKey = "auditd"
 )
