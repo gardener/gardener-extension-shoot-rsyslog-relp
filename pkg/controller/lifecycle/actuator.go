@@ -21,6 +21,7 @@ import (
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/imagevector"
 	apisconfig "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/config"
+	api "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/component/rsyslogrelpconfigcleaner"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/constants"
 )
@@ -57,7 +58,12 @@ type actuator struct {
 func (a *actuator) Reconcile(ctx context.Context, _ logr.Logger, ex *extensionsv1alpha1.Extension) error {
 	namespace := ex.GetNamespace()
 
-	if err := deployMonitoringConfig(ctx, a.client, namespace); err != nil {
+	rsyslogRelpConfig := &api.RsyslogRelpConfig{}
+	if _, _, err := a.decoder.Decode(ex.Spec.ProviderConfig.Raw, nil, rsyslogRelpConfig); err != nil {
+		return fmt.Errorf("failed to decode provider config: %w", err)
+	}
+
+	if err := deployMonitoringConfig(ctx, a.client, namespace, rsyslogRelpConfig.AuditConfig); err != nil {
 		return err
 	}
 

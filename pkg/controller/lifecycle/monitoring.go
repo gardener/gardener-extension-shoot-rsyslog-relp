@@ -23,10 +23,11 @@ import (
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/constants"
 )
 
-func deployMonitoringConfig(ctx context.Context, c client.Client, namespace string) error {
+func deployMonitoringConfig(ctx context.Context, c client.Client, namespace string, auditConfig *rsyslog.AuditConfig) error {
 	// TODO(plkokanov): remove this in a future release.
 	// Refer to https://github.com/gardener/gardener-extension-shoot-rsyslog-relp/issues/89 for more details.
 	if err := c.DeleteAllOf(ctx, &corev1.ConfigMap{},
@@ -55,45 +56,65 @@ func deployMonitoringConfig(ctx context.Context, c client.Client, namespace stri
 			return err
 		}
 
+		alertingRules := []monitoringv1.Rule{
+			{
+				Alert: "RsyslogTooManyRelpActionFailures",
+				Expr:  intstr.FromString(`sum(rate(rsyslog_pstat_failed{origin="core.action",name="rsyslg-relp"}[5m])) / sum(rate(rsyslog_pstat_processed{origin="core.action",name="rsyslog-relp"}[5m])) > bool 0.02 == 1`),
+				For:   ptr.To(monitoringv1.Duration("15m")),
+				Labels: map[string]string{
+					"service":    "rsyslog-relp",
+					"severity":   "warning",
+					"type":       "shoot",
+					"visibility": "operator",
+				},
+				Annotations: map[string]string{
+					"description": "The rsyslog relp cumulative failure rate in processing action events is greater than 2%.",
+					"summary":     "Rsyslog relp has too many failed attempts to process action events",
+				},
+			},
+			{
+				Alert: "RsyslogRelpActionProcessingRateIsZero",
+				Expr:  intstr.FromString(`rate(rsyslog_pstat_processed{origin="core.action",name="rsyslog-relp"}[5m]) == 0`),
+				For:   ptr.To(monitoringv1.Duration("15m")),
+				Labels: map[string]string{
+					"service":    "rsyslog-relp",
+					"severity":   "warning",
+					"type":       "seed",
+					"visibility": "operator",
+				},
+				Annotations: map[string]string{
+					"description": "The rsyslog relp action processing rate is 0 meaning that there is most likely something wrong with the rsyslog service.",
+					"summary":     "Rsyslog relp action processing rate is 0",
+				},
+			},
+		}
+
+		if auditConfig != nil && ptr.Deref(auditConfig.Enabled, false) {
+			alertingRules = append(alertingRules, monitoringv1.Rule{
+				Alert: "RsyslogRelpAuditRulesNotLoadedSuccessfully",
+				Expr:  intstr.FromString(`absent(rsyslog_augenrules_load_success == 1)`),
+				For:   ptr.To(monitoringv1.Duration("15m")),
+				Labels: map[string]string{
+					"service":    "rsyslog-relp",
+					"severity":   "warning",
+					"type":       "seed",
+					"visibility": "operator",
+				},
+				Annotations: map[string]string{
+					"description": "The rsyslog augenrules load success is 0 meaning that there was an error when calling 'augenrules --load' on the Shoot nodes",
+					"summary":     "Rsyslog augenrules load success is 0",
+				},
+			})
+		}
+
 		prometheusRule := &monitoringv1.PrometheusRule{ObjectMeta: monitoringutils.ConfigObjectMeta(constants.ServiceName, namespace, "shoot")}
 		if _, err := controllerutils.GetAndCreateOrMergePatch(ctx, c, prometheusRule, func() error {
 			metav1.SetMetaDataLabel(&prometheusRule.ObjectMeta, "component", constants.ServiceName)
 			metav1.SetMetaDataLabel(&prometheusRule.ObjectMeta, "prometheus", "shoot")
 			prometheusRule.Spec = monitoringv1.PrometheusRuleSpec{
 				Groups: []monitoringv1.RuleGroup{{
-					Name: "rsyslog-relp.rules",
-					Rules: []monitoringv1.Rule{
-						{
-							Alert: "RsyslogTooManyRelpActionFailures",
-							Expr:  intstr.FromString(`sum(rate(rsyslog_pstat_failed{origin="core.action",name="rsyslg-relp"}[5m])) / sum(rate(rsyslog_pstat_processed{origin="core.action",name="rsyslog-relp"}[5m])) > bool 0.02 == 1`),
-							For:   ptr.To(monitoringv1.Duration("15m")),
-							Labels: map[string]string{
-								"service":    "rsyslog-relp",
-								"severity":   "warning",
-								"type":       "shoot",
-								"visibility": "operator",
-							},
-							Annotations: map[string]string{
-								"description": "The rsyslog relp cumulative failure rate in processing action events is greater than 2%.",
-								"summary":     "Rsyslog relp has too many failed attempts to process action events",
-							},
-						},
-						{
-							Alert: "RsyslogRelpActionProcessingRateIsZero",
-							Expr:  intstr.FromString(`rate(rsyslog_pstat_processed{origin="core.action",name="rsyslog-relp"}[5m]) == 0`),
-							For:   ptr.To(monitoringv1.Duration("15m")),
-							Labels: map[string]string{
-								"service":    "rsyslog-relp",
-								"severity":   "warning",
-								"type":       "seed",
-								"visibility": "operator",
-							},
-							Annotations: map[string]string{
-								"description": "The rsyslog relp action processing rate is 0 meaning that there is most likely something wrong with the rsyslog service.",
-								"summary":     "Rsyslog relp action processing rate is 0",
-							},
-						},
-					},
+					Name:  "rsyslog-relp.rules",
+					Rules: alertingRules,
 				}},
 			}
 			return nil
