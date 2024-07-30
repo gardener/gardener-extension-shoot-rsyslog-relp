@@ -29,8 +29,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/config/v1alpha1"
+	configv1alpha1 "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/config/v1alpha1"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
+	rsysloginstall "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog/install"
 	. "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/webhook/operatingsystemconfig"
 )
 
@@ -83,7 +84,8 @@ var _ = Describe("Ensurer", func() {
 		scheme := runtime.NewScheme()
 		Expect(extensionsv1alpha1.AddToScheme(scheme)).To(Succeed())
 		Expect(corev1.AddToScheme(scheme)).To(Succeed())
-		Expect(v1alpha1.AddToScheme(scheme)).To(Succeed())
+		Expect(configv1alpha1.AddToScheme(scheme)).To(Succeed())
+		Expect(rsysloginstall.AddToScheme(scheme)).To(Succeed())
 
 		decoder = serializer.NewCodecFactory(scheme, serializer.EnableStrict).UniversalDecoder()
 		fakeClient = fakeclient.NewClientBuilder().WithScheme(scheme).Build()
@@ -119,6 +121,9 @@ var _ = Describe("Ensurer", func() {
 				{
 					Severity: 2,
 				},
+			},
+			AuditConfig: &rsyslog.AuditConfig{
+				Enabled: ptr.To(true),
 			},
 		}
 	})
@@ -232,6 +237,72 @@ var _ = Describe("Ensurer", func() {
 				files = append(files, getAuditRulesFiles(false)...)
 				files = append(files, getRsyslogTLSFiles(false)...)
 
+				Expect(ensurer.EnsureAdditionalFiles(ctx, gctx, &files, nil)).To(Succeed())
+				Expect(files).To(ConsistOf(expectedFiles))
+			})
+		})
+
+		Context("when audit rules are specified via a configmap reference", func() {
+			BeforeEach(func() {
+				shoot.Spec.Resources = []gardencorev1beta1.NamedResourceReference{
+					{
+						Name: "audit-rules",
+						ResourceRef: v1.CrossVersionObjectReference{
+							Kind: "ConfigMap",
+							Name: "audit-rules",
+						},
+					},
+				}
+
+				auditRulesConfigMap := &corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "ref-audit-rules",
+						Namespace: shootTechnicalID,
+					},
+					Data: map[string]string{
+						"auditd": `apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
+kind: Auditd
+auditRules: |
+  custom-rule-00`,
+					},
+				}
+				Expect(fakeClient.Create(ctx, auditRulesConfigMap)).To(Succeed())
+
+				extensionProviderConfig.AuditConfig = &rsyslog.AuditConfig{
+					Enabled:                ptr.To(true),
+					ConfigMapReferenceName: ptr.To("audit-rules"),
+				}
+
+				expectedFiles = append([]extensionsv1alpha1.File{oldFile}, getRsyslogFiles(rsyslogConfig, true)...)
+				expectedFiles = append(expectedFiles, []extensionsv1alpha1.File{
+					{
+						Path:        "/var/lib/rsyslog-relp-configurator/audit/rules.d/00_shoot_rsyslog_relp.rules",
+						Permissions: ptr.To(int32(0644)),
+						Content: extensionsv1alpha1.FileContent{
+							Inline: &extensionsv1alpha1.FileContentInline{
+								Encoding: "b64",
+								Data:     gardenerutils.EncodeBase64([]byte("custom-rule-00")),
+							},
+						},
+					},
+				}...)
+			})
+
+			It("should add additional files to current ones", func() {
+				Expect(ensurer.EnsureAdditionalFiles(ctx, gctx, &files, nil)).To(Succeed())
+				Expect(files).To(ConsistOf(expectedFiles))
+			})
+		})
+
+		Context("when modification of audit rules is disabled", func() {
+			BeforeEach(func() {
+				extensionProviderConfig.AuditConfig = &rsyslog.AuditConfig{
+					Enabled: ptr.To(false),
+				}
+				expectedFiles = append([]extensionsv1alpha1.File{oldFile}, getRsyslogFiles(rsyslogConfig, true)...)
+			})
+
+			It("should add additional files to the current ones, but not include audit rules files", func() {
 				Expect(ensurer.EnsureAdditionalFiles(ctx, gctx, &files, nil)).To(Succeed())
 				Expect(files).To(ConsistOf(expectedFiles))
 			})
