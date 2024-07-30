@@ -15,6 +15,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
@@ -69,7 +70,7 @@ func (s *shoot) Validate(ctx context.Context, new, _ client.Object) error {
 	}
 
 	if rsyslogRelpConfig.TLS != nil && rsyslogRelpConfig.TLS.Enabled {
-		secretName, err := getReferencedSecretName(shoot, *rsyslogRelpConfig.TLS.SecretReferenceName)
+		secretName, err := getReferencedResourceName(shoot, "Secret", *rsyslogRelpConfig.TLS.SecretReferenceName)
 		if err != nil {
 			return err
 		}
@@ -96,6 +97,33 @@ func (s *shoot) Validate(ctx context.Context, new, _ client.Object) error {
 		}
 	}
 
+	if ptr.Deref(rsyslogRelpConfig.AuditConfig.Enabled, false) && rsyslogRelpConfig.AuditConfig.ConfigMapReferenceName != nil {
+		configMapName, err := getReferencedResourceName(shoot, "ConfigMap", *rsyslogRelpConfig.AuditConfig.ConfigMapReferenceName)
+		if err != nil {
+			return err
+		}
+
+		configMap := &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      configMapName,
+				Namespace: shoot.Namespace,
+			},
+		}
+
+		configMapKey := client.ObjectKeyFromObject(configMap)
+		if err := s.client.Get(ctx, configMapKey, configMap); err != nil {
+			if errors.IsNotFound(err) {
+				return fmt.Errorf("referenced configMap %s does not exist", configMapKey.String())
+			}
+
+			return fmt.Errorf("failed to get referenced configMap %s with error: %w", configMapKey.String(), err)
+		}
+
+		if err := utils.ValidateAuditConfigMap(s.decoder, configMap); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -117,22 +145,22 @@ func decodeRsyslogRelpConfig(decoder runtime.Decoder, config *runtime.RawExtensi
 
 	rsyslogRelpConfig := &rsyslog.RsyslogRelpConfig{}
 	if err := runtime.DecodeInto(decoder, config.Raw, rsyslogRelpConfig); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not decode rsyslog relp configuration: %w", err)
 	}
 
 	return rsyslogRelpConfig, nil
 }
 
-func getReferencedSecretName(shoot *core.Shoot, secretReferenceName string) (string, error) {
+func getReferencedResourceName(shoot *core.Shoot, resourceKind, resourceName string) (string, error) {
 	if shoot != nil {
 		for _, ref := range shoot.Spec.Resources {
-			if ref.Name == secretReferenceName {
-				if ref.ResourceRef.Kind != "Secret" {
-					return "", fmt.Errorf("invalid referenced resource, expected kind Secret, not %s: %s", ref.ResourceRef.Kind, ref.ResourceRef.Name)
+			if ref.Name == resourceName {
+				if ref.ResourceRef.Kind != resourceKind {
+					return "", fmt.Errorf("invalid referenced resource, expected kind %s, not %s: %s", resourceKind, ref.ResourceRef.Kind, ref.ResourceRef.Name)
 				}
 				return ref.ResourceRef.Name, nil
 			}
 		}
 	}
-	return "", fmt.Errorf("missing or invalid referenced resource: %s", secretReferenceName)
+	return "", fmt.Errorf("missing or invalid referenced resource: %s", resourceName)
 }

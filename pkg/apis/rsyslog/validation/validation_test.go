@@ -17,6 +17,8 @@ import (
 )
 
 var _ = Describe("Validation", func() {
+	var path = field.NewPath("")
+
 	Describe("#ValidateRsyslogRelpConfig", func() {
 		const (
 			relpTarget     = "rsyslog.relp.server"
@@ -32,7 +34,6 @@ var _ = Describe("Validation", func() {
 			tlsLibGnuTLS  rsyslog.TLSLib = "gnutls"
 			tlsLibInvalid rsyslog.TLSLib = "invalid"
 
-			path         = field.NewPath("")
 			loggingRules = []rsyslog.LoggingRule{
 				{
 					ProgramNames: []string{"kubelet"},
@@ -218,6 +219,35 @@ var _ = Describe("Validation", func() {
 					),
 				),
 			)
+		})
+	})
+
+	Describe("#ValidateAuditd", func() {
+		It("should not allow setting empty audit rules", func() {
+			config := rsyslog.Auditd{
+				AuditRules: "",
+			}
+
+			matcher := ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("auditRules"),
+					"BadValue": Equal(""),
+					"Detail":   Equal("auditRules must not be empty"),
+				})),
+			)
+
+			errorList := validation.ValidateAuditd(&config, path)
+			Expect(errorList).To(matcher)
+		})
+
+		It("should allow correct auditd configuration", func() {
+			config := rsyslog.Auditd{
+				AuditRules: "-a exit,always -F arch=b64 -S setuid -S setreuid -S setgid -S setregid -F auid>0 -F auid!=-1 -F key=privilege_escalation",
+			}
+
+			errorList := validation.ValidateAuditd(&config, path)
+			Expect(errorList).To(BeEmpty())
 		})
 	})
 })

@@ -289,6 +289,127 @@ tls:
 					})
 				})
 			})
+
+			Context("when AuditConfig.ConfigMapReferenceName is not nil", func() {
+				BeforeEach(func() {
+					shoot.Spec.Extensions[0].ProviderConfig.Raw = append(shoot.Spec.Extensions[0].ProviderConfig.Raw, []byte(`
+auditConfig:
+  enabled: true
+  configMapReferenceName: rsyslog-configmap`)...)
+
+					shoot.Spec.Resources = []core.NamedResourceReference{
+						{
+							Name: "rsyslog-configmap",
+							ResourceRef: autoscalingv1.CrossVersionObjectReference{
+								Kind:       "ConfigMap",
+								Name:       "rsyslog-configmap",
+								APIVersion: "v1",
+							},
+						},
+					}
+				})
+
+				It("should return error if referenced configMap does not exist", func() {
+					Expect(shootValidator.Validate(ctx, shoot, nil)).To(MatchError(ContainSubstring("referenced configMap bar/rsyslog-configmap does not exist")))
+				})
+
+				It("should return error if referenced configMap is empty", func() {
+					referencedConfigMap := &corev1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "rsyslog-configmap",
+							Namespace: "bar",
+						},
+						Immutable: ptr.To(true),
+					}
+
+					Expect(fakeGardenClient.Create(ctx, referencedConfigMap)).To(Succeed())
+					Expect(shootValidator.Validate(ctx, shoot, nil)).To(MatchError("missing 'data.auditd' field in configMap bar/rsyslog-configmap"))
+				})
+
+				It("should return error if referenced configMap contains invalid config", func() {
+					referencedConfigMap := &corev1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "rsyslog-configmap",
+							Namespace: "bar",
+						},
+						Immutable: ptr.To(true),
+						Data: map[string]string{
+							"auditd": "some policy",
+						},
+					}
+
+					Expect(fakeGardenClient.Create(ctx, referencedConfigMap)).To(Succeed())
+					Expect(shootValidator.Validate(ctx, shoot, nil)).To(MatchError(ContainSubstring("could not decode 'data.auditd' field of configMap bar/rsyslog-configmap")))
+				})
+
+				It("should return error if referenced configMap contains config with invalid kind", func() {
+					referencedConfigMap := &corev1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "rsyslog-configmap",
+							Namespace: "bar",
+						},
+						Immutable: ptr.To(true),
+						Data: map[string]string{
+							"auditd": `apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
+kind: Foo`,
+						},
+					}
+
+					Expect(fakeGardenClient.Create(ctx, referencedConfigMap)).To(Succeed())
+					Expect(shootValidator.Validate(ctx, shoot, nil)).To(
+						MatchError(runtime.NewNotRegisteredErrForKind(
+							kubernetes.GardenScheme.Name(),
+							schema.GroupVersionKind{
+								Group:   "rsyslog-relp.extensions.gardener.cloud",
+								Version: "v1alpha1",
+								Kind:    "Foo",
+							}),
+						),
+					)
+				})
+
+				It("should return error if referenced configMap contains invalid auditd config", func() {
+					referencedConfigMap := &corev1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "rsyslog-configmap",
+							Namespace: "bar",
+						},
+						Immutable: ptr.To(true),
+						Data: map[string]string{
+							"auditd": `apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
+kind: Auditd`,
+						},
+					}
+
+					Expect(fakeGardenClient.Create(ctx, referencedConfigMap)).To(Succeed())
+					Expect(shootValidator.Validate(ctx, shoot, nil)).To(ConsistOf(
+						PointTo(MatchFields(IgnoreExtras, Fields{
+							"Type":     Equal(field.ErrorTypeInvalid),
+							"Field":    Equal("auditRules"),
+							"BadValue": Equal(""),
+							"Detail":   Equal("auditRules must not be empty"),
+						})),
+					))
+				})
+
+				It("should not return error when referenced configmap contains valid auditd config", func() {
+					referencedConfigMap := &corev1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "rsyslog-configmap",
+							Namespace: "bar",
+						},
+						Immutable: ptr.To(true),
+						Data: map[string]string{
+							"auditd": `apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
+kind: Auditd
+auditRules: -a exit,always -F arch=b64 -S setuid -S setreuid -S setgid -S setregid -F auid>0 -F auid!=-1 -F key=privilege_escalation`,
+						},
+					}
+
+					Expect(fakeGardenClient.Create(ctx, referencedConfigMap)).To(Succeed())
+					Expect(shootValidator.Validate(ctx, shoot, nil)).To(Succeed())
+				})
+			})
 		})
 	})
 })
