@@ -82,16 +82,17 @@ func init() {
 	}
 
 	if err := configureRsyslogScriptTemplate.Execute(&configureRsyslogScript, map[string]interface{}{
-		"rsyslogRelpQueueSpoolDir":    rsyslogRelpQueueSpoolDir,
-		"pathRsyslogTLSDir":           rsyslogTLSDir,
-		"pathRsyslogTLSFromOSCDir":    rsyslogTLSFromOSCDir,
-		"pathAuditRulesDir":           auditRulesDir,
-		"pathAuditRulesBackupDir":     auditRulesBackupDir,
-		"pathAuditRulesFromOSCDir":    auditRulesFromOSCDir,
-		"pathSyslogAuditPlugin":       auditSyslogPluginPath,
-		"audispSyslogPluginPath":      audispSyslogPluginPath,
-		"pathRsyslogAuditConf":        rsyslogConfigPath,
-		"pathRsyslogAuditConfFromOSC": rsyslogConfigFromOSCPath,
+		"rsyslogRelpQueueSpoolDir":         rsyslogRelpQueueSpoolDir,
+		"pathRsyslogTLSDir":                rsyslogTLSDir,
+		"pathRsyslogTLSFromOSCDir":         rsyslogTLSFromOSCDir,
+		"pathAuditRulesDir":                auditRulesDir,
+		"pathAuditRulesBackupDir":          auditRulesBackupDir,
+		"pathAuditRulesFromOSCDir":         auditRulesFromOSCDir,
+		"pathSyslogAuditPlugin":            auditSyslogPluginPath,
+		"audispSyslogPluginPath":           audispSyslogPluginPath,
+		"nodeExporterTextfileCollectorDir": nodeExporterTextfileCollectorDir,
+		"pathRsyslogAuditConf":             rsyslogConfigPath,
+		"pathRsyslogAuditConfFromOSC":      rsyslogConfigFromOSCPath,
 	}); err != nil {
 		panic(err)
 	}

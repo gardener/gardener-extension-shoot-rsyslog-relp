@@ -8,6 +8,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+auditd_metrics_file="{{ .nodeExporterTextfileCollectorDir }}/rsyslog_auditd.prom"
+
 function remove_auditd_config() {
   if [[ -d {{ .pathAuditRulesBackupDir }} ]]; then
     if [[ -f {{ .pathSyslogAuditPlugin }} ]]; then
@@ -24,6 +26,7 @@ function remove_auditd_config() {
     ## The original audit rules might be erroneus so we ignore any errors here.
     augenrules --load || true
     systemctl restart auditd
+    rm -f "${auditd_metrics_file}"
     rm -rf {{ .pathAuditRulesBackupDir }}
   fi
 }
@@ -47,9 +50,13 @@ function configure_auditd() {
     rm -rf {{ .pathAuditRulesDir }}/*
     cp -fL {{ .pathAuditRulesFromOSCDir }}/* {{ .pathAuditRulesDir }}/
 
+    augenrules_load_metric="# HELP rsyslog_augenrules_load_success shows whether the 'augenrules --load' command was executed successfullt or not.\n# TYPE rsyslog_augenrules_load_success gauge\nrsyslog_augenrules_load_success"
     error=$(augenrules --load 2>&1 > /dev/null)
     if [[ -n "$error" ]]; then
       logger -p error "Error loading audit rules: $error"
+      echo -e "${augenrules_load_metric} 0" > "${auditd_metrics_file}"
+    else
+      echo -e "${augenrules_load_metric} 1" > "${auditd_metrics_file}"
     fi
     restart_auditd=true
   fi
