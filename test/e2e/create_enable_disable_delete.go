@@ -99,7 +99,7 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 
 		enableExtensionFunc := func(shoot *gardencorev1beta1.Shoot) error {
 			common.AddOrUpdateRsyslogRelpExtension(shoot, common.WithPort(443), common.WithTLSWithSecretRefNameAndTLSLib("rsyslog-relp-tls", "openssl"))
-			common.AddOrUpdateRsyslogTLSSecretResource(shoot, "rsyslog-relp-tls")
+			common.AddOrUpdateResourceReference(shoot, "rsyslog-relp-tls", "Secret", createdResources[0].GetGenerateName())
 			return nil
 		}
 
@@ -111,6 +111,7 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 			var err error
 			createdResources, err = testutils.EnsureTestResources(ctx, f.GardenClient.Client(), f.ProjectNamespace, "../common/testdata/tls")
 			Expect(err).NotTo(HaveOccurred())
+			Expect(len(createdResources)).ToNot(BeZero())
 		})
 
 		AfterEach(func() {
