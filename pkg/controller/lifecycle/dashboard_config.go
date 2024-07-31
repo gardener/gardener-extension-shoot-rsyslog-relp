@@ -21,7 +21,7 @@ const dashboardConfig = `{
   "editable": true,
   "gnetId": null,
   "graphTooltip": 1,
-  "iteration": 1697800309188,
+  "iteration": 1722334973106,
   "links": [],
   "panels": [
     {
@@ -84,7 +84,7 @@ const dashboardConfig = `{
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.24",
+      "pluginVersion": "7.5.32",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -208,7 +208,7 @@ const dashboardConfig = `{
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.24",
+      "pluginVersion": "7.5.32",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -309,7 +309,7 @@ const dashboardConfig = `{
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.24",
+      "pluginVersion": "7.5.32",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -405,7 +405,7 @@ const dashboardConfig = `{
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.24",
+      "pluginVersion": "7.5.32",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -509,7 +509,7 @@ const dashboardConfig = `{
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.24",
+      "pluginVersion": "7.5.32",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -605,7 +605,7 @@ const dashboardConfig = `{
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.24",
+      "pluginVersion": "7.5.32",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -723,7 +723,7 @@ const dashboardConfig = `{
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.24",
+      "pluginVersion": "7.5.32",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -832,7 +832,7 @@ const dashboardConfig = `{
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.24",
+      "pluginVersion": "7.5.32",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -941,7 +941,7 @@ const dashboardConfig = `{
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.24",
+      "pluginVersion": "7.5.32",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1050,7 +1050,7 @@ const dashboardConfig = `{
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.24",
+      "pluginVersion": "7.5.32",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1159,7 +1159,7 @@ const dashboardConfig = `{
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.24",
+      "pluginVersion": "7.5.32",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1268,7 +1268,7 @@ const dashboardConfig = `{
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.24",
+      "pluginVersion": "7.5.32",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1391,7 +1391,7 @@ const dashboardConfig = `{
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.24",
+      "pluginVersion": "7.5.32",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1500,7 +1500,7 @@ const dashboardConfig = `{
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.24",
+      "pluginVersion": "7.5.32",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1609,7 +1609,7 @@ const dashboardConfig = `{
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.24",
+      "pluginVersion": "7.5.32",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1718,7 +1718,7 @@ const dashboardConfig = `{
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.24",
+      "pluginVersion": "7.5.32",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1827,7 +1827,7 @@ const dashboardConfig = `{
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.24",
+      "pluginVersion": "7.5.32",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1936,7 +1936,7 @@ const dashboardConfig = `{
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.24",
+      "pluginVersion": "7.5.32",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -2045,7 +2045,7 @@ const dashboardConfig = `{
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.24",
+      "pluginVersion": "7.5.32",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -2154,7 +2154,7 @@ const dashboardConfig = `{
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.24",
+      "pluginVersion": "7.5.32",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -2263,7 +2263,7 @@ const dashboardConfig = `{
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.24",
+      "pluginVersion": "7.5.32",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -2372,7 +2372,7 @@ const dashboardConfig = `{
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.24",
+      "pluginVersion": "7.5.32",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -2434,6 +2434,139 @@ const dashboardConfig = `{
         "align": false,
         "alignLevel": null
       }
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 88
+      },
+      "id": 73,
+      "panels": [],
+      "title": "Audit",
+      "type": "row"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 89
+      },
+      "hiddenSeries": false,
+      "id": 75,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "sideWidth": null,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 2,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.5.32",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "rsyslog_augenrules_load_success{node=~\"$Node\"}",
+          "interval": "",
+          "legendFormat": "{{node}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [
+        {
+          "$$hashKey": "object:157",
+          "colorMode": "ok",
+          "fill": true,
+          "line": false,
+          "op": "gt",
+          "value": 0.5,
+          "yaxis": "left"
+        },
+        {
+          "$$hashKey": "object:163",
+          "colorMode": "critical",
+          "fill": true,
+          "line": false,
+          "op": "lt",
+          "value": 0.5,
+          "yaxis": "left"
+        }
+      ],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Augenrules Load Success",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:139",
+          "decimals": 0,
+          "format": "none",
+          "label": "Success",
+          "logBase": 1,
+          "max": "1.2",
+          "min": "-0.2",
+          "show": true
+        },
+        {
+          "$$hashKey": "object:140",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     }
   ],
   "refresh": "1h",
@@ -2449,7 +2582,7 @@ const dashboardConfig = `{
       {
         "allValue": null,
         "current": {
-          "selected": true,
+          "selected": false,
           "text": [
             "All"
           ],
@@ -2484,7 +2617,7 @@ const dashboardConfig = `{
     ]
   },
   "time": {
-    "from": "now-3h",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {

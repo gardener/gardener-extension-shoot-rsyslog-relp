@@ -34,7 +34,7 @@ spec:
       apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
       kind: RsyslogRelpConfig
       # Set the target server to which logs are sent. The server must support the RELP protocol.
-      target: some.rsyslog-rlep.server
+      target: some.rsyslog-relp.server
       # Set the port of the target server.
       port: 10250
       # Define rules to select logs from which programs and with what syslog severity
@@ -61,9 +61,9 @@ spec:
         enabled: true
         # Use `name` authentication mode for the tls connection.
         authMode: name
-        # Only allow connections if the server's name is `some.rsyslog-rlep.server`
+        # Only allow connections if the server's name is `some.rsyslog-relp.server`
         permittedPeer:
-        - "some.rsyslog-rlep.server"
+        - "some.rsyslog-relp.server"
         # Reference to the resource which contains certificates used for the tls connection.
         # It must be added to the `.spec.resources` field of the Shoot.
         secretReferenceName: rsyslog-relp-tls
@@ -115,7 +115,7 @@ You can use a minimal `shoot-rsyslog-relp` extension configuration to forward al
 ```yaml
 apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
 kind: RsyslogRelpConfig
-target: some.rsyslog-rlep.server
+target: some.rsyslog-relp.server
 port: 10250
 loggingRules:
 - severity: 7
@@ -165,7 +165,7 @@ spec:
     providerConfig:
       apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
       kind: RsyslogRelpConfig
-      target: some.rsyslog-rlep.server
+      target: some.rsyslog-relp.server
       port: 10250
       loggingRules:
       - severity: 7
@@ -185,3 +185,76 @@ You can set a few additional parameters for the TLS connection: `.tls.authMode`,
 - [`.tls.authMode`](https://www.rsyslog.com/doc/v8-stable/configuration/modules/omrelp.html#tls-authmode)
 - [`.tls.permittedPeer`](https://www.rsyslog.com/doc/v8-stable/configuration/modules/omrelp.html#tls-permittedpeer)
 - [`.tls.tlsLib`](https://www.rsyslog.com/doc/v8-stable/configuration/modules/imrelp.html#tls-tlslib)
+
+### Configuring the Audit Daemon on the Shoot Nodes
+
+The `shoot-rsyslog-relp` extension also allows you to configure the Audit Daemon (`auditd`) on the Shoot nodes.
+
+By default the following rules will be placed under the `/etc/audit/rules.d` directory on the Shoot nodes: [00-base-config.rules](../../pkg/webhook/operatingsystemconfig/resources/auditrules/00-base-config.rules), [10-privilege-escalation.rules](../../pkg/webhook/operatingsystemconfig/resources/auditrules/10-privilege-escalation.rules), [11-privilege-special.rules](../../pkg/webhook/operatingsystemconfig/resources/auditrules/11-privileged-special.rules), [12-system-integrity.rules](../../pkg/webhook/operatingsystemconfig/resources/auditrules/12-system-integrity.rules). It will then call `augerules --load` and restart the audit daemon (`auditd`) so that the new rules can take effect.
+
+Alternatively, you can define your own `auditd` rules by using the following configuration:
+```yaml
+apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
+kind: Auditd
+auditRules: |
+  ## First rule - delete all existing rules
+  -D
+  ## Now define some custom rules
+  -a exit,always -F arch=b64 -S setuid -S setreuid -S setgid -S setregid -F auid>0 -F auid!=-1 -F key=privilege_escalation
+  -a exit,always -F arch=b64 -S execve -S execveat -F euid=0 -F auid>0 -F auid!=-1 -F key=privilege_escalation
+```
+
+To deploy this configuration, it must be embedded in a config map. **Note** that the data key storing this configuration must be named `auditd`.
+An example `ConfigMap` is given below:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: audit-config-v1
+  namespace: garden-foo
+immutable: true
+data:
+  auditd: |
+    apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
+    kind: Auditd
+    auditRules: |
+      ## First rule - delete all existing rules
+      -D
+      ## Now define some custom rules
+      -a exit,always -F arch=b64 -S setuid -S setreuid -S setgid -S setregid -F auid>0 -F auid!=-1 -F key=privilege_escalation
+      -a exit,always -F arch=b64 -S execve -S execveat -F euid=0 -F auid>0 -F auid!=-1 -F key=privilege_escalation
+```
+
+After creating such a `ConfigMap`, it must be included in the Shoot's `spec.resources` array and then referenced from the `providerConfig.auditConfig.configMapReferenceName` field in the `shoot-rsyslog-relp` extension configuration.
+
+An example configuration is given below:
+
+```yaml
+kind: Shoot
+metadata:
+  name: bar
+  namespace: garden-foo
+...
+spec:
+  extensions:
+  - type: shoot-rsyslog-relp
+    providerConfig:
+      apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
+      kind: RsyslogRelpConfig
+      target: some.rsyslog-relp.server
+      port: 10250
+      loggingRules:
+      - severity: 7
+      auditConfig:
+        enabled: true
+        configMapReferenceName: audit-config
+  resources:
+    - name: audit-config
+      resourceRef:
+        apiVersion: v1
+        kind: ConfigMap
+        name: audit-config-v1
+```
+
+Finally, by setting `providerConfig.auditConfig.enabled` to `false` in the `shoot-rsyslog-relp` extension configuration, you can completely disable the additional audit configurations performed by the extension.

@@ -16,6 +16,7 @@ import (
 	"github.com/go-logr/logr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
@@ -72,15 +73,20 @@ func (e *ensurer) EnsureAdditionalFiles(ctx context.Context, gctx gcontext.Garde
 
 	rsyslogFiles, err := getRsyslogFiles(shootRsyslogRelpConfig, cluster)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get rsyslog files: %w", err)
 	}
-
 	for _, file := range rsyslogFiles {
 		*new = extensionswebhook.EnsureFileWithPath(*new, file)
 	}
 
-	for _, file := range getAuditdFiles() {
-		*new = extensionswebhook.EnsureFileWithPath(*new, file)
+	if ptr.Deref(shootRsyslogRelpConfig.AuditConfig.Enabled, false) {
+		auditdFiles, err := getAuditdFiles(ctx, e.client, e.decoder, extension.Namespace, shootRsyslogRelpConfig, cluster)
+		if err != nil {
+			return fmt.Errorf("failed to get auditd files: %w", err)
+		}
+		for _, file := range auditdFiles {
+			*new = extensionswebhook.EnsureFileWithPath(*new, file)
+		}
 	}
 
 	return nil
