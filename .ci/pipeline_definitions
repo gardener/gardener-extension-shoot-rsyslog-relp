@@ -14,9 +14,18 @@ gardener-extension-shoot-rsyslog-relp:
         attribute: image.repository
       - ref: ocm-resource:gardener-extension-shoot-rsyslog-relp.tag
         attribute: image.tag
-    - &shoot-rsyslog-relp-admission
-      name: shoot-rsyslog-relp-admission
-      dir: charts/gardener-extension-shoot-rsyslog-relp-admission
+    - &shoot-rsyslog-relp-admission-application
+      name: shoot-rsyslog-relp-admission-application
+      dir: charts/gardener-extension-shoot-rsyslog-relp-admission/charts/application
+      registry: europe-docker.pkg.dev/gardener-project/snapshots/charts/gardener/extensions
+      mappings:
+      - ref: ocm-resource:gardener-extension-shoot-rsyslog-relp-admission.repository
+        attribute: global.image.repository
+      - ref: ocm-resource:gardener-extension-shoot-rsyslog-relp-admission.tag
+        attribute: global.image.tag
+    - &shoot-rsyslog-relp-admission-runtime
+      name: shoot-rsyslog-relp-admission-runtime
+      dir: charts/gardener-extension-shoot-rsyslog-relp-admission/charts/runtime
       registry: europe-docker.pkg.dev/gardener-project/snapshots/charts/gardener/extensions
       mappings:
       - ref: ocm-resource:gardener-extension-shoot-rsyslog-relp-admission.repository
@@ -73,5 +82,7 @@ gardener-extension-shoot-rsyslog-relp:
           helmcharts:
           - <<: *shoot-rsyslog-relp
             registry: europe-docker.pkg.dev/gardener-project/releases/charts/gardener/extensions
-          - <<: *shoot-rsyslog-relp-admission
+          - <<: *shoot-rsyslog-relp-admission-application
+            registry: europe-docker.pkg.dev/gardener-project/releases/charts/gardener/extensions
+          - <<: *shoot-rsyslog-relp-admission-runtime
             registry: europe-docker.pkg.dev/gardener-project/releases/charts/gardener/extensions
