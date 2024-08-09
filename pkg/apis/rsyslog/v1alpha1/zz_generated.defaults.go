@@ -22,7 +22,4 @@ func RegisterDefaults(scheme *runtime.Scheme) error {
 
 func SetObjectDefaults_RsyslogRelpConfig(in *RsyslogRelpConfig) {
 	SetDefaults_RsyslogRelpConfig(in)
-	if in.AuditConfig != nil {
-		SetDefaults_AuditConfig(in.AuditConfig)
-	}
 }

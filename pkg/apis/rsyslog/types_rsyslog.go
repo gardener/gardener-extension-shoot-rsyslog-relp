@@ -68,8 +68,8 @@ type LoggingRule struct {
 // AuditConfig contains options to configure the audit system.
 type AuditConfig struct {
 	// Enabled determines whether auditing configurations are applied to the nodes or not.
-	// Defaults to true.
-	Enabled *bool
+	// Will be defaulted to true, if AuditConfig is nil.
+	Enabled bool
 	// ConfigMapReferenceName is the name of the reference for the ConfigMap containing
 	// auditing configuration to apply to shoot nodes.
 	ConfigMapReferenceName *string

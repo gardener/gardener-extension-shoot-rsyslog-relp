@@ -77,7 +77,7 @@ func RegisterConversions(s *runtime.Scheme) error {
 }
 
 func autoConvert_v1alpha1_AuditConfig_To_rsyslog_AuditConfig(in *AuditConfig, out *rsyslog.AuditConfig, s conversion.Scope) error {
-	out.Enabled = (*bool)(unsafe.Pointer(in.Enabled))
+	out.Enabled = in.Enabled
 	out.ConfigMapReferenceName = (*string)(unsafe.Pointer(in.ConfigMapReferenceName))
 	return nil
 }
@@ -88,7 +88,7 @@ func Convert_v1alpha1_AuditConfig_To_rsyslog_AuditConfig(in *AuditConfig, out *r
 }
 
 func autoConvert_rsyslog_AuditConfig_To_v1alpha1_AuditConfig(in *rsyslog.AuditConfig, out *AuditConfig, s conversion.Scope) error {
-	out.Enabled = (*bool)(unsafe.Pointer(in.Enabled))
+	out.Enabled = in.Enabled
 	out.ConfigMapReferenceName = (*string)(unsafe.Pointer(in.ConfigMapReferenceName))
 	return nil
 }

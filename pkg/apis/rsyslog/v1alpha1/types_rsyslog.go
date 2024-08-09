@@ -80,9 +80,8 @@ type LoggingRule struct {
 // AuditConfig contains options to configure the audit system.
 type AuditConfig struct {
 	// Enabled determines whether auditing configurations are applied to the nodes or not.
-	// Defaults to true.
-	// +optional
-	Enabled *bool `json:"enabled,omitempty"`
+	// Will be defaulted to true, if AuditConfig is nil.
+	Enabled bool `json:"enabled"`
 	// ConfigMapReferenceName is the name of the reference for the ConfigMap containing
 	// auditing configuration to apply to shoot nodes.
 	// +optional

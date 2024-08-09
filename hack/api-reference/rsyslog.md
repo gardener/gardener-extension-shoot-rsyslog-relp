@@ -228,9 +228,8 @@ bool
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Enabled determines whether auditing configurations are applied to the nodes or not.
-Defaults to true.</p>
+Will be defaulted to true, if AuditConfig is nil.</p>
 </td>
 </tr>
 <tr>

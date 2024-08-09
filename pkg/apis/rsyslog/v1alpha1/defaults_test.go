@@ -7,8 +7,6 @@ package v1alpha1_test
 import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gstruct"
-	"k8s.io/utils/ptr"
 
 	. "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog/v1alpha1"
 )
@@ -20,20 +18,20 @@ var _ = Describe("RsyslogRelpConfig defaulting", func() {
 			SetObjectDefaults_RsyslogRelpConfig(obj)
 
 			Expect(obj.AuditConfig).NotTo(BeNil())
-			Expect(obj.AuditConfig.Enabled).To(PointTo(Equal(true)))
+			Expect(obj.AuditConfig.Enabled).To(BeTrue())
 		})
 
 		It("should not overwrite values if already set", func() {
 			obj := &RsyslogRelpConfig{
 				AuditConfig: &AuditConfig{
-					Enabled: ptr.To(false),
+					Enabled: false,
 				},
 			}
 
 			SetObjectDefaults_RsyslogRelpConfig(obj)
 
 			Expect(obj.AuditConfig).NotTo(BeNil())
-			Expect(obj.AuditConfig.Enabled).To(PointTo(Equal(false)))
+			Expect(obj.AuditConfig.Enabled).To(BeFalse())
 		})
 	})
 })

@@ -16,5 +16,5 @@ type Auditd struct {
 	metav1.TypeMeta
 
 	// AuditRules contains the audit rules that will be placed under /etc/audit/rules.d.
-	AuditRules string `json:"auditRules,omitempty"`
+	AuditRules string `json:"auditRules"`
 }
