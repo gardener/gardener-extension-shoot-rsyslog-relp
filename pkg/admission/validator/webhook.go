@@ -35,7 +35,7 @@ func New(mgr manager.Manager) (*extensionswebhook.Webhook, error) {
 		Name:     Name,
 		Path:     "/webhooks/validate",
 		Validators: map[extensionswebhook.Validator][]extensionswebhook.Type{
-			NewShootValidator(mgr.GetClient(), decoder): {{Obj: &core.Shoot{}}},
+			NewShootValidator(mgr.GetAPIReader(), decoder): {{Obj: &core.Shoot{}}},
 		},
 		Target: extensionswebhook.TargetSeed,
 		ObjectSelector: &metav1.LabelSelector{

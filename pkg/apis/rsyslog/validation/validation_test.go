@@ -237,7 +237,7 @@ var _ = Describe("Validation", func() {
 				})),
 			)
 
-			errorList := validation.ValidateAuditd(&config, path)
+			errorList := validation.ValidateAuditd(&config)
 			Expect(errorList).To(matcher)
 		})
 
@@ -246,7 +246,7 @@ var _ = Describe("Validation", func() {
 				AuditRules: "-a exit,always -F arch=b64 -S setuid -S setreuid -S setgid -S setregid -F auid>0 -F auid!=-1 -F key=privilege_escalation",
 			}
 
-			errorList := validation.ValidateAuditd(&config, path)
+			errorList := validation.ValidateAuditd(&config)
 			Expect(errorList).To(BeEmpty())
 		})
 	})

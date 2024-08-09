@@ -21,20 +21,19 @@ import (
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog/validation"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/constants"
-	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/utils"
 )
 
 // shoot validates shoots
 type shoot struct {
-	client  client.Client
-	decoder runtime.Decoder
+	apiReader client.Reader
+	decoder   runtime.Decoder
 }
 
 // NewShootValidator returns a new instance of a shoot validator.
-func NewShootValidator(client client.Client, decoder runtime.Decoder) extensionswebhook.Validator {
+func NewShootValidator(apiReader client.Reader, decoder runtime.Decoder) extensionswebhook.Validator {
 	return &shoot{
-		client:  client,
-		decoder: decoder,
+		apiReader: apiReader,
+		decoder:   decoder,
 	}
 }
 
@@ -84,7 +83,7 @@ func (s *shoot) Validate(ctx context.Context, new, _ client.Object) error {
 		}
 
 		secretKey := client.ObjectKeyFromObject(secret)
-		if err := s.client.Get(ctx, secretKey, secret); err != nil {
+		if err := s.apiReader.Get(ctx, secretKey, secret); err != nil {
 			if errors.IsNotFound(err) {
 				return fmt.Errorf("referenced secret %s does not exist", secretKey.String())
 			}
@@ -92,12 +91,12 @@ func (s *shoot) Validate(ctx context.Context, new, _ client.Object) error {
 			return fmt.Errorf("failed to get referenced secret %s with error: %w", secretKey.String(), err)
 		}
 
-		if err := utils.ValidateRsyslogRelpSecret(secret); err != nil {
+		if err := validateRsyslogRelpSecret(secret); err != nil {
 			return err
 		}
 	}
 
-	if ptr.Deref(rsyslogRelpConfig.AuditConfig.Enabled, false) && rsyslogRelpConfig.AuditConfig.ConfigMapReferenceName != nil {
+	if rsyslogRelpConfig.AuditConfig != nil && rsyslogRelpConfig.AuditConfig.Enabled && rsyslogRelpConfig.AuditConfig.ConfigMapReferenceName != nil {
 		configMapName, err := getReferencedResourceName(shoot, "ConfigMap", *rsyslogRelpConfig.AuditConfig.ConfigMapReferenceName)
 		if err != nil {
 			return err
@@ -111,7 +110,7 @@ func (s *shoot) Validate(ctx context.Context, new, _ client.Object) error {
 		}
 
 		configMapKey := client.ObjectKeyFromObject(configMap)
-		if err := s.client.Get(ctx, configMapKey, configMap); err != nil {
+		if err := s.apiReader.Get(ctx, configMapKey, configMap); err != nil {
 			if errors.IsNotFound(err) {
 				return fmt.Errorf("referenced configMap %s does not exist", configMapKey.String())
 			}
@@ -119,9 +118,59 @@ func (s *shoot) Validate(ctx context.Context, new, _ client.Object) error {
 			return fmt.Errorf("failed to get referenced configMap %s with error: %w", configMapKey.String(), err)
 		}
 
-		if err := utils.ValidateAuditConfigMap(s.decoder, configMap); err != nil {
+		if err := validateAuditConfigMap(s.decoder, configMap); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+// validateRsyslogRelpSecret validates the content of an rsyslog relp secret.
+func validateRsyslogRelpSecret(secret *corev1.Secret) error {
+	key := client.ObjectKeyFromObject(secret)
+	if _, ok := secret.Data[constants.RsyslogCertifcateAuthorityKey]; !ok {
+		return fmt.Errorf("secret %s is missing %s value", key.String(), constants.RsyslogCertifcateAuthorityKey)
+	}
+	if _, ok := secret.Data[constants.RsyslogClientCertificateKey]; !ok {
+		return fmt.Errorf("secret %s is missing %s value", key.String(), constants.RsyslogClientCertificateKey)
+	}
+	if _, ok := secret.Data[constants.RsyslogPrivateKeyKey]; !ok {
+		return fmt.Errorf("secret %s is missing %s value", key.String(), constants.RsyslogPrivateKeyKey)
+	}
+	if !ptr.Deref(secret.Immutable, false) {
+		return fmt.Errorf("secret %s must be immutable", key.String())
+	}
+	if len(secret.Data) != 3 {
+		return fmt.Errorf("secret %s should have only three data entries", key.String())
+	}
+
+	return nil
+}
+
+// validateAuditConfigMap validates the content of a configmap containing audit config.
+func validateAuditConfigMap(decoder runtime.Decoder, configMap *corev1.ConfigMap) error {
+	configMapKey := client.ObjectKeyFromObject(configMap)
+	if !ptr.Deref(configMap.Immutable, false) {
+		return fmt.Errorf("configMap %s must be immutable", configMapKey.String())
+	}
+
+	auditdConfigString, ok := configMap.Data[constants.AuditdConfigMapDataKey]
+	if !ok {
+		return fmt.Errorf("missing 'data.%s' field in configMap %s", constants.AuditdConfigMapDataKey, configMapKey.String())
+	}
+	if len(auditdConfigString) == 0 {
+		return fmt.Errorf("empty auditd config. Provide non-empty auditd config in configMap %s", configMapKey.String())
+	}
+
+	auditdConfig := &rsyslog.Auditd{}
+
+	_, _, err := decoder.Decode([]byte(auditdConfigString), nil, auditdConfig)
+	if err != nil {
+		return fmt.Errorf("could not decode 'data.%s' field of configMap %s: %w", constants.AuditdConfigMapDataKey, configMapKey.String(), err)
+	}
+	if err := validation.ValidateAuditd(auditdConfig).ToAggregate(); err != nil {
+		return err
 	}
 
 	return nil

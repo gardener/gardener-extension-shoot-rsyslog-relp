@@ -11,7 +11,7 @@ import (
 )
 
 // ValidateAuditd validates the passed configuration instance.
-func ValidateAuditd(auditd *rsyslog.Auditd, _ *field.Path) field.ErrorList {
+func ValidateAuditd(auditd *rsyslog.Auditd) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	if len(auditd.AuditRules) == 0 {
