@@ -123,7 +123,7 @@ var _ = Describe("Ensurer", func() {
 				},
 			},
 			AuditConfig: &rsyslog.AuditConfig{
-				Enabled: ptr.To(true),
+				Enabled: true,
 			},
 		}
 	})
@@ -269,7 +269,7 @@ auditRules: |
 				Expect(fakeClient.Create(ctx, auditRulesConfigMap)).To(Succeed())
 
 				extensionProviderConfig.AuditConfig = &rsyslog.AuditConfig{
-					Enabled:                ptr.To(true),
+					Enabled:                true,
 					ConfigMapReferenceName: ptr.To("audit-rules"),
 				}
 
@@ -297,7 +297,7 @@ auditRules: |
 		Context("when modification of audit rules is disabled", func() {
 			BeforeEach(func() {
 				extensionProviderConfig.AuditConfig = &rsyslog.AuditConfig{
-					Enabled: ptr.To(false),
+					Enabled: false,
 				}
 				expectedFiles = append([]extensionsv1alpha1.File{oldFile}, getRsyslogFiles(rsyslogConfig, true)...)
 			})

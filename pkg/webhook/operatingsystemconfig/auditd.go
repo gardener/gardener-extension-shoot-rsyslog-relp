@@ -43,7 +43,7 @@ var (
 )
 
 func getAuditdFiles(ctx context.Context, c client.Client, decoder runtime.Decoder, namespace string, rsyslogRelpConfig *rsyslog.RsyslogRelpConfig, cluster *extensionscontroller.Cluster) ([]extensionsv1alpha1.File, error) {
-	if rsyslogRelpConfig.AuditConfig.ConfigMapReferenceName != nil {
+	if rsyslogRelpConfig.AuditConfig != nil && rsyslogRelpConfig.AuditConfig.ConfigMapReferenceName != nil {
 		return getAuditConfigFromConfigMap(ctx, c, decoder, cluster, namespace, *rsyslogRelpConfig.AuditConfig.ConfigMapReferenceName)
 	}
 
@@ -133,14 +133,10 @@ func getDefaultAuditRules() []extensionsv1alpha1.File {
 }
 
 func parseAuditConfig(decoder runtime.Decoder, data string) ([]byte, error) {
-	auditConfig, _, err := decoder.Decode([]byte(data), nil, nil)
+	auditdConfig := &rsyslog.Auditd{}
+	_, _, err := decoder.Decode([]byte(data), nil, auditdConfig)
 	if err != nil {
 		return nil, err
 	}
-
-	switch config := auditConfig.(type) {
-	case *rsyslog.Auditd:
-		return []byte(config.AuditRules), nil
-	}
-	return nil, nil
+	return []byte(auditdConfig.AuditRules), nil
 }

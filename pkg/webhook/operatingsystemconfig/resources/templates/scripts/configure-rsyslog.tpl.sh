@@ -50,7 +50,7 @@ function configure_auditd() {
     rm -rf {{ .pathAuditRulesDir }}/*
     cp -fL {{ .pathAuditRulesFromOSCDir }}/* {{ .pathAuditRulesDir }}/
 
-    augenrules_load_metric="# HELP rsyslog_augenrules_load_success shows whether the 'augenrules --load' command was executed successfullt or not.\n# TYPE rsyslog_augenrules_load_success gauge\nrsyslog_augenrules_load_success"
+    augenrules_load_metric="# HELP rsyslog_augenrules_load_success shows whether the 'augenrules --load' command was executed successfully or not.\n# TYPE rsyslog_augenrules_load_success gauge\nrsyslog_augenrules_load_success"
     error=$(augenrules --load 2>&1 > /dev/null)
     if [[ -n "$error" ]]; then
       logger -p error "Error loading audit rules: $error"
