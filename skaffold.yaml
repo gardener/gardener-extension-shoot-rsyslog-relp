@@ -38,7 +38,6 @@ build:
             - pkg/apis/config/v1alpha1
             - pkg/apis/rsyslog
             - pkg/apis/rsyslog/install
-            - pkg/apis/rsyslog/validation
             - pkg/apis/rsyslog/v1alpha1
             - pkg/cmd/rsyslogrelp
             - pkg/component/rsyslogrelpconfigcleaner
@@ -91,7 +90,6 @@ build:
             - pkg/apis/rsyslog/v1alpha1
             - pkg/apis/rsyslog/validation
             - pkg/constants
-            - pkg/utils
             - VERSION
         ldflags:
           - '{{.LD_FLAGS}}'
