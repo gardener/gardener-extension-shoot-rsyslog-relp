@@ -69,6 +69,12 @@ spec:
         secretReferenceName: rsyslog-relp-tls
         # Instruct librelp on the Shoot nodes to use the gnutls tls library.
         tlsLib: gnutls
+      # Add auditConfig settings if you want to customize node level auditing.
+      auditConfig:
+        enabled: true
+        # Reference to the resource which contains the audit configuration.
+        # It must be added to the `.spec.resources` field of the Shoot.
+        configMapReferenceName: audit-config
   resources:
     # Add the rsyslog-relp-tls secret in the resources field of the Shoot spec.
     - name: rsyslog-relp-tls
@@ -76,6 +82,11 @@ spec:
         apiVersion: v1
         kind: Secret
         name: rsyslog-relp-tls-v1
+    - name: audit-config
+      resourceRef:
+        apiVersion: v1
+        kind: ConfigMap
+        name: audit-config-v1
 ...
 ```
 
@@ -190,9 +201,9 @@ You can set a few additional parameters for the TLS connection: `.tls.authMode`,
 
 The `shoot-rsyslog-relp` extension also allows you to configure the Audit Daemon (`auditd`) on the Shoot nodes.
 
-By default the following rules will be placed under the `/etc/audit/rules.d` directory on the Shoot nodes: [00-base-config.rules](../../pkg/webhook/operatingsystemconfig/resources/auditrules/00-base-config.rules), [10-privilege-escalation.rules](../../pkg/webhook/operatingsystemconfig/resources/auditrules/10-privilege-escalation.rules), [11-privilege-special.rules](../../pkg/webhook/operatingsystemconfig/resources/auditrules/11-privileged-special.rules), [12-system-integrity.rules](../../pkg/webhook/operatingsystemconfig/resources/auditrules/12-system-integrity.rules). It will then call `augerules --load` and restart the audit daemon (`auditd`) so that the new rules can take effect.
+By default, the audit rules located under the `/etc/audit/rules.d` directory on your Shoot's nodes will be moved to `/etc/audit/rules.d.original` and the following rules will be placed under the `/etc/audit/rules.d` directory: [00-base-config.rules](../../pkg/webhook/operatingsystemconfig/resources/auditrules/00-base-config.rules), [10-privilege-escalation.rules](../../pkg/webhook/operatingsystemconfig/resources/auditrules/10-privilege-escalation.rules), [11-privilege-special.rules](../../pkg/webhook/operatingsystemconfig/resources/auditrules/11-privileged-special.rules), [12-system-integrity.rules](../../pkg/webhook/operatingsystemconfig/resources/auditrules/12-system-integrity.rules). Next, `augerules --load` will be called and the audit daemon (`auditd`) restarted so that the new rules can take effect.
 
-Alternatively, you can define your own `auditd` rules by using the following configuration:
+Alternatively, you can define your own `auditd` rules to be placed on your Shoot's nodes by using the following configuration:
 ```yaml
 apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
 kind: Auditd
@@ -204,7 +215,13 @@ auditRules: |
   -a exit,always -F arch=b64 -S execve -S execveat -F euid=0 -F auid>0 -F auid!=-1 -F key=privilege_escalation
 ```
 
-To deploy this configuration, it must be embedded in a config map. **Note** that the data key storing this configuration must be named `auditd`.
+In this case the original rules are also backed up in the `/etc/audit/rules.d.original` directory.
+
+To deploy this configuration, it must be embedded in an immutable ConfigMap.
+
+> [!NOTE]
+> The data key storing this configuration must be named `auditd`.
+
 An example `ConfigMap` is given below:
 
 ```yaml
@@ -257,4 +274,32 @@ spec:
         name: audit-config-v1
 ```
 
-Finally, by setting `providerConfig.auditConfig.enabled` to `false` in the `shoot-rsyslog-relp` extension configuration, you can completely disable the additional audit configurations performed by the extension.
+Finally, by setting `providerConfig.auditConfig.enabled` to `false` in the `shoot-rsyslog-relp` extension configuration, the original audit rules on your Shoot's nodes will not be modified and `auditd` will not be restarted.
+
+Examples on how the `providerConfig.auditConfig.enabled` field functions are given below:
+
+- The following deploys the extension default audit rules as of today:
+  ```yaml
+  providerConfig:
+    auditConfig:
+      enabled: true
+  ```
+- The following deploys only the rules specified in the referenced ConfigMap:
+  ```yaml
+  providerConfig:
+    auditConfig:
+      enabled: true
+      configMapReferenceName: audit-config
+  ```
+- Both of the following do not deploy any audit rules:
+  ```yaml
+  providerConfig:
+    auditConfig:
+      enabled: false
+      configMapReferenceName: audit-config
+  ```
+  ```yaml
+  providerConfig:
+    auditConfig:
+      enabled: false
+  ```

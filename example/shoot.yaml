@@ -38,11 +38,20 @@ spec:
     #   tlsLib: openssl # {openssl, gnutls}
     #   permittedPeer:
     #   - "rsyslog-server"
+    # auditConfig:
+    #   enabled: true
+    #   configMapReferenceName: audit-config
 # resources:
 # - name: rsyslog-tls-certificates
 #   resourceRef:
 #     kind: Secret
-#     name: rsyslog-relp-tls
+#     name: rsyslog-relp-tls-v1
+#     apiVersion: v1
+# resources:
+# - name: audit-config
+#   resourceRef:
+#     kind: ConfigMap
+#     name: audit-config-v1
 #     apiVersion: v1
   seedName: local
   cloudProfileName: local
