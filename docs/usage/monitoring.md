@@ -120,7 +120,7 @@ Maximum size queue has reached.
 - Labels: `name` `node` `origin`
 
 #### rsyslog_augenrules_load_success
-Maximum size queue has reached.
+Shows whether the `augenrules --load` command was executed successfully or not on the node.
 - Type: Gauge
 - Labels: `node`
 

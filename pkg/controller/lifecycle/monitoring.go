@@ -65,7 +65,7 @@ func deployMonitoringConfig(ctx context.Context, c client.Client, namespace stri
 					"service":    "rsyslog-relp",
 					"severity":   "warning",
 					"type":       "shoot",
-					"visibility": "operator",
+					"visibility": "all",
 				},
 				Annotations: map[string]string{
 					"description": "The rsyslog relp cumulative failure rate in processing action events is greater than 2%.",
@@ -79,8 +79,8 @@ func deployMonitoringConfig(ctx context.Context, c client.Client, namespace stri
 				Labels: map[string]string{
 					"service":    "rsyslog-relp",
 					"severity":   "warning",
-					"type":       "seed",
-					"visibility": "operator",
+					"type":       "shoot",
+					"visibility": "all",
 				},
 				Annotations: map[string]string{
 					"description": "The rsyslog relp action processing rate is 0 meaning that there is most likely something wrong with the rsyslog service.",
@@ -89,7 +89,7 @@ func deployMonitoringConfig(ctx context.Context, c client.Client, namespace stri
 			},
 		}
 
-		if auditConfig != nil && ptr.Deref(auditConfig.Enabled, false) {
+		if auditConfig == nil || auditConfig.Enabled {
 			alertingRules = append(alertingRules, monitoringv1.Rule{
 				Alert: "RsyslogRelpAuditRulesNotLoadedSuccessfully",
 				Expr:  intstr.FromString(`absent(rsyslog_augenrules_load_success == 1)`),
@@ -97,8 +97,8 @@ func deployMonitoringConfig(ctx context.Context, c client.Client, namespace stri
 				Labels: map[string]string{
 					"service":    "rsyslog-relp",
 					"severity":   "warning",
-					"type":       "seed",
-					"visibility": "operator",
+					"type":       "shoot",
+					"visibility": "all",
 				},
 				Annotations: map[string]string{
 					"description": "The rsyslog augenrules load success is 0 meaning that there was an error when calling 'augenrules --load' on the Shoot nodes",

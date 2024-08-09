@@ -2617,7 +2617,7 @@ const dashboardConfig = `{
     ]
   },
   "time": {
-    "from": "now-5m",
+    "from": "now-3h",
     "to": "now"
   },
   "timepicker": {
