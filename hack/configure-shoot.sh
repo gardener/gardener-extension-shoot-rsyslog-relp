@@ -89,6 +89,9 @@ fi
 echo "Deploying rsyslog-relp-tls secret in Garden cluster."
 kubectl apply -f <(yq -e ".metadata.namespace = \"${SHOOT_NAMESPACE}\"" "${REPO_ROOT_DIR}/example/secret-rsyslog-tls-certs.yaml")
 
+echo "Deploying audit-config configMap in Garden cluster."
+kubectl apply -f <(yq -e ".metadata.namespace = \"${SHOOT_NAMESPACE}\"" "${REPO_ROOT_DIR}/example/configmap-rsyslog-audit.yaml")
+
 extension_config_patch_file="${SHOOT_NAMESPACE}--${SHOOT_NAME}--extension-config-patch.yaml"
 
 echo "Enabling shoot-rsyslog-relp extension by patching shoot with ${extension_config_patch_file}."
