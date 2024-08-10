@@ -53,7 +53,7 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 
 			echoServerPodIf, echoServerPodName, err := common.GetEchoServerPodInterfaceAndName(ctx, f.ShootFramework.SeedClient)
 			Expect(err).NotTo(HaveOccurred())
-			verifier := common.NewVerifier(f.Logger, f.ShootFramework.ShootClient, echoServerPodIf, echoServerPodName, f.Shoot.Spec.Provider.Type, f.ShootFramework.Project.Name, f.Shoot.Name, string(f.Shoot.UID), false)
+			verifier := common.NewVerifier(f.Logger, f.ShootFramework.ShootClient, echoServerPodIf, echoServerPodName, f.Shoot.Spec.Provider.Type, f.ShootFramework.Project.Name, f.Shoot.Name, string(f.Shoot.UID), false, "")
 
 			common.ForEachNode(ctx, f.ShootFramework.ShootClient, func(ctx context.Context, node *corev1.Node) {
 				verifier.VerifyExtensionForNode(ctx, node.Name)
@@ -99,7 +99,7 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 
 		enableExtensionFunc := func(shoot *gardencorev1beta1.Shoot) error {
 			common.AddOrUpdateRsyslogRelpExtension(shoot, common.WithPort(443), common.WithTLSWithSecretRefNameAndTLSLib("rsyslog-relp-tls", "openssl"))
-			common.AddOrUpdateResourceReference(shoot, "rsyslog-relp-tls", "Secret", createdResources[0].GetGenerateName())
+			common.AddOrUpdateResourceReference(shoot, "rsyslog-relp-tls", "Secret", createdResources[0].GetName())
 			return nil
 		}
 

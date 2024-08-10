@@ -29,6 +29,7 @@ Files:
   hack/api-reference/*.json
   hack/cherry-pick-pull.sh
   test/integration/controller/lifecycle/resources/*.yaml
+  **/testdata/**
   local-setup
   go.mod
   go.sum

@@ -1,12 +1,7 @@
-# SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and Gardener contributors
-#
-# SPDX-License-Identifier: Apache-2.0
-
-
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: auditd
+  name: audit-config-v1
   namespace: garden-local
 immutable: true
 data:
