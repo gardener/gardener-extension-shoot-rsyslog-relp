@@ -19,12 +19,12 @@ import (
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/test/common"
 )
 
-const (
-	hibernationTestTimeout        = 75 * time.Minute
-	hibernationTestCleanupTimeout = 25 * time.Minute
-)
-
 var _ = Describe("Shoot rsyslog-relp testing", func() {
+	const (
+		hibernationTestTimeout        = 75 * time.Minute
+		hibernationTestCleanupTimeout = 25 * time.Minute
+	)
+
 	f := framework.NewShootFramework(nil)
 
 	f.Serial().Beta().CIt("should enable and disable the shoot-rsyslog-relp extension", func(parentCtx context.Context) {
