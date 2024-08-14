@@ -14,7 +14,7 @@ REPO_ROOT                   := $(shell dirname $(realpath $(lastword $(MAKEFILE_
 HACK_DIR                    := $(REPO_ROOT)/hack
 VERSION                     := $(shell cat "$(REPO_ROOT)/VERSION")
 EFFECTIVE_VERSION           := $(VERSION)-$(shell git rev-parse HEAD)
-ECHO_SERVER_VERSION         := v0.1.0
+ECHO_SERVER_VERSION         := v0.2.0
 IMAGE_TAG                   := $(EFFECTIVE_VERSION)
 LD_FLAGS                    := "-w $(shell EFFECTIVE_VERSION=$(EFFECTIVE_VERSION) bash $(GARDENER_HACK_DIR)/get-build-ld-flags.sh k8s.io/component-base $(REPO_ROOT)/VERSION $(EXTENSION_PREFIX)-$(NAME))"
 PARALLEL_E2E_TESTS          := 2
@@ -71,8 +71,8 @@ echo-server-docker-image:
 
 .PHONY: push-echo-server-image
 push-echo-server-image:
-	@docker push $(IMAGE)-echo-server:$(ECHO_SERVER_VERSION)
-	@docker push $(IMAGE)-echo-server:latest
+	@docker push $(ECHO_SERVER_IMAGE):$(ECHO_SERVER_VERSION)
+	@docker push $(ECHO_SERVER_IMAGE):latest
 
 #####################################################################
 # Rules for verification, formatting, linting, testing and cleaning #

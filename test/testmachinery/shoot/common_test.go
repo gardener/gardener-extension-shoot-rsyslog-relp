@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	rsyslogRelpEchoServerTag       = "v0.1.0"
+	rsyslogRelpEchoServerTag       = "v0.2.0"
 	rsyslogRelpEchoServerRepo      = "europe-docker.pkg.dev/gardener-project/releases/gardener/extensions/shoot-rsyslog-relp-echo-server"
 	rsyslogRelpEchoServerName      = "rsyslog-relp-echo-server"
 	rsyslogRelpEchoServerNamespace = "rsyslog-relp-echo-server"
