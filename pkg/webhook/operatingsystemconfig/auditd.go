@@ -42,7 +42,7 @@ var (
 	systemIntegrityRules []byte
 )
 
-func getAuditdFiles(ctx context.Context, c client.Client, decoder runtime.Decoder, namespace string, rsyslogRelpConfig *rsyslog.RsyslogRelpConfig, cluster *extensionscontroller.Cluster) ([]extensionsv1alpha1.File, error) {
+func getAuditFiles(ctx context.Context, c client.Client, decoder runtime.Decoder, namespace string, rsyslogRelpConfig *rsyslog.RsyslogRelpConfig, cluster *extensionscontroller.Cluster) ([]extensionsv1alpha1.File, error) {
 	if rsyslogRelpConfig.AuditConfig != nil && rsyslogRelpConfig.AuditConfig.ConfigMapReferenceName != nil {
 		return getAuditConfigFromConfigMap(ctx, c, decoder, cluster, namespace, *rsyslogRelpConfig.AuditConfig.ConfigMapReferenceName)
 	}
@@ -66,11 +66,13 @@ func getAuditConfigFromConfigMap(ctx context.Context, c client.Client, decoder r
 		return nil, fmt.Errorf("failed to read referenced configMap %s%s for reference %s", v1beta1constants.ReferencedResourcesPrefix, ref.ResourceRef.Name, configMapRefName)
 	}
 
-	auditConfigString, ok := refConfigMap.Data[constants.AuditdConfigMapDataKey]
+	auditdConfigString, ok := refConfigMap.Data[constants.AuditdConfigMapDataKey]
 	if !ok {
 		return nil, fmt.Errorf("missing 'data.%s' field in configMap %s%s", constants.AuditdConfigMapDataKey, v1beta1constants.ReferencedResourcesPrefix, ref.ResourceRef.Name)
 	}
-	auditdConfig, err := parseAuditConfig(decoder, auditConfigString)
+
+	auditdConfig := &rsyslog.Auditd{}
+	_, _, err := decoder.Decode([]byte(auditdConfigString), nil, auditdConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +83,7 @@ func getAuditConfigFromConfigMap(ctx context.Context, c client.Client, decoder r
 		Content: extensionsv1alpha1.FileContent{
 			Inline: &extensionsv1alpha1.FileContentInline{
 				Encoding: "b64",
-				Data:     gardenerutils.EncodeBase64(auditdConfig),
+				Data:     gardenerutils.EncodeBase64([]byte(auditdConfig.AuditRules)),
 			},
 		},
 	}}, nil
@@ -130,13 +132,4 @@ func getDefaultAuditRules() []extensionsv1alpha1.File {
 			},
 		},
 	}
-}
-
-func parseAuditConfig(decoder runtime.Decoder, data string) ([]byte, error) {
-	auditdConfig := &rsyslog.Auditd{}
-	_, _, err := decoder.Decode([]byte(data), nil, auditdConfig)
-	if err != nil {
-		return nil, err
-	}
-	return []byte(auditdConfig.AuditRules), nil
 }
