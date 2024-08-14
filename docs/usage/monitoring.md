@@ -119,9 +119,14 @@ Maximum size queue has reached.
 - Type: Gauge
 - Labels: `name` `node` `origin`
 
+#### rsyslog_augenrules_load_success
+Shows whether the `augenrules --load` command was executed successfully or not on the node.
+- Type: Gauge
+- Labels: `node`
+
 ## Alerts
 
-There are two alerts defined for the `rsyslog` service in the Shoot's Prometheus instance:
+There are three alerts defined for the `rsyslog` service in the Shoot's Prometheus instance:
 
 #### RsyslogTooManyRelpActionFailures
 This indicates that the cumulative failure rate in processing `relp` action messages is greater than 2%. In other words, it compares the rate of processed `relp` action messages to the rate of failed `relp` action messages and fires an alert when the following expression evaluates to true:
@@ -135,6 +140,13 @@ This indicates that no messages are being sent to the upstream rsyslog target by
 
 ```
 rate(rsyslog_pstat_processed{origin="core.action",name="rsyslog-relp"}[5m]) == 0
+```
+
+#### RsyslogRelpAuditRulesNotLoadedSuccessfully
+This indicates that `augenrules --load` was not executed successfully when called to load the configured audit rules. You should check if the `auditd` configuration you provided is valid. An alert is fired when the following expression evaluates to true:
+
+```
+absent(rsyslog_augenrules_load_success == 1)
 ```
 
 Users can subscribe to these alerts by following the Gardener [alerting guide](https://github.com/gardener/gardener/blob/master/docs/monitoring/alerting.md#alerting-for-users).

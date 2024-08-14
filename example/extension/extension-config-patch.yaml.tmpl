@@ -20,18 +20,29 @@ spec:
       reportSuspensionContinuation: true
       tls:
         # If you enable the tls connection to the rsyslog relp echo server
-        # you also have to uncomment the resources array below. The rsyslog-relp-tls
-        # secret is automatically deployed in the local Garden cluster when you
-        # run `make configure-shoot`.
+        # you also have to uncomment the 'rsyslog-tls-certificates' reference in the
+        # resources array below. The 'rsyslog-relp-tls-v1' secret is automatically
+        # deployed in the local Garden cluster when you run `make configure-shoot`.
         enabled: false
         secretReferenceName: rsyslog-tls-certificates
         authMode: name
         tlsLib: openssl
         permittedPeer:
         - "rsyslog-server"
+      auditConfig:
+        enabled: true
+        # If you uncomment the config map refernece you also have to uncomment the 'audit-config'
+        # reference in the resources array below. The 'audit-config-v1' ConfigMap is automatically
+        # deployed in the local Garden cluster when you run `make configure-shoot`.
+        # configMapReferenceName: audit-config-v1
 # resources:
 # - name: rsyslog-tls-certificates
 #   resourceRef:
 #     kind: Secret
-#     name: rsyslog-relp-tls
+#     name: rsyslog-relp-tls-v1
+#     apiVersion: v1
+# - name: audit-config
+#   resourceRef:
+#     kind: ConfigMap
+#     name: audit-config-v1
 #     apiVersion: v1

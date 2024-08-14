@@ -36,6 +36,7 @@ type Verifier struct {
 	shootUID                   string
 	rootPodExecutor            framework.RootPodExecutor
 	testAuditLogging           bool
+	expectedAuditRules         string
 }
 
 type logEntry struct {
@@ -50,7 +51,8 @@ func NewVerifier(log logr.Logger,
 	client kubernetes.Interface,
 	echoServerPodIf clientcorev1.PodInterface,
 	echoServerPodName, providerType, projectName, shootName, shootUID string,
-	testAuditLogging bool) *Verifier {
+	testAuditLogging bool,
+	expectedAuditRules string) *Verifier {
 	return &Verifier{
 		log:                        log,
 		client:                     client,
@@ -61,6 +63,7 @@ func NewVerifier(log logr.Logger,
 		shootName:                  shootName,
 		shootUID:                   shootUID,
 		testAuditLogging:           testAuditLogging,
+		expectedAuditRules:         expectedAuditRules,
 	}
 }
 
@@ -80,6 +83,11 @@ func (v *Verifier) VerifyExtensionForNode(ctx context.Context, nodeName string) 
 	defer v.setNodeName("")
 
 	v.verifyThatRsyslogIsActiveAndConfigured(ctx)
+
+	if v.testAuditLogging {
+		v.verifyThatAuditRulesAreInstalled(ctx)
+	}
+
 	v.verifyLogsAreForwardedToEchoServer(
 		ctx,
 		logEntry{program: "test-program", severity: "1", message: "this should get sent to echo server", shouldBeForwarded: true},
@@ -100,6 +108,13 @@ func (v *Verifier) VerifyExtensionDisabledForNode(ctx context.Context, nodeName 
 	v.verifyThatLogsAreNotForwardedToEchoServer(ctx,
 		logEntry{program: "test-program", severity: "1", message: "this should not get sent to echo server"},
 	)
+}
+
+func (v *Verifier) verifyThatAuditRulesAreInstalled(ctx context.Context) {
+	EventuallyWithOffset(2, func(g Gomega) {
+		response, _ := ExecCommand(ctx, v.log, v.rootPodExecutor, "cat /etc/audit/audit.rules")
+		g.Expect(string(response)).To(Equal(v.expectedAuditRules), fmt.Sprintf("Expected the /etc/audit/audit.rules file to contain correct audit rules on node %s", v.nodeName))
+	}).WithTimeout(1 * time.Minute).WithPolling(10 * time.Second).WithContext(ctx).Should(Succeed())
 }
 
 func (v *Verifier) verifyThatRsyslogIsActiveAndConfigured(ctx context.Context) {

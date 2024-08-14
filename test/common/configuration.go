@@ -72,19 +72,19 @@ func RemoveRsyslogRelpExtension(shoot *gardencorev1beta1.Shoot) {
 	})
 }
 
-// AddOrUpdateRsyslogTLSSecretResource adds or updates the rsyslog relp tls secret resource reference to the given shoot.
-func AddOrUpdateRsyslogTLSSecretResource(shoot *gardencorev1beta1.Shoot, secretRefName string) {
+// AddOrUpdateResourceReference adds or updates a resource reference to the given shoot.
+func AddOrUpdateResourceReference(shoot *gardencorev1beta1.Shoot, resourceRefName, kind, resourceName string) {
 	resource := gardencorev1beta1.NamedResourceReference{
-		Name: secretRefName,
+		Name: resourceRefName,
 		ResourceRef: autoscalingv1.CrossVersionObjectReference{
-			Kind:       "Secret",
+			Kind:       kind,
 			APIVersion: "v1",
-			Name:       "rsyslog-relp-tls",
+			Name:       resourceName,
 		},
 	}
 
 	i := slices.IndexFunc(shoot.Spec.Resources, func(resource gardencorev1beta1.NamedResourceReference) bool {
-		return resource.Name == secretRefName
+		return resource.Name == resourceRefName
 	})
 
 	if i == -1 {
@@ -94,17 +94,17 @@ func AddOrUpdateRsyslogTLSSecretResource(shoot *gardencorev1beta1.Shoot, secretR
 	}
 }
 
-// RemoveRsyslogTLSSecretResource removes the rsyslog relp tls secret resource reference from the given shoot.
-func RemoveRsyslogTLSSecretResource(shoot *gardencorev1beta1.Shoot, secretRefName string) {
+// RemoveResourceReference removes the resource reference from the given shoot.
+func RemoveResourceReference(shoot *gardencorev1beta1.Shoot, resourceRefName string) {
 	shoot.Spec.Resources = slices.DeleteFunc(shoot.Spec.Resources, func(resource gardencorev1beta1.NamedResourceReference) bool {
-		return resource.Name == secretRefName
+		return resource.Name == resourceRefName
 	})
 }
 
-// HasRsyslogTLSSecretResource returns whether the shoot has an named resource reference with the given name.
-func HasRsyslogTLSSecretResource(shoot *gardencorev1beta1.Shoot, secretRefName string) bool {
+// HasResourceReference returns whether the shoot has an named resource reference with the given name.
+func HasResourceReference(shoot *gardencorev1beta1.Shoot, resourceRefName string) bool {
 	return slices.ContainsFunc(shoot.Spec.Resources, func(resource gardencorev1beta1.NamedResourceReference) bool {
-		return resource.Name == secretRefName
+		return resource.Name == resourceRefName
 	})
 }
 
@@ -119,6 +119,13 @@ func WithPort(port int) func(rsyslogRelpConfig *rsyslogv1alpha1.RsyslogRelpConfi
 func WithTarget(target string) func(rsyslogRelpConfig *rsyslogv1alpha1.RsyslogRelpConfig) {
 	return func(rsyslogRelpConfig *rsyslogv1alpha1.RsyslogRelpConfig) {
 		rsyslogRelpConfig.Target = target
+	}
+}
+
+// WithAuditConfig returns a function which sets the auditConfig of the rsyslog relp configuration.
+func WithAuditConfig(auditConfig *rsyslogv1alpha1.AuditConfig) func(rsyslogRelpConfig *rsyslogv1alpha1.RsyslogRelpConfig) {
+	return func(rsyslogRelpConfig *rsyslogv1alpha1.RsyslogRelpConfig) {
+		rsyslogRelpConfig.AuditConfig = auditConfig
 	}
 }
 

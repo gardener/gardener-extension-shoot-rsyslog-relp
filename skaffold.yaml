@@ -90,7 +90,6 @@ build:
             - pkg/apis/rsyslog/v1alpha1
             - pkg/apis/rsyslog/validation
             - pkg/constants
-            - pkg/utils
             - VERSION
         ldflags:
           - '{{.LD_FLAGS}}'

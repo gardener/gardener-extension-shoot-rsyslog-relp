@@ -5,11 +5,23 @@
 package operatingsystemconfig
 
 import (
+	"context"
 	_ "embed"
+	"fmt"
 
+	extensionscontroller "github.com/gardener/gardener/extensions/pkg/controller"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
+	v1beta1helper "github.com/gardener/gardener/pkg/apis/core/v1beta1/helper"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenerutils "github.com/gardener/gardener/pkg/utils"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/ptr"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
+	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/constants"
 )
 
 const (
@@ -30,7 +42,54 @@ var (
 	systemIntegrityRules []byte
 )
 
-func getAuditdFiles() []extensionsv1alpha1.File {
+func getAuditFiles(ctx context.Context, c client.Client, decoder runtime.Decoder, namespace string, rsyslogRelpConfig *rsyslog.RsyslogRelpConfig, cluster *extensionscontroller.Cluster) ([]extensionsv1alpha1.File, error) {
+	if rsyslogRelpConfig.AuditConfig != nil && rsyslogRelpConfig.AuditConfig.ConfigMapReferenceName != nil {
+		return getAuditConfigFromConfigMap(ctx, c, decoder, cluster, namespace, *rsyslogRelpConfig.AuditConfig.ConfigMapReferenceName)
+	}
+
+	return getDefaultAuditRules(), nil
+}
+
+func getAuditConfigFromConfigMap(ctx context.Context, c client.Client, decoder runtime.Decoder, cluster *extensionscontroller.Cluster, namespace, configMapRefName string) ([]extensionsv1alpha1.File, error) {
+	ref := v1beta1helper.GetResourceByName(cluster.Shoot.Spec.Resources, configMapRefName)
+	if ref == nil || ref.ResourceRef.Kind != "ConfigMap" {
+		return nil, fmt.Errorf("failed to find referenced resource with name %s and kind ConfigMap", configMapRefName)
+	}
+
+	refConfigMap := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      ref.ResourceRef.Name,
+			Namespace: namespace,
+		},
+	}
+	if err := extensionscontroller.GetObjectByReference(ctx, c, &ref.ResourceRef, namespace, refConfigMap); err != nil {
+		return nil, fmt.Errorf("failed to read referenced configMap %s%s for reference %s", v1beta1constants.ReferencedResourcesPrefix, ref.ResourceRef.Name, configMapRefName)
+	}
+
+	auditdConfigString, ok := refConfigMap.Data[constants.AuditdConfigMapDataKey]
+	if !ok {
+		return nil, fmt.Errorf("missing 'data.%s' field in configMap %s%s", constants.AuditdConfigMapDataKey, v1beta1constants.ReferencedResourcesPrefix, ref.ResourceRef.Name)
+	}
+
+	auditdConfig := &rsyslog.Auditd{}
+	_, _, err := decoder.Decode([]byte(auditdConfigString), nil, auditdConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return []extensionsv1alpha1.File{{
+		Path:        fmt.Sprintf("%s/%s", auditRulesFromOSCDir, "00_shoot_rsyslog_relp.rules"),
+		Permissions: ptr.To(int32(0644)),
+		Content: extensionsv1alpha1.FileContent{
+			Inline: &extensionsv1alpha1.FileContentInline{
+				Encoding: "b64",
+				Data:     gardenerutils.EncodeBase64([]byte(auditdConfig.AuditRules)),
+			},
+		},
+	}}, nil
+}
+
+func getDefaultAuditRules() []extensionsv1alpha1.File {
 	return []extensionsv1alpha1.File{
 		{
 			Path:        baseConfigRulesPath,

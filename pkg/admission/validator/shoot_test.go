@@ -13,6 +13,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
+	"github.com/onsi/gomega/types"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -200,20 +201,66 @@ tls:
 					Expect(shootValidator.Validate(ctx, shoot, nil)).To(MatchError(ContainSubstring("referenced secret bar/rsyslog-secret does not exist")))
 				})
 
-				It("should return error if referenced secret is not valid", func() {
-					referencedSecret := &corev1.Secret{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "rsyslog-secret",
-							Namespace: "bar",
-						},
-						StringData: map[string]string{
-							"key": "some secret data",
-						},
-					}
+				DescribeTable("when referenced secret is not valid",
+					func(caData, crtData, keyData, extraData []byte, immutable bool, matcher types.GomegaMatcher) {
+						var data = map[string][]byte{}
 
-					Expect(fakeGardenClient.Create(ctx, referencedSecret)).To(Succeed())
-					Expect(shootValidator.Validate(ctx, shoot, nil)).To(MatchError("secret bar/rsyslog-secret is missing ca value"))
-				})
+						if len(caData) > 0 {
+							data["ca"] = caData
+						}
+						if len(crtData) > 0 {
+							data["crt"] = caData
+						}
+						if len(keyData) > 0 {
+							data["key"] = caData
+						}
+						if len(extraData) > 0 {
+							data["extra"] = extraData
+						}
+
+						secret := &corev1.Secret{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "rsyslog-secret",
+								Namespace: "bar",
+							},
+							Immutable: &immutable,
+							Data:      data,
+						}
+
+						Expect(fakeGardenClient.Create(ctx, secret)).To(Succeed())
+						Expect(shootValidator.Validate(ctx, shoot, nil)).To(matcher)
+					},
+					Entry(
+						"should return error if secret does not contain 'ca' data entry",
+						nil, nil, nil, nil, true,
+						MatchError(ContainSubstring("secret bar/rsyslog-secret is missing ca value")),
+					),
+					Entry(
+						"should return error if secret does not contain 'crt' data entry",
+						[]byte("caData"), nil, nil, nil, true,
+						MatchError(ContainSubstring("secret bar/rsyslog-secret is missing crt value")),
+					),
+					Entry(
+						"should return error if secret does not contain 'key' data entry",
+						[]byte("caData"), []byte("crtData"), nil, nil, true,
+						MatchError(ContainSubstring("secret bar/rsyslog-secret is missing key value")),
+					),
+					Entry(
+						"should not return error if secret is valid",
+						[]byte("caData"), []byte("crtData"), []byte("keyData"), nil, true,
+						Succeed(),
+					),
+					Entry(
+						"should return error if secret does not contain 'tls' data entry",
+						[]byte("caData"), []byte("crtData"), []byte("tlsData"), []byte("extraData"), true,
+						MatchError(ContainSubstring("secret bar/rsyslog-secret should have only three data entries")),
+					),
+					Entry(
+						"should return error if secret is mutable",
+						[]byte("caData"), []byte("crtData"), []byte("tlsData"), []byte("extraData"), false,
+						MatchError(ContainSubstring("secret bar/rsyslog-secret must be immutable")),
+					),
+				)
 
 				Context("when referenced secret exists and is valid", func() {
 					BeforeEach(func() {
@@ -247,7 +294,7 @@ tls:
 						Expect(shootValidator.Validate(ctx, shoot, nil)).To(Succeed())
 					})
 
-					It("should return error when aithMode is neither name nor fingerprint", func() {
+					It("should return error when authMode is neither name nor fingerprint", func() {
 						authModeInvalid := rsyslog.AuthMode("foo")
 						shoot.Spec.Extensions[0].ProviderConfig.Raw = append(shoot.Spec.Extensions[0].ProviderConfig.Raw, []byte(`
   authMode: "foo"
@@ -288,6 +335,102 @@ tls:
 						))
 					})
 				})
+			})
+
+			Context("when AuditConfig.ConfigMapReferenceName is not nil", func() {
+				BeforeEach(func() {
+					shoot.Spec.Extensions[0].ProviderConfig.Raw = append(shoot.Spec.Extensions[0].ProviderConfig.Raw, []byte(`
+auditConfig:
+  enabled: true
+  configMapReferenceName: audit-configmap`)...)
+
+					shoot.Spec.Resources = []core.NamedResourceReference{
+						{
+							Name: "audit-configmap",
+							ResourceRef: autoscalingv1.CrossVersionObjectReference{
+								Kind:       "ConfigMap",
+								Name:       "audit-configmap",
+								APIVersion: "v1",
+							},
+						},
+					}
+				})
+
+				It("should return error if referenced configMap does not exist", func() {
+					Expect(shootValidator.Validate(ctx, shoot, nil)).To(MatchError(ContainSubstring("referenced configMap bar/audit-configmap does not exist")))
+				})
+
+				DescribeTable("when referenced configMap is not valid",
+					func(auditdData string, immutable bool, matcher types.GomegaMatcher) {
+						var data = map[string]string{}
+
+						if len(auditdData) > 0 {
+							data["auditd"] = auditdData
+						}
+
+						configMap := &corev1.ConfigMap{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "audit-configmap",
+								Namespace: "bar",
+							},
+							Immutable: &immutable,
+							Data:      data,
+						}
+
+						Expect(fakeGardenClient.Create(ctx, configMap)).To(Succeed())
+						Expect(shootValidator.Validate(ctx, shoot, nil)).To(matcher)
+					},
+					Entry(
+						"should return error when referenced configmap is mutable",
+						"", false,
+						MatchError(ContainSubstring("configMap bar/audit-configmap must be immutable")),
+					),
+					Entry(
+						"should return error if referenced configMap is empty",
+						"", true,
+						MatchError(ContainSubstring("missing 'data.auditd' field in configMap bar/audit-configmap")),
+					),
+					Entry(
+						"should return error if referenced configMap contains invalid config",
+						"some policy", true,
+						MatchError(ContainSubstring("could not decode 'data.auditd' field of configMap bar/audit-configmap")),
+					),
+					Entry(
+						"should return error if referenced configMap contains config with invalid kind",
+						`apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
+kind: Foo`,
+						true,
+						MatchError(runtime.NewNotRegisteredErrForKind(
+							kubernetes.GardenScheme.Name(),
+							schema.GroupVersionKind{
+								Group:   "rsyslog-relp.extensions.gardener.cloud",
+								Version: "v1alpha1",
+								Kind:    "Foo",
+							}),
+						),
+					),
+					Entry(
+						"should return error if referenced configMap contains invalid auditd config",
+						`apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
+kind: Auditd`,
+						true,
+						ConsistOf(
+							PointTo(MatchFields(IgnoreExtras, Fields{
+								"Type":     Equal(field.ErrorTypeInvalid),
+								"Field":    Equal("auditRules"),
+								"BadValue": Equal(""),
+								"Detail":   Equal("auditRules must not be empty"),
+							}))),
+					),
+					Entry(
+						"should return error if secret is mutable",
+						`apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
+kind: Auditd
+auditRules: -a exit,always -F arch=b64 -S setuid -S setreuid -S setgid -S setregid -F auid>0 -F auid!=-1 -F key=privilege_escalation`,
+						true,
+						Succeed(),
+					),
+				)
 			})
 		})
 	})

@@ -8,7 +8,35 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+auditd_metrics_file="/var/lib/node-exporter/textfile-collector/rsyslog_auditd.prom"
+
+function remove_auditd_config() {
+  if [[ -d /etc/audit/rules.d.original ]]; then
+    if [[ -f /etc/audit/plugins.d/syslog.conf ]]; then
+      sed -i "s/^active\\>.*/active = no/i" /etc/audit/plugins.d/syslog.conf
+    fi
+    if [[ -f /etc/audisp/plugins.d/syslog.conf ]]; then
+      sed -i "s/^active\\>.*/active = no/i" /etc/audisp/plugins.d/syslog.conf
+    fi
+
+    if [[ -d /etc/audit/rules.d ]]; then
+      rm -rf /etc/audit/rules.d
+    fi
+    cp -fa /etc/audit/rules.d.original /etc/audit/rules.d
+    ## The original audit rules might be erroneus so we ignore any errors here.
+    augenrules --load || true
+    systemctl restart auditd
+    rm -f "${auditd_metrics_file}"
+    rm -rf /etc/audit/rules.d.original
+  fi
+}
+
 function configure_auditd() {
+  if [[ ! -d /var/lib/rsyslog-relp-configurator/audit/rules.d ]] || [ -z "$( ls -A '/var/lib/rsyslog-relp-configurator/audit/rules.d' )" ] ; then
+    remove_auditd_config
+    return 0
+  fi
+
   if [[ ! -d /etc/audit/rules.d.original ]] && [[ -d /etc/audit/rules.d ]]; then
     mv /etc/audit/rules.d /etc/audit/rules.d.original
   fi
@@ -20,8 +48,16 @@ function configure_auditd() {
   fi
   if ! diff -rq /var/lib/rsyslog-relp-configurator/audit/rules.d /etc/audit/rules.d ; then
     rm -rf /etc/audit/rules.d/*
-    cp -L /var/lib/rsyslog-relp-configurator/audit/rules.d/* /etc/audit/rules.d/
-    augenrules --load
+    cp -fL /var/lib/rsyslog-relp-configurator/audit/rules.d/* /etc/audit/rules.d/
+
+    augenrules_load_metric="# HELP rsyslog_augenrules_load_success shows whether the 'augenrules --load' command was executed successfully or not.\n# TYPE rsyslog_augenrules_load_success gauge\nrsyslog_augenrules_load_success"
+    error=$(augenrules --load 2>&1 > /dev/null)
+    if [[ -n "$error" ]]; then
+      logger -p error "Error loading audit rules: $error"
+      echo -e "${augenrules_load_metric} 0" > "${auditd_metrics_file}"
+    else
+      echo -e "${augenrules_load_metric} 1" > "${auditd_metrics_file}"
+    fi
     restart_auditd=true
   fi
 
@@ -79,7 +115,7 @@ function configure_rsyslog() {
     fi
     if ! diff -rq /var/lib/rsyslog-relp-configurator/tls /etc/ssl/rsyslog ; then
       rm -rf /etc/ssl/rsyslog/*
-      cp -L /var/lib/rsyslog-relp-configurator/tls/* /etc/ssl/rsyslog/
+      cp -fL /var/lib/rsyslog-relp-configurator/tls/* /etc/ssl/rsyslog/
       restart_rsyslog=true
     fi
   elif [[ -d /etc/ssl/rsyslog ]]; then

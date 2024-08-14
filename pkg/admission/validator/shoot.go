@@ -15,25 +15,25 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog/validation"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/constants"
-	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/utils"
 )
 
 // shoot validates shoots
 type shoot struct {
-	client  client.Client
-	decoder runtime.Decoder
+	apiReader client.Reader
+	decoder   runtime.Decoder
 }
 
 // NewShootValidator returns a new instance of a shoot validator.
-func NewShootValidator(client client.Client, decoder runtime.Decoder) extensionswebhook.Validator {
+func NewShootValidator(apiReader client.Reader, decoder runtime.Decoder) extensionswebhook.Validator {
 	return &shoot{
-		client:  client,
-		decoder: decoder,
+		apiReader: apiReader,
+		decoder:   decoder,
 	}
 }
 
@@ -69,7 +69,7 @@ func (s *shoot) Validate(ctx context.Context, new, _ client.Object) error {
 	}
 
 	if rsyslogRelpConfig.TLS != nil && rsyslogRelpConfig.TLS.Enabled {
-		secretName, err := getReferencedSecretName(shoot, *rsyslogRelpConfig.TLS.SecretReferenceName)
+		secretName, err := getReferencedResourceName(shoot, "Secret", *rsyslogRelpConfig.TLS.SecretReferenceName)
 		if err != nil {
 			return err
 		}
@@ -83,7 +83,7 @@ func (s *shoot) Validate(ctx context.Context, new, _ client.Object) error {
 		}
 
 		secretKey := client.ObjectKeyFromObject(secret)
-		if err := s.client.Get(ctx, secretKey, secret); err != nil {
+		if err := s.apiReader.Get(ctx, secretKey, secret); err != nil {
 			if errors.IsNotFound(err) {
 				return fmt.Errorf("referenced secret %s does not exist", secretKey.String())
 			}
@@ -91,9 +91,86 @@ func (s *shoot) Validate(ctx context.Context, new, _ client.Object) error {
 			return fmt.Errorf("failed to get referenced secret %s with error: %w", secretKey.String(), err)
 		}
 
-		if err := utils.ValidateRsyslogRelpSecret(secret); err != nil {
+		if err := validateRsyslogRelpSecret(secret); err != nil {
 			return err
 		}
+	}
+
+	if rsyslogRelpConfig.AuditConfig != nil && rsyslogRelpConfig.AuditConfig.Enabled && rsyslogRelpConfig.AuditConfig.ConfigMapReferenceName != nil {
+		configMapName, err := getReferencedResourceName(shoot, "ConfigMap", *rsyslogRelpConfig.AuditConfig.ConfigMapReferenceName)
+		if err != nil {
+			return err
+		}
+
+		configMap := &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      configMapName,
+				Namespace: shoot.Namespace,
+			},
+		}
+
+		configMapKey := client.ObjectKeyFromObject(configMap)
+		if err := s.apiReader.Get(ctx, configMapKey, configMap); err != nil {
+			if errors.IsNotFound(err) {
+				return fmt.Errorf("referenced configMap %s does not exist", configMapKey.String())
+			}
+
+			return fmt.Errorf("failed to get referenced configMap %s with error: %w", configMapKey.String(), err)
+		}
+
+		if err := validateAuditConfigMap(s.decoder, configMap); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// validateRsyslogRelpSecret validates the content of an rsyslog relp secret.
+func validateRsyslogRelpSecret(secret *corev1.Secret) error {
+	key := client.ObjectKeyFromObject(secret)
+	if _, ok := secret.Data[constants.RsyslogCertifcateAuthorityKey]; !ok {
+		return fmt.Errorf("secret %s is missing %s value", key.String(), constants.RsyslogCertifcateAuthorityKey)
+	}
+	if _, ok := secret.Data[constants.RsyslogClientCertificateKey]; !ok {
+		return fmt.Errorf("secret %s is missing %s value", key.String(), constants.RsyslogClientCertificateKey)
+	}
+	if _, ok := secret.Data[constants.RsyslogPrivateKeyKey]; !ok {
+		return fmt.Errorf("secret %s is missing %s value", key.String(), constants.RsyslogPrivateKeyKey)
+	}
+	if !ptr.Deref(secret.Immutable, false) {
+		return fmt.Errorf("secret %s must be immutable", key.String())
+	}
+	if len(secret.Data) != 3 {
+		return fmt.Errorf("secret %s should have only three data entries", key.String())
+	}
+
+	return nil
+}
+
+// validateAuditConfigMap validates the content of a configmap containing audit config.
+func validateAuditConfigMap(decoder runtime.Decoder, configMap *corev1.ConfigMap) error {
+	configMapKey := client.ObjectKeyFromObject(configMap)
+	if !ptr.Deref(configMap.Immutable, false) {
+		return fmt.Errorf("configMap %s must be immutable", configMapKey.String())
+	}
+
+	auditdConfigString, ok := configMap.Data[constants.AuditdConfigMapDataKey]
+	if !ok {
+		return fmt.Errorf("missing 'data.%s' field in configMap %s", constants.AuditdConfigMapDataKey, configMapKey.String())
+	}
+	if len(auditdConfigString) == 0 {
+		return fmt.Errorf("empty auditd config. Provide non-empty auditd config in configMap %s", configMapKey.String())
+	}
+
+	auditdConfig := &rsyslog.Auditd{}
+
+	_, _, err := decoder.Decode([]byte(auditdConfigString), nil, auditdConfig)
+	if err != nil {
+		return fmt.Errorf("could not decode 'data.%s' field of configMap %s: %w", constants.AuditdConfigMapDataKey, configMapKey.String(), err)
+	}
+	if err := validation.ValidateAuditd(auditdConfig).ToAggregate(); err != nil {
+		return err
 	}
 
 	return nil
@@ -117,22 +194,22 @@ func decodeRsyslogRelpConfig(decoder runtime.Decoder, config *runtime.RawExtensi
 
 	rsyslogRelpConfig := &rsyslog.RsyslogRelpConfig{}
 	if err := runtime.DecodeInto(decoder, config.Raw, rsyslogRelpConfig); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not decode rsyslog relp configuration: %w", err)
 	}
 
 	return rsyslogRelpConfig, nil
 }
 
-func getReferencedSecretName(shoot *core.Shoot, secretReferenceName string) (string, error) {
+func getReferencedResourceName(shoot *core.Shoot, resourceKind, resourceName string) (string, error) {
 	if shoot != nil {
 		for _, ref := range shoot.Spec.Resources {
-			if ref.Name == secretReferenceName {
-				if ref.ResourceRef.Kind != "Secret" {
-					return "", fmt.Errorf("invalid referenced resource, expected kind Secret, not %s: %s", ref.ResourceRef.Kind, ref.ResourceRef.Name)
+			if ref.Name == resourceName {
+				if ref.ResourceRef.Kind != resourceKind {
+					return "", fmt.Errorf("invalid referenced resource, expected kind %s, not %s: %s", resourceKind, ref.ResourceRef.Kind, ref.ResourceRef.Name)
 				}
 				return ref.ResourceRef.Name, nil
 			}
 		}
 	}
-	return "", fmt.Errorf("missing or invalid referenced resource: %s", secretReferenceName)
+	return "", fmt.Errorf("missing or invalid referenced resource: %s", resourceName)
 }

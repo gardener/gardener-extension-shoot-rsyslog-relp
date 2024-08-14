@@ -72,15 +72,20 @@ func (e *ensurer) EnsureAdditionalFiles(ctx context.Context, gctx gcontext.Garde
 
 	rsyslogFiles, err := getRsyslogFiles(shootRsyslogRelpConfig, cluster)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get rsyslog files: %w", err)
 	}
-
 	for _, file := range rsyslogFiles {
 		*new = extensionswebhook.EnsureFileWithPath(*new, file)
 	}
 
-	for _, file := range getAuditdFiles() {
-		*new = extensionswebhook.EnsureFileWithPath(*new, file)
+	if shootRsyslogRelpConfig.AuditConfig == nil || shootRsyslogRelpConfig.AuditConfig.Enabled {
+		auditFiles, err := getAuditFiles(ctx, e.client, e.decoder, extension.Namespace, shootRsyslogRelpConfig, cluster)
+		if err != nil {
+			return fmt.Errorf("failed to get audit files: %w", err)
+		}
+		for _, file := range auditFiles {
+			*new = extensionswebhook.EnsureFileWithPath(*new, file)
+		}
 	}
 
 	return nil

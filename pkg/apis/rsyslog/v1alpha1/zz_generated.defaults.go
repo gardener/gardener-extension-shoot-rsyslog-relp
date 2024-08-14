@@ -16,5 +16,10 @@ import (
 // Public to allow building arbitrary schemes.
 // All generated defaulters are covering - they call all nested defaulters.
 func RegisterDefaults(scheme *runtime.Scheme) error {
+	scheme.AddTypeDefaultingFunc(&RsyslogRelpConfig{}, func(obj interface{}) { SetObjectDefaults_RsyslogRelpConfig(obj.(*RsyslogRelpConfig)) })
 	return nil
+}
+
+func SetObjectDefaults_RsyslogRelpConfig(in *RsyslogRelpConfig) {
+	SetDefaults_RsyslogRelpConfig(in)
 }

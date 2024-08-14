@@ -19,12 +19,12 @@ import (
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/test/common"
 )
 
-const (
-	hibernationTestTimeout        = 75 * time.Minute
-	hibernationTestCleanupTimeout = 25 * time.Minute
-)
-
 var _ = Describe("Shoot rsyslog-relp testing", func() {
+	const (
+		hibernationTestTimeout        = 75 * time.Minute
+		hibernationTestCleanupTimeout = 25 * time.Minute
+	)
+
 	f := framework.NewShootFramework(nil)
 
 	f.Serial().Beta().CIt("should enable and disable the shoot-rsyslog-relp extension", func(parentCtx context.Context) {
@@ -48,7 +48,7 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 
 		echoServerPodIf, echoServerPodName, err := common.GetEchoServerPodInterfaceAndName(ctx, f.ShootClient)
 		Expect(err).NotTo(HaveOccurred())
-		verifier := common.NewVerifier(f.Logger, f.ShootClient, echoServerPodIf, echoServerPodName, f.Shoot.Spec.Provider.Type, f.Project.Name, f.Shoot.Name, string(f.Shoot.UID), false)
+		verifier := common.NewVerifier(f.Logger, f.ShootClient, echoServerPodIf, echoServerPodName, f.Shoot.Spec.Provider.Type, f.Project.Name, f.Shoot.Name, string(f.Shoot.UID), false, "")
 
 		common.ForEachNode(ctx, f.ShootClient, func(ctx context.Context, node *corev1.Node) {
 			verifier.VerifyExtensionForNode(ctx, node.Name)

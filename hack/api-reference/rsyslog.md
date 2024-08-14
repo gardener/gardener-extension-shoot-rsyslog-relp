@@ -10,8 +10,53 @@
 </p>
 Resource Types:
 <ul><li>
+<a href="#rsyslog-relp.extensions.gardener.cloud/v1alpha1.Auditd">Auditd</a>
+</li><li>
 <a href="#rsyslog-relp.extensions.gardener.cloud/v1alpha1.RsyslogRelpConfig">RsyslogRelpConfig</a>
 </li></ul>
+<h3 id="rsyslog-relp.extensions.gardener.cloud/v1alpha1.Auditd">Auditd
+</h3>
+<p>
+<p>Auditd contains configuration for the audit daemon.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+rsyslog-relp.extensions.gardener.cloud/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>Auditd</code></td>
+</tr>
+<tr>
+<td>
+<code>auditRules</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>AuditRules contains the audit rules that will be placed under /etc/audit/rules.d.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="rsyslog-relp.extensions.gardener.cloud/v1alpha1.RsyslogRelpConfig">RsyslogRelpConfig
 </h3>
 <p>
@@ -139,6 +184,65 @@ bool
 <em>(Optional)</em>
 <p>ReportSuspensionContinuation determines whether suspension continuation in the relp action
 should be reported.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>auditConfig</code></br>
+<em>
+<a href="#rsyslog-relp.extensions.gardener.cloud/v1alpha1.AuditConfig">
+AuditConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AuditConfig contains configuration that can be used to setup node level auditing so that audit logs
+can be forwarded via rsyslog to the target RELP server.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="rsyslog-relp.extensions.gardener.cloud/v1alpha1.AuditConfig">AuditConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#rsyslog-relp.extensions.gardener.cloud/v1alpha1.RsyslogRelpConfig">RsyslogRelpConfig</a>)
+</p>
+<p>
+<p>AuditConfig contains options to configure the audit system.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>enabled</code></br>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Enabled determines whether auditing configurations are applied to the nodes or not.
+Will be defaulted to true, if AuditConfig is nil.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>configMapReferenceName</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ConfigMapReferenceName is the name of the reference for the ConfigMap containing
+auditing configuration to apply to shoot nodes.</p>
 </td>
 </tr>
 </tbody>

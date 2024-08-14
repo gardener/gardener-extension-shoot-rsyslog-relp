@@ -1,0 +1,20 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: audit-config-v1
+  namespace: garden-local
+immutable: true
+data:
+  auditd: |
+    apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
+    kind: Auditd
+    auditRules: |
+      ## First rule - delete all
+      -D
+      ## Set failure mode to syslog
+      -f 1
+      ## Ignore errors when loading rules
+      -i
+      -a exit,always -F arch=b64 -S execve -S execveat -F euid=0 -F auid>0 -F auid!=-1 -F key=privilege_escalation
+      -a exit,always -F arch=b64 -S setuid -S setreuid -S setgid -S setregid -F auid>0 -F auid!=-1 -F key=privilege_escalation
+      -a exit,always -F dir=/etc -F perm=wa -F key=system_integrity
