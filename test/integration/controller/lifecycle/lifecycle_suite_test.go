@@ -59,6 +59,8 @@ var _ = BeforeSuite(func() {
 				filepath.Join("resources", "crd-extensions.gardener.cloud_extensions.yaml"),
 				filepath.Join("resources", "crd-extensions.gardener.cloud_clusters.yaml"),
 				filepath.Join("resources", "crd-resources.gardener.cloud_managedresources.yaml"),
+				filepath.Join("resources", "crd-monitoring.coreos.com_prometheusrules.yaml"),
+				filepath.Join("resources", "crd-monitoring.coreos.com_scrapeconfigs.yaml"),
 			},
 			ErrorIfPathMissing: true,
 		},
