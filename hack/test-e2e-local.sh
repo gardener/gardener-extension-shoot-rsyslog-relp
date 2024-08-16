@@ -13,6 +13,8 @@ echo "> E2E Tests"
 
 ginkgo_flags=
 
+local_address="172.18.255.1"
+
 seed_name="local"
 
 shoot_names=(
@@ -24,15 +26,15 @@ shoot_names=(
 
 if [ -n "${CI:-}" -a -n "${ARTIFACTS:-}" ]; then
   for shoot in "${shoot_names[@]}" ; do
-    printf "\n127.0.0.1 api.%s.external.$seed_name.gardener.cloud\n127.0.0.1 api.%s.internal.local.gardener.cloud\n" $shoot $shoot >>/etc/hosts
+    printf "\n$local_address api.%s.external.$seed_name.gardener.cloud\n$local_address api.%s.internal.local.gardener.cloud\n" $shoot $shoot >>/etc/hosts
   done
 else
   missing_entries=()
 
   for shoot in "${shoot_names[@]}"; do
     for ip in internal external; do
-      if ! grep -q -x "127.0.0.1 api.$shoot.$ip.local.gardener.cloud" /etc/hosts; then
-        missing_entries+=("127.0.0.1 api.$shoot.$ip.local.gardener.cloud")
+      if ! grep -q -x "$local_address api.$shoot.$ip.local.gardener.cloud" /etc/hosts; then
+        missing_entries+=("$local_address api.$shoot.$ip.local.gardener.cloud")
       fi
     done
   done
