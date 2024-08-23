@@ -13,8 +13,10 @@ import (
 	"time"
 
 	"github.com/gardener/gardener/pkg/client/kubernetes"
+	"github.com/gardener/gardener/pkg/utils/retry"
 	"github.com/gardener/gardener/test/framework"
 	"github.com/go-logr/logr"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -157,11 +159,26 @@ func (v *Verifier) verifyThatLogsAreNotForwardedToEchoServer(ctx context.Context
 		return v.generateLogs(ctx, logEntries)
 	}).WithTimeout(30*time.Second).WithPolling(10*time.Second).WithContext(ctx).Should(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s", v.nodeName))
 
-	ConsistentlyWithOffset(2, func(g Gomega) {
+	By("waiting 30 seconds before checking for logs")
+	timer := time.NewTimer(30 * time.Second)
+	select {
+	case <-ctx.Done():
+		Fail("context deadline exceeded")
+	case <-timer.C:
+	}
+
+	By("validating there are no logs")
+	Expect(retry.UntilTimeout(ctx, 10*time.Second, 30*time.Second, func(ctx context.Context) (done bool, err error) {
 		logLines, err := v.getLogs(ctx, timeBeforeLogGeneration)
-		g.Expect(err).NotTo(HaveOccurred())
-		g.Expect(logLines).To(BeEmpty())
-	}).WithTimeout(30*time.Second).WithPolling(10*time.Second).WithContext(ctx).Should(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s and logs to NOT be present in rsyslog-relp-echo-server", v.nodeName))
+		if err != nil {
+			return retry.MinorError(fmt.Errorf("error while getting logs : %w", err))
+		}
+		if len(logLines) > 0 {
+			return retry.SevereError(fmt.Errorf("expected not to receive any logs, got %s", strings.Join(logLines, ", ")))
+		}
+		return retry.Ok()
+	})).NotTo(HaveOccurred())
+
 }
 
 func (v *Verifier) setPodExecutor(rootPodExecutor framework.RootPodExecutor) {
