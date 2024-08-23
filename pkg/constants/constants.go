@@ -24,9 +24,9 @@ const (
 
 	// AuditdConfigMapDataKey is a key in a ConfigMap's data which holds the configuration for the auditd service.
 	AuditdConfigMapDataKey = "auditd"
+
 	// RsyslogOSCDir is the path where node-agent will put rsyslog files from the OSC
 	RsyslogOSCDir = "/var/lib/rsyslog-relp-configurator"
-
 	// ConfigureRsyslogScriptPath is the path where node-agent will put the rsyslog configuration script from the OSC
 	ConfigureRsyslogScriptPath = RsyslogOSCDir + "/configure-rsyslog.sh"
 	// ProcessRsyslogPstatsScriptPath is the path where node-agent will put the rsyslog pstats script from the OSC
@@ -46,7 +46,6 @@ const (
 	AuditRulesFromOSCDir = RsyslogOSCDir + "/audit/rules.d"
 	// AuditRulesDir is the path for where the audit rules will be places
 	AuditRulesDir = "/etc/audit/rules.d"
-
 	// AuditRulesBackupDir is the path for where the audit rules will be backed up
 	AuditRulesBackupDir = "/etc/audit/rules.d.original"
 	// AuditSyslogPluginPath is the path where the audit syslog plugin is expected to be
