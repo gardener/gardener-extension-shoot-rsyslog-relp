@@ -177,15 +177,15 @@ func computeCommand() []string {
   chroot /host /bin/bash -c 'systemctl disable rsyslog-configurator; systemctl stop rsyslog-configurator; rm -f /etc/systemd/system/rsyslog-configurator.service'
 fi
 
-if [[ -d /host/var/log/rsyslog ]]; then
-  rm -rf /host/var/log/rsyslog
+if [[ -d /host` + constants.RsyslogRelpQueueSpoolDir + ` ]]; then
+  rm -rf /host` + constants.RsyslogRelpQueueSpoolDir + `
 fi
 
-if [[ -f /host/etc/audit/plugins.d/syslog.conf ]]; then
-  sed -i "s/^active\\>.*/active = no/i" /host/etc/audit/plugins.d/syslog.conf
+if [[ -f /host` + constants.AuditSyslogPluginPath + ` ]]; then
+  sed -i "s/^active\\>.*/active = no/i" /host` + constants.AuditSyslogPluginPath + `
 fi
-if [[ -f /host/etc/audisp/plugins.d/syslog.conf ]]; then
-  sed -i "s/^active\\>.*/active = no/i" /host/etc/audisp/plugins.d/syslog.conf
+if [[ -f /host` + constants.AudispSyslogPluginPath + ` ]]; then
+  sed -i "s/^active\\>.*/active = no/i" /host` + constants.AudispSyslogPluginPath + `
 fi
 
 chroot /host /bin/bash -c 'if systemctl list-unit-files systemd-journald-audit.socket > /dev/null; then \
@@ -194,25 +194,25 @@ chroot /host /bin/bash -c 'if systemctl list-unit-files systemd-journald-audit.s
   systemctl restart systemd-journald; \
 fi'
 
-if [[ -d /host/etc/audit/rules.d.original ]]; then
-  if [[ -d /host/etc/audit/rules.d ]]; then
-    rm -rf /host/etc/audit/rules.d
+if [[ -d /host` + constants.AuditRulesBackupDir + ` ]]; then
+  if [[ -d /host` + constants.AuditRulesDir + ` ]]; then
+    rm -rf /host` + constants.AuditRulesDir + `
   fi
-  mv /host/etc/audit/rules.d.original /host/etc/audit/rules.d
+  mv /host` + constants.AuditRulesBackupDir + ` /host` + constants.AuditRulesDir + `
   chroot /host /bin/bash -c 'if systemctl list-unit-files auditd.service > /dev/null; then augenrules --load; systemctl restart auditd; fi'
 fi
 
-if [[ -f /host/etc/rsyslog.d/60-audit.conf ]]; then
-  rm -f /host/etc/rsyslog.d/60-audit.conf
+if [[ -f /host` + constants.RsyslogConfigPath + ` ]]; then
+  rm -f /host` + constants.RsyslogConfigPath + `
   chroot /host /bin/bash -c 'if systemctl list-unit-files rsyslog.service > /dev/null; then systemctl restart rsyslog; fi'
 fi
 
-if [[ -d /host/etc/ssl/rsyslog ]]; then
-  rm -rf /host/etc/ssl/rsyslog
+if [[ -d /host` + constants.RsyslogTLSDir + ` ]]; then
+  rm -rf /host` + constants.RsyslogTLSDir + `
 fi
 
-if [[ -d /host/var/lib/rsyslog-relp-configurator ]]; then
-  rm -rf /host/var/lib/rsyslog-relp-configurator
+if [[ -d /host` + constants.RsyslogOSCDir + ` ]]; then
+  rm -rf /host` + constants.RsyslogOSCDir + `
 fi`,
 	}
 }
