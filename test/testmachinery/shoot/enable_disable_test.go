@@ -145,9 +145,12 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 			defer cancel()
 
 			var err error
-			createdResources, err = testutils.EnsureTestResources(ctx, f.GardenClient.Client(), f.ProjectNamespace, "../../common/testdata/tls")
+			createdResources, err = testutils.ReadTestResources(f.GardenClient.Client().Scheme(), f.ProjectNamespace, "../../common/testdata/tls")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(createdResources)).ToNot(BeZero())
+			for _, obj := range createdResources {
+				Expect(f.GardenClient.Client().Create(ctx, obj)).NotTo(HaveOccurred())
+			}
 
 			test(parentCtx, defaultExtensionAuditRules, func(shoot *gardencorev1beta1.Shoot) error {
 				common.AddOrUpdateRsyslogRelpExtension(
