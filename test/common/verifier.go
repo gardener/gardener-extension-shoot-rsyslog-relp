@@ -15,6 +15,7 @@ import (
 	"github.com/gardener/gardener/pkg/client/kubernetes"
 	"github.com/gardener/gardener/test/framework"
 	"github.com/go-logr/logr"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -157,7 +158,16 @@ func (v *Verifier) verifyThatLogsAreNotForwardedToEchoServer(ctx context.Context
 		return v.generateLogs(ctx, logEntries)
 	}).WithTimeout(30*time.Second).WithPolling(10*time.Second).WithContext(ctx).Should(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s", v.nodeName))
 
-	ConsistentlyWithOffset(2, func(g Gomega) {
+	By("Wait 30 seconds before checking for logs")
+	timer := time.NewTimer(30 * time.Second)
+	select {
+	case <-ctx.Done():
+		Fail("context deadline exceeded while waiting to check for logs")
+	case <-timer.C:
+	}
+
+	By("Verify that there are no logs")
+	EventuallyWithOffset(2, func(g Gomega) {
 		logLines, err := v.getLogs(ctx, timeBeforeLogGeneration)
 		g.Expect(err).NotTo(HaveOccurred())
 		g.Expect(logLines).To(BeEmpty())
