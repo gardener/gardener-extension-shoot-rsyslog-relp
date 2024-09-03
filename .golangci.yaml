@@ -2,9 +2,6 @@ run:
   concurrency: 4
   deadline: 10m
 
-  skip-files:
-  - "zz_generated\\..*\\.go$"
-
 linters:
   disable:
   - unused
@@ -14,13 +11,16 @@ linters:
 issues:
   exclude-use-default: false
   exclude:
-    # revive:
-    - var-naming # ((var|const|struct field|func) .* should be .*
-    - dot-imports # should not use dot imports
-    - package-comments # package comment should be of the form
-    - unexported-return # exported func .* returns unexported type .*, which can be annoying to use
-    - indent-error-flow # if block ends with a return statement, so drop this else and outdent its block
-    - "exported: (type|func) name will be used as .* by other packages, and that stutters;"
-    # typecheck:
-    - "undeclared name: `.*`"
-    - "\".*\" imported but not used"
+  # revive:
+  - var-naming # ((var|const|struct field|func) .* should be .*
+  - dot-imports # should not use dot imports
+  - package-comments # package comment should be of the form
+  - unexported-return # exported func .* returns unexported type .*, which can be annoying to use
+  - indent-error-flow # if block ends with a return statement, so drop this else and outdent its block
+  - "exported: (type|func) name will be used as .* by other packages, and that stutters;"
+  # typecheck:
+  - "undeclared name: `.*`"
+  - "\".*\" imported but not used"
+
+  exclude-files:
+  - "zz_generated\\..*\\.go$"
