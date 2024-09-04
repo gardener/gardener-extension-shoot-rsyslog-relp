@@ -9,7 +9,6 @@ import (
 	"time"
 
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	testutils "github.com/gardener/gardener/pkg/utils/test"
 	. "github.com/gardener/gardener/pkg/utils/test/matchers"
 	"github.com/gardener/gardener/test/framework"
 	. "github.com/onsi/ginkgo/v2"
@@ -145,7 +144,7 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 			defer cancel()
 
 			var err error
-			createdResources, err = testutils.EnsureTestResources(ctx, f.GardenClient.Client(), f.ProjectNamespace, "../../common/testdata/tls")
+			createdResources, err = common.CreateResourcesFromFile(ctx, f.GardenClient.Client(), f.ProjectNamespace, "../../common/testdata/tls")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(createdResources)).ToNot(BeZero())
 
@@ -187,7 +186,7 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 			defer cancel()
 
 			var err error
-			createdResources, err = testutils.EnsureTestResources(ctx, f.GardenClient.Client(), f.ProjectNamespace, "../../common/testdata/audit")
+			createdResources, err = common.CreateResourcesFromFile(ctx, f.GardenClient.Client(), f.ProjectNamespace, "../../common/testdata/audit")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(createdResources)).ToNot(BeZero())
 

@@ -11,6 +11,7 @@ import (
 
 	"github.com/gardener/gardener/pkg/client/kubernetes"
 	"github.com/gardener/gardener/pkg/utils/retry"
+	testutils "github.com/gardener/gardener/pkg/utils/test"
 	"github.com/gardener/gardener/test/framework"
 	"github.com/go-logr/logr"
 	. "github.com/onsi/gomega"
@@ -57,4 +58,18 @@ func ExecCommand(ctx context.Context, log logr.Logger, podExecutor framework.Roo
 		return retry.Ok()
 	})
 	return
+}
+
+// CreateResourcesFromFile creates the objects from filePath with a given namespace name
+func CreateResourcesFromFile(ctx context.Context, client client.Client, namespaceName string, filePath string) ([]client.Object, error) {
+	resources, err := testutils.ReadTestResources(client.Scheme(), namespaceName, filePath)
+	if err != nil {
+		return nil, err
+	}
+	for _, obj := range resources {
+		if err = client.Create(ctx, obj); err != nil {
+			return nil, err
+		}
+	}
+	return resources, nil
 }

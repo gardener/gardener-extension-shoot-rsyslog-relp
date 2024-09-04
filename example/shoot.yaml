@@ -59,6 +59,7 @@ spec:
   region: local
   networking:
     type: calico
+    nodes: 10.10.0.0/16
     providerConfig:
       apiVersion: calico.networking.extensions.gardener.cloud/v1alpha1
       kind: NetworkConfig
