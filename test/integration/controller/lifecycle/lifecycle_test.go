@@ -61,7 +61,7 @@ var _ = Describe("Lifecycle controller tests", func() {
 						AutomountServiceAccountToken: ptr.To(false),
 						Containers: []corev1.Container{
 							{
-								Image:           "registry.k8s.io/pause:3.9",
+								Image:           "registry.k8s.io/pause:3.10",
 								ImagePullPolicy: corev1.PullIfNotPresent,
 								Name:            "pause-container",
 							},
@@ -113,7 +113,7 @@ if [[ -d /host/var/lib/rsyslog-relp-configurator ]]; then
   rm -rf /host/var/lib/rsyslog-relp-configurator
 fi`,
 								},
-								Image:           "europe-docker.pkg.dev/gardener-project/releases/3rd/alpine:3.20.2",
+								Image:           "europe-docker.pkg.dev/gardener-project/releases/3rd/alpine:3.20.3",
 								ImagePullPolicy: corev1.PullIfNotPresent,
 								Name:            "rsyslog-relp-configuration-cleaner",
 								Resources: corev1.ResourceRequirements{

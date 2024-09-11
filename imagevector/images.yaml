@@ -6,7 +6,7 @@
 images:
 - name: alpine
   repository: europe-docker.pkg.dev/gardener-project/releases/3rd/alpine
-  tag: "3.20.2"
+  tag: "3.20.3"
   labels:
   - name: cloud.gardener.cnudie/dso/scanning-hints/binary_id/v1
     value:
@@ -18,7 +18,7 @@ images:
 - name: pause-container
   sourceRepository: github.com/kubernetes/kubernetes/blob/master/build/pause/Dockerfile
   repository: registry.k8s.io/pause
-  tag: "3.9"
+  tag: "3.10"
   labels:
   - name: cloud.gardener.cnudie/dso/scanning-hints/binary_id/v1
     value:
