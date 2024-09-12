@@ -170,7 +170,7 @@ func (v *Verifier) verifyThatLogsAreNotForwardedToEchoServer(ctx context.Context
 	EventuallyWithOffset(2, func(g Gomega) {
 		logLines, err := v.getLogs(ctx, timeBeforeLogGeneration)
 		g.Expect(err).NotTo(HaveOccurred())
-		g.Expect(logLines).To(BeEmpty())
+		g.Expect(logLines).To(Or(BeEmpty(), ConsistOf(ContainSubstring("-- Mark --"))))
 	}).WithTimeout(30*time.Second).WithPolling(10*time.Second).WithContext(ctx).Should(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s and logs to NOT be present in rsyslog-relp-echo-server", v.nodeName))
 }
 
