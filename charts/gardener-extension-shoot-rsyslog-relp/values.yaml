@@ -3,8 +3,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ---
-image: europe-docker.pkg.dev/gardener-project/public/gardener/extensions/shoot-rsyslog-relp:latest
-pullPolicy: IfNotPresent
+image:
+  repository: europe-docker.pkg.dev/gardener-project/public/gardener/extensions/shoot-rsyslog-relp
+  tag: latest
+  pullPolicy: IfNotPresent
 
 serviceName: shoot-rsyslog-relp
 replicaCount: 1

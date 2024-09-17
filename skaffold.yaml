@@ -59,11 +59,11 @@ build:
         ldflags:
           - '{{.LD_FLAGS}}'
         main: ./cmd/gardener-extension-shoot-rsyslog-relp
-resourceSelector:
-  allow:
-    # instruct skaffold to inject the built image reference into the image field in our ControllerDeployment
-    - groupKind: ControllerDeployment.core.gardener.cloud
-      image: [".*"]
+      hooks:
+        after:
+          - command: 
+            - bash 
+            - hack/generate-kustomize-patch-controllerdeployment-shoot-rsyslog-relp.sh
 manifests:
   kustomize:
     paths:
