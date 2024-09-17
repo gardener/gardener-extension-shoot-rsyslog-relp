@@ -37,6 +37,20 @@ gardener-extension-shoot-rsyslog-relp:
     traits:
       version:
         preprocess: 'inject-commit-hash'
+      publish:
+        oci-builder: docker-buildx
+        platforms:
+        - linux/amd64
+        - linux/arm64
+        dockerimages:
+          gardener-extension-shoot-rsyslog-relp:
+            image: europe-docker.pkg.dev/gardener-project/snapshots/gardener/extensions/shoot-rsyslog-relp
+            dockerfile: 'Dockerfile'
+            target: shoot-rsyslog-relp
+          gardener-extension-shoot-rsyslog-relp-admission:
+            image: europe-docker.pkg.dev/gardener-project/snapshots/gardener/extensions/shoot-rsyslog-relp-admission
+            dockerfile: 'Dockerfile'
+            target: shoot-rsyslog-relp-admission
   jobs:
     head-update:
       traits:
@@ -47,6 +61,21 @@ gardener-extension-shoot-rsyslog-relp:
         draft_release: ~
         options:
           public_build_logs: true
+        publish:
+          helmcharts:
+          - *shoot-rsyslog-relp
+          - *shoot-rsyslog-relp-admission-application
+          - *shoot-rsyslog-relp-admission-runtime
+    pull-request:
+      traits:
+        pull-request: ~
+        options:
+          public_build_logs: true
+        publish:
+          helmcharts:
+          - *shoot-rsyslog-relp
+          - *shoot-rsyslog-relp-admission-application
+          - *shoot-rsyslog-relp-admission-runtime
     release:
       steps:
         verify:
@@ -67,18 +96,13 @@ gardener-extension-shoot-rsyslog-relp:
               channel_name: 'C9CEBQPGE' #sap-tech-gardener
               slack_cfg_name: 'scp_workspace'
         publish:
-          oci-builder: docker-buildx
           dockerimages:
             gardener-extension-shoot-rsyslog-relp:
               image: europe-docker.pkg.dev/gardener-project/releases/gardener/extensions/shoot-rsyslog-relp
-              dockerfile: 'Dockerfile'
               target: shoot-rsyslog-relp
-              tag_as_latest: true
             gardener-extension-shoot-rsyslog-relp-admission:
               image: europe-docker.pkg.dev/gardener-project/releases/gardener/extensions/shoot-rsyslog-relp-admission
-              dockerfile: 'Dockerfile'
               target: shoot-rsyslog-relp-admission
-              tag_as_latest: true
           helmcharts:
           - <<: *shoot-rsyslog-relp
             registry: europe-docker.pkg.dev/gardener-project/releases/charts/gardener/extensions
