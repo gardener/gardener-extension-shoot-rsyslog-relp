@@ -66,16 +66,6 @@ gardener-extension-shoot-rsyslog-relp:
           - *shoot-rsyslog-relp
           - *shoot-rsyslog-relp-admission-application
           - *shoot-rsyslog-relp-admission-runtime
-    pull-request:
-      traits:
-        pull-request: ~
-        options:
-          public_build_logs: true
-        publish:
-          helmcharts:
-          - *shoot-rsyslog-relp
-          - *shoot-rsyslog-relp-admission-application
-          - *shoot-rsyslog-relp-admission-runtime
     release:
       steps:
         verify:
