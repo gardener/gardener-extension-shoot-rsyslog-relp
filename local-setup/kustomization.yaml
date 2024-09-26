@@ -5,11 +5,4 @@ resources:
 - ../example
 
 patches:
-- patch: |
-    - op: replace
-      path: /helm/values/image
-      value: local-skaffold/gardener-extension-shoot-rsyslog-relp
-  target:
-    group: core.gardener.cloud
-    kind: ControllerDeployment
-    name: extension-shoot-rsyslog-relp
+- path: patch-controllerdeployment-image.yaml
