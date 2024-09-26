@@ -170,11 +170,11 @@ func (v *Verifier) verifyThatLogsAreNotForwardedToEchoServer(ctx context.Context
 	EventuallyWithOffset(2, func(g Gomega) {
 		logLines, err := v.getLogs(ctx, timeBeforeLogGeneration)
 		g.Expect(err).NotTo(HaveOccurred())
-		// Rsyslog outputs a "-- Mark --" message as a form of heartbeat each 1200 seconds (by default) to indicate that it is working properly.
+		// Rsyslog outputs a "-- MARK --" message as a form of heartbeat each 1200 seconds (by default) to indicate that it is working properly.
 		// This log comes from the rsyslog server itself and must be ignored when checking if there were no logs sent from the rsyslog clients.
 		// ContainSubstring is used as there could be spaces at the start or end of the log message depending on the template with which the
 		// rsyslog server is configured.
-		g.Expect(logLines).To(Or(BeEmpty(), ConsistOf(ContainSubstring("-- Mark --"))))
+		g.Expect(logLines).To(Or(BeEmpty(), ConsistOf(ContainSubstring("-- MARK --"))))
 	}).WithTimeout(30*time.Second).WithPolling(10*time.Second).WithContext(ctx).Should(Succeed(), fmt.Sprintf("Expected to successfully generate logs for node %s and logs to NOT be present in rsyslog-relp-echo-server", v.nodeName))
 }
 
