@@ -27,6 +27,7 @@ const fileForAuditEvent = "/etc/newfile"
 type Verifier struct {
 	log                logr.Logger
 	client             kubernetes.Interface
+	clientForLogs      kubernetes.Interface
 	providerType       string
 	nodeName           string
 	projectName        string
@@ -46,13 +47,14 @@ type logEntry struct {
 
 // NewVerifier creates a new Verifier.
 func NewVerifier(log logr.Logger,
-	client kubernetes.Interface,
+	client, clientForLogs kubernetes.Interface,
 	providerType, projectName, shootName, shootUID string,
 	testAuditLogging bool,
 	expectedAuditRules string) *Verifier {
 	return &Verifier{
 		log:                log,
 		client:             client,
+		clientForLogs:      clientForLogs,
 		providerType:       providerType,
 		projectName:        projectName,
 		shootName:          shootName,
@@ -196,7 +198,7 @@ func (v *Verifier) generateLogs(ctx context.Context, logEntries []logEntry) erro
 }
 
 func (v *Verifier) getLogs(ctx context.Context, timeBeforeLogGeneration metav1.Time) ([]string, error) {
-	echoServerPodIf, echoServerPodName, err := GetEchoServerPodInterfaceAndName(ctx, v.client)
+	echoServerPodIf, echoServerPodName, err := GetEchoServerPodInterfaceAndName(ctx, v.clientForLogs)
 	if err != nil {
 		return nil, err
 	}

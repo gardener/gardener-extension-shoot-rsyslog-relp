@@ -46,7 +46,7 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 		ctx, cancel = context.WithTimeout(parentCtx, 20*time.Minute)
 		defer cancel()
 
-		verifier := common.NewVerifier(f.Logger, f.ShootClient, f.Shoot.Spec.Provider.Type, f.Project.Name, f.Shoot.Name, string(f.Shoot.UID), false, "")
+		verifier := common.NewVerifier(f.Logger, f.ShootClient, f.ShootClient, f.Shoot.Spec.Provider.Type, f.Project.Name, f.Shoot.Name, string(f.Shoot.UID), false, "")
 
 		common.ForEachNode(ctx, f.ShootClient, func(ctx context.Context, node *corev1.Node) {
 			verifier.VerifyExtensionForNode(ctx, node.Name)
