@@ -131,7 +131,16 @@ func (v *Verifier) verifyLogsAreForwardedToEchoServer(ctx context.Context, logEn
 	}
 
 	if len(notForwardedLogMatchers) > 0 {
-		ConsistentlyWithOffset(2, func(g Gomega) {
+		By("Wait 30 seconds before checking for logs")
+		timer := time.NewTimer(30 * time.Second)
+		select {
+		case <-ctx.Done():
+			Fail("context deadline exceeded while waiting to check for logs")
+		case <-timer.C:
+		}
+
+		By("Verify that there are no logs")
+		EventuallyWithOffset(2, func(g Gomega) {
 			logLines, err := v.getLogs(ctx, timeBeforeLogGeneration)
 			g.Expect(err).NotTo(HaveOccurred())
 			// Iterate over all matchers to ensure that none of them are contained in the log lines.
