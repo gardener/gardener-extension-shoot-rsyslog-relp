@@ -19,25 +19,23 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	clientcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
 const fileForAuditEvent = "/etc/newfile"
 
 // Verifier is a struct that can be used to verify whether the shoot-rsyslog-relp extension is working as expected.
 type Verifier struct {
-	log                        logr.Logger
-	client                     kubernetes.Interface
-	rsyslogRelpEchoServerPodIf clientcorev1.PodInterface
-	rsyslogEchoServerPodName   string
-	providerType               string
-	nodeName                   string
-	projectName                string
-	shootName                  string
-	shootUID                   string
-	rootPodExecutor            framework.RootPodExecutor
-	testAuditLogging           bool
-	expectedAuditRules         string
+	log                logr.Logger
+	client             kubernetes.Interface
+	clientForLogs      kubernetes.Interface
+	providerType       string
+	nodeName           string
+	projectName        string
+	shootName          string
+	shootUID           string
+	rootPodExecutor    framework.RootPodExecutor
+	testAuditLogging   bool
+	expectedAuditRules string
 }
 
 type logEntry struct {
@@ -49,29 +47,21 @@ type logEntry struct {
 
 // NewVerifier creates a new Verifier.
 func NewVerifier(log logr.Logger,
-	client kubernetes.Interface,
-	echoServerPodIf clientcorev1.PodInterface,
-	echoServerPodName, providerType, projectName, shootName, shootUID string,
+	client, clientForLogs kubernetes.Interface,
+	providerType, projectName, shootName, shootUID string,
 	testAuditLogging bool,
 	expectedAuditRules string) *Verifier {
 	return &Verifier{
-		log:                        log,
-		client:                     client,
-		rsyslogRelpEchoServerPodIf: echoServerPodIf,
-		rsyslogEchoServerPodName:   echoServerPodName,
-		providerType:               providerType,
-		projectName:                projectName,
-		shootName:                  shootName,
-		shootUID:                   shootUID,
-		testAuditLogging:           testAuditLogging,
-		expectedAuditRules:         expectedAuditRules,
+		log:                log,
+		client:             client,
+		clientForLogs:      clientForLogs,
+		providerType:       providerType,
+		projectName:        projectName,
+		shootName:          shootName,
+		shootUID:           shootUID,
+		testAuditLogging:   testAuditLogging,
+		expectedAuditRules: expectedAuditRules,
 	}
-}
-
-// SetEchoServerPodIfAndName sets the clientcorev1.PodInterface and the name of the rsyslog-relp-echo-server pod to the Verifier.
-func (v *Verifier) SetEchoServerPodIfAndName(echoServerPodIf clientcorev1.PodInterface, echoServerPodName string) {
-	v.rsyslogRelpEchoServerPodIf = echoServerPodIf
-	v.rsyslogEchoServerPodName = echoServerPodName
 }
 
 // VerifyExtensionForNode verifies whether the shoot-rsyslog-relp extension has properly configured
@@ -208,7 +198,11 @@ func (v *Verifier) generateLogs(ctx context.Context, logEntries []logEntry) erro
 }
 
 func (v *Verifier) getLogs(ctx context.Context, timeBeforeLogGeneration metav1.Time) ([]string, error) {
-	logs, err := kubernetes.GetPodLogs(ctx, v.rsyslogRelpEchoServerPodIf, v.rsyslogEchoServerPodName, &corev1.PodLogOptions{SinceTime: &timeBeforeLogGeneration})
+	echoServerPodIf, echoServerPodName, err := GetEchoServerPodInterfaceAndName(ctx, v.clientForLogs)
+	if err != nil {
+		return nil, err
+	}
+	logs, err := kubernetes.GetPodLogs(ctx, echoServerPodIf, echoServerPodName, &corev1.PodLogOptions{SinceTime: &timeBeforeLogGeneration})
 	if err != nil {
 		return nil, err
 	}
