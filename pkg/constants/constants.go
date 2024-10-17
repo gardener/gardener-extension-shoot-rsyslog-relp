@@ -12,8 +12,6 @@ const (
 
 	// Origin is the origin used for the shoot-rsyslog-relp ManagedResources.
 	Origin = "shoot-rsyslog-relp"
-	// ManagedResourceName is the name used to describe the managed shoot resources.
-	ManagedResourceName = "extension-" + ServiceName + "-shoot"
 
 	// RsyslogCertifcateAuthorityKey is a key in a secret's data which holds the certificate authority used for the tls connection.
 	RsyslogCertifcateAuthorityKey = "ca"
