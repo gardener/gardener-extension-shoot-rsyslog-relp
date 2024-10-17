@@ -14,7 +14,6 @@ import (
 	"github.com/gardener/gardener/extensions/pkg/controller/extension"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/component"
-	"github.com/gardener/gardener/pkg/utils/managedresources"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -76,19 +75,12 @@ func (a *actuator) Reconcile(ctx context.Context, _ logr.Logger, ex *extensionsv
 		return errors.New("cluster.shoot is not yet populated")
 	}
 
-	// TODO(plkokanov): remove this after a couple releases.
-	if err := managedresources.DeleteForShoot(ctx, a.client, namespace, constants.ManagedResourceName); err != nil {
-		return err
-	}
-
 	// Do not wait for the managed resource to be deleted
 	if extensionscontroller.IsHibernated(cluster) {
 		return nil
 	}
 
-	timeoutCtx, cancelCtx := context.WithTimeout(ctx, deletionTimeout)
-	defer cancelCtx()
-	return managedresources.WaitUntilDeleted(timeoutCtx, a.client, namespace, constants.ManagedResourceName)
+	return nil
 }
 
 // Delete deletes the extension resource.
@@ -102,17 +94,6 @@ func (a *actuator) Delete(ctx context.Context, _ logr.Logger, ex *extensionsv1al
 
 	if cluster.Shoot == nil {
 		return errors.New("cluster.shoot is not yet populated")
-	}
-
-	// TODO(plkokanov): remove this after a couple releases.
-	if err := managedresources.DeleteForShoot(ctx, a.client, namespace, constants.ManagedResourceName); err != nil {
-		return err
-	}
-
-	timeoutCtx, cancelCtx := context.WithTimeout(ctx, deletionTimeout)
-	defer cancelCtx()
-	if err := managedresources.WaitUntilDeleted(timeoutCtx, a.client, namespace, constants.ManagedResourceName); err != nil {
-		return err
 	}
 
 	return cleanRsyslogRelpConfiguration(ctx, cluster, a.client, namespace)
@@ -134,8 +115,7 @@ func (a *actuator) ForceDelete(ctx context.Context, _ logr.Logger, ex *extension
 		return errors.New("cluster.shoot is not yet populated")
 	}
 
-	// TODO(plkokanov): remove this after a couple releases
-	return managedresources.DeleteForShoot(ctx, a.client, namespace, constants.ManagedResourceName)
+	return nil
 }
 
 // Restore restores the extension resource.
@@ -145,16 +125,7 @@ func (a *actuator) Restore(ctx context.Context, log logr.Logger, ex *extensionsv
 
 // Migrate migrates the extension resource.
 func (a *actuator) Migrate(ctx context.Context, _ logr.Logger, ex *extensionsv1alpha1.Extension) error {
-	namespace := ex.GetNamespace()
-
-	// TODO(plkokanov): remove this after a couple releases.
-	if err := managedresources.DeleteForShoot(ctx, a.client, namespace, constants.ManagedResourceName); err != nil {
-		return err
-	}
-
-	timeoutCtx, cancelCtx := context.WithTimeout(ctx, deletionTimeout)
-	defer cancelCtx()
-	return managedresources.WaitUntilDeleted(timeoutCtx, a.client, namespace, constants.ManagedResourceName)
+	return nil
 }
 
 func cleanRsyslogRelpConfiguration(ctx context.Context, cluster *extensionscontroller.Cluster, client client.Client, namespace string) error {
