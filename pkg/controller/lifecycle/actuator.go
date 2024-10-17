@@ -124,7 +124,7 @@ func (a *actuator) Restore(ctx context.Context, log logr.Logger, ex *extensionsv
 }
 
 // Migrate migrates the extension resource.
-func (a *actuator) Migrate(ctx context.Context, _ logr.Logger, ex *extensionsv1alpha1.Extension) error {
+func (a *actuator) Migrate(_ context.Context, _ logr.Logger, _ *extensionsv1alpha1.Extension) error {
 	return nil
 }
 
