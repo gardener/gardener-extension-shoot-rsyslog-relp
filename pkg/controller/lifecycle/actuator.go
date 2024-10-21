@@ -62,25 +62,7 @@ func (a *actuator) Reconcile(ctx context.Context, _ logr.Logger, ex *extensionsv
 		return fmt.Errorf("failed to decode provider config: %w", err)
 	}
 
-	if err := deployMonitoringConfig(ctx, a.client, namespace, rsyslogRelpConfig.AuditConfig); err != nil {
-		return err
-	}
-
-	cluster, err := extensionscontroller.GetCluster(ctx, a.client, namespace)
-	if err != nil {
-		return err
-	}
-
-	if cluster.Shoot == nil {
-		return errors.New("cluster.shoot is not yet populated")
-	}
-
-	// Do not wait for the managed resource to be deleted
-	if extensionscontroller.IsHibernated(cluster) {
-		return nil
-	}
-
-	return nil
+	return deployMonitoringConfig(ctx, a.client, namespace, rsyslogRelpConfig.AuditConfig)
 }
 
 // Delete deletes the extension resource.
@@ -100,21 +82,7 @@ func (a *actuator) Delete(ctx context.Context, _ logr.Logger, ex *extensionsv1al
 }
 
 // ForceDelete deletes the extension resource.
-//
-// We don't need to wait for the ManagedResource deletion because ManagedResources are finalized by gardenlet
-// in later step in the Shoot force deletion flow.
-func (a *actuator) ForceDelete(ctx context.Context, _ logr.Logger, ex *extensionsv1alpha1.Extension) error {
-	namespace := ex.GetNamespace()
-
-	cluster, err := extensionscontroller.GetCluster(ctx, a.client, namespace)
-	if err != nil {
-		return err
-	}
-
-	if cluster.Shoot == nil {
-		return errors.New("cluster.shoot is not yet populated")
-	}
-
+func (a *actuator) ForceDelete(_ context.Context, _ logr.Logger, _ *extensionsv1alpha1.Extension) error {
 	return nil
 }
 
