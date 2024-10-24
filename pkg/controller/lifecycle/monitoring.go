@@ -10,6 +10,7 @@ import (
 
 	monitoringutils "github.com/gardener/gardener/pkg/component/observability/monitoring/utils"
 	"github.com/gardener/gardener/pkg/controllerutils"
+	kubernetesutils "github.com/gardener/gardener/pkg/utils/kubernetes"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -29,7 +30,7 @@ const (
 )
 
 func deployMonitoringConfig(ctx context.Context, c client.Client, namespace string, auditConfig *rsyslog.AuditConfig) error {
-	configMapDashboards := &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: fmt.Sprintf("%s-dashboards", constants.ServiceName), Namespace: namespace}}
+	configMapDashboards := emptyConfigMapDashboards(namespace)
 	if _, err := controllerutils.GetAndCreateOrMergePatch(ctx, c, configMapDashboards, func() error {
 		metav1.SetMetaDataLabel(&configMapDashboards.ObjectMeta, "component", constants.ServiceName)
 		metav1.SetMetaDataLabel(&configMapDashboards.ObjectMeta, "dashboard.monitoring.gardener.cloud/shoot", "true")
@@ -90,7 +91,7 @@ func deployMonitoringConfig(ctx context.Context, c client.Client, namespace stri
 		})
 	}
 
-	prometheusRule := &monitoringv1.PrometheusRule{ObjectMeta: monitoringutils.ConfigObjectMeta(constants.ServiceName, namespace, "shoot")}
+	prometheusRule := emptyPrometheusRule(namespace)
 	if _, err := controllerutils.GetAndCreateOrMergePatch(ctx, c, prometheusRule, func() error {
 		metav1.SetMetaDataLabel(&prometheusRule.ObjectMeta, "component", constants.ServiceName)
 		metav1.SetMetaDataLabel(&prometheusRule.ObjectMeta, "prometheus", "shoot")
@@ -105,7 +106,7 @@ func deployMonitoringConfig(ctx context.Context, c client.Client, namespace stri
 		return err
 	}
 
-	scrapeConfig := &monitoringv1alpha1.ScrapeConfig{ObjectMeta: monitoringutils.ConfigObjectMeta(constants.ServiceName, namespace, "shoot")}
+	scrapeConfig := emptyScrapeConfig(namespace)
 	_, err := controllerutils.GetAndCreateOrMergePatch(ctx, c, scrapeConfig, func() error {
 		metav1.SetMetaDataLabel(&scrapeConfig.ObjectMeta, "component", constants.ServiceName)
 		metav1.SetMetaDataLabel(&scrapeConfig.ObjectMeta, "prometheus", "shoot")
@@ -175,4 +176,24 @@ func deployMonitoringConfig(ctx context.Context, c client.Client, namespace stri
 	})
 
 	return err
+}
+
+func deleteMonitoringConfig(ctx context.Context, client client.Client, namespace string) error {
+	return kubernetesutils.DeleteObjects(ctx, client,
+		emptyConfigMapDashboards(namespace),
+		emptyPrometheusRule(namespace),
+		emptyScrapeConfig(namespace),
+	)
+}
+
+func emptyConfigMapDashboards(namespace string) *corev1.ConfigMap {
+	return &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: fmt.Sprintf("%s-dashboards", constants.ServiceName), Namespace: namespace}}
+}
+
+func emptyPrometheusRule(namespace string) *monitoringv1.PrometheusRule {
+	return &monitoringv1.PrometheusRule{ObjectMeta: monitoringutils.ConfigObjectMeta(constants.ServiceName, namespace, "shoot")}
+}
+
+func emptyScrapeConfig(namespace string) *monitoringv1alpha1.ScrapeConfig {
+	return &monitoringv1alpha1.ScrapeConfig{ObjectMeta: monitoringutils.ConfigObjectMeta(constants.ServiceName, namespace, "shoot")}
 }
