@@ -78,6 +78,10 @@ func (a *actuator) Delete(ctx context.Context, _ logr.Logger, ex *extensionsv1al
 		return errors.New("cluster.shoot is not yet populated")
 	}
 
+	if err := deleteMonitoringConfig(ctx, a.client, namespace); err != nil {
+		return fmt.Errorf("failed cleaning up monitoring configuration: %w", err)
+	}
+
 	return cleanRsyslogRelpConfiguration(ctx, cluster, a.client, namespace)
 }
 
