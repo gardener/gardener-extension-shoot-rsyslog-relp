@@ -1,4 +1,4 @@
-apiVersion: skaffold/v4beta3
+apiVersion: skaffold/v4beta7
 kind: Config
 metadata:
   name: rsyslog-relp-echo-server
@@ -24,7 +24,7 @@ deploy:
         setValues:
           service.clusterIP: 10.2.64.54
 ---
-apiVersion: skaffold/v4beta3
+apiVersion: skaffold/v4beta7
 kind: Config
 metadata:
   name: extension
@@ -84,7 +84,7 @@ deploy:
         - --server-side
         - --force-conflicts
 ---
-apiVersion: skaffold/v4beta3
+apiVersion: skaffold/v4beta7
 kind: Config
 metadata:
   name: admission
