@@ -42,7 +42,7 @@ else
 fi
 
 echo "Deploying shoot-rsyslog-relp admission in garden cluster"
-SKAFFOLD_DEFAULT_REPO=localhost:5001 SKAFFOLD_PUSH=true skaffold run -m admission -p remote-extension
+SKAFFOLD_DEFAULT_REPO=garden.local.gardener.cloud:5001 SKAFFOLD_PUSH=true skaffold run -m admission -p remote-extension
 
 echo "Deploying shoot-rsyslog-relp extension"
 SKAFFOLD_DEFAULT_REPO=$registry_domain \
