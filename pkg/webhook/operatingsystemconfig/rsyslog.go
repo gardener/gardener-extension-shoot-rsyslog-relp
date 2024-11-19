@@ -115,7 +115,7 @@ func getRsyslogFiles(rsyslogRelpConfig *rsyslog.RsyslogRelpConfig, cluster *exte
 	rsyslogFiles = append(rsyslogFiles, []extensionsv1alpha1.File{
 		{
 			Path:        constants.RsyslogConfigFromOSCPath,
-			Permissions: ptr.To(int32(0744)),
+			Permissions: ptr.To(uint32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -125,7 +125,7 @@ func getRsyslogFiles(rsyslogRelpConfig *rsyslog.RsyslogRelpConfig, cluster *exte
 		},
 		{
 			Path:        constants.ConfigureRsyslogScriptPath,
-			Permissions: ptr.To(int32(0744)),
+			Permissions: ptr.To(uint32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -135,7 +135,7 @@ func getRsyslogFiles(rsyslogRelpConfig *rsyslog.RsyslogRelpConfig, cluster *exte
 		},
 		{
 			Path:        constants.ProcessRsyslogPstatsScriptPath,
-			Permissions: ptr.To(int32(0744)),
+			Permissions: ptr.To(uint32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -145,7 +145,7 @@ func getRsyslogFiles(rsyslogRelpConfig *rsyslog.RsyslogRelpConfig, cluster *exte
 		},
 		{
 			Path:        rsyslogServiceMemoryLimitsDropInPath,
-			Permissions: ptr.To(int32(0644)),
+			Permissions: ptr.To(uint32(0644)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Data: `[Service]
@@ -227,7 +227,7 @@ func getRsyslogTLSFiles(cluster *extensionscontroller.Cluster, secretRefName str
 	return []extensionsv1alpha1.File{
 		{
 			Path:        constants.RsyslogTLSFromOSCDir + "/ca.crt",
-			Permissions: ptr.To(int32(0600)),
+			Permissions: ptr.To(uint32(0600)),
 			Content: extensionsv1alpha1.FileContent{
 				SecretRef: &extensionsv1alpha1.FileContentSecretRef{
 					Name:    refSecretName,
@@ -237,7 +237,7 @@ func getRsyslogTLSFiles(cluster *extensionscontroller.Cluster, secretRefName str
 		},
 		{
 			Path:        constants.RsyslogTLSFromOSCDir + "/tls.crt",
-			Permissions: ptr.To(int32(0600)),
+			Permissions: ptr.To(uint32(0600)),
 			Content: extensionsv1alpha1.FileContent{
 				SecretRef: &extensionsv1alpha1.FileContentSecretRef{
 					Name:    refSecretName,
@@ -247,7 +247,7 @@ func getRsyslogTLSFiles(cluster *extensionscontroller.Cluster, secretRefName str
 		},
 		{
 			Path:        constants.RsyslogTLSFromOSCDir + "/tls.key",
-			Permissions: ptr.To(int32(0600)),
+			Permissions: ptr.To(uint32(0600)),
 			Content: extensionsv1alpha1.FileContent{
 				SecretRef: &extensionsv1alpha1.FileContentSecretRef{
 					Name:    refSecretName,

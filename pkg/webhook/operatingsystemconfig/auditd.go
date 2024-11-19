@@ -79,7 +79,7 @@ func getAuditConfigFromConfigMap(ctx context.Context, c client.Client, decoder r
 
 	return []extensionsv1alpha1.File{{
 		Path:        fmt.Sprintf("%s/%s", constants.AuditRulesFromOSCDir, "00_shoot_rsyslog_relp.rules"),
-		Permissions: ptr.To(int32(0644)),
+		Permissions: ptr.To(uint32(0644)),
 		Content: extensionsv1alpha1.FileContent{
 			Inline: &extensionsv1alpha1.FileContentInline{
 				Encoding: "b64",
@@ -93,7 +93,7 @@ func getDefaultAuditRules() []extensionsv1alpha1.File {
 	return []extensionsv1alpha1.File{
 		{
 			Path:        baseConfigRulesPath,
-			Permissions: ptr.To(int32(0744)),
+			Permissions: ptr.To(uint32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -103,7 +103,7 @@ func getDefaultAuditRules() []extensionsv1alpha1.File {
 		},
 		{
 			Path:        privilegeEscalationRulesPath,
-			Permissions: ptr.To(int32(0744)),
+			Permissions: ptr.To(uint32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -113,7 +113,7 @@ func getDefaultAuditRules() []extensionsv1alpha1.File {
 		},
 		{
 			Path:        privilegeSpecialRulesPath,
-			Permissions: ptr.To(int32(0744)),
+			Permissions: ptr.To(uint32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -123,7 +123,7 @@ func getDefaultAuditRules() []extensionsv1alpha1.File {
 		},
 		{
 			Path:        systemIntegrityRulesPath,
-			Permissions: ptr.To(int32(0744)),
+			Permissions: ptr.To(uint32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
