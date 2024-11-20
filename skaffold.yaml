@@ -3,6 +3,8 @@ kind: Config
 metadata:
   name: rsyslog-relp-echo-server
 build:
+  insecureRegistries:
+    - garden.local.gardener.cloud:5001
   artifacts:
     - image: local-skaffold/gardener-extension-shoot-rsyslog-relp-echo-server
       docker:
@@ -27,6 +29,8 @@ kind: Config
 metadata:
   name: extension
 build:
+  insecureRegistries:
+    - garden.local.gardener.cloud:5001
   artifacts:
     - image: local-skaffold/gardener-extension-shoot-rsyslog-relp
       ko:
@@ -61,8 +65,8 @@ build:
         main: ./cmd/gardener-extension-shoot-rsyslog-relp
       hooks:
         after:
-          - command: 
-            - bash 
+          - command:
+            - bash
             - hack/generate-kustomize-patch-controllerdeployment-shoot-rsyslog-relp.sh
 manifests:
   kustomize:
@@ -76,6 +80,8 @@ kind: Config
 metadata:
   name: admission
 build:
+  insecureRegistries:
+    - garden.local.gardener.cloud:5001
   artifacts:
     - image: local-skaffold/gardener-extension-shoot-rsyslog-relp-admission
       ko:

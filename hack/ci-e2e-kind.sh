@@ -8,6 +8,13 @@ set -o nounset
 set -o pipefail
 set -o errexit
 
+# If running in prow, we need to ensure that garden.local.gardener.cloud resolves to localhost
+ensure_glgc_resolves_to_localhost() {
+  if [ -n "${CI:-}" ]; then
+    printf "\n127.0.0.1 garden.local.gardener.cloud\n" >> /etc/hosts
+    printf "\n::1 garden.local.gardener.cloud\n" >> /etc/hosts
+  fi
+}
 
 REPO_ROOT="$(readlink -f $(dirname ${0})/..)"
 GARDENER_VERSION=$(go list -m -f '{{.Version}}' github.com/gardener/gardener)
@@ -20,7 +27,7 @@ fi
 
 source "${REPO_ROOT}"/gardener/hack/ci-common.sh
 
-clamp_mss_to_pmtu
+ensure_glgc_resolves_to_localhost
 
 # test setup
 make -C "${REPO_ROOT}"/gardener kind-up
