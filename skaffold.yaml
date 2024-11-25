@@ -5,6 +5,15 @@ metadata:
 build:
   insecureRegistries:
     - garden.local.gardener.cloud:5001
+  tagPolicy:
+    customTemplate:
+      template: "{{.version}}-{{.sha}}"
+      components:
+        - name: version
+          envTemplate:
+            template: "{{.EXTENSION_VERSION}}"
+        - name: sha
+          inputDigest: {}
   artifacts:
     - image: local-skaffold/gardener-extension-shoot-rsyslog-relp-echo-server
       docker:
@@ -31,6 +40,15 @@ metadata:
 build:
   insecureRegistries:
     - garden.local.gardener.cloud:5001
+  tagPolicy:
+    customTemplate:
+      template: "{{.version}}-{{.sha}}"
+      components:
+        - name: version
+          envTemplate:
+            template: "{{.EXTENSION_VERSION}}"
+        - name: sha
+          inputDigest: {}
   artifacts:
     - image: local-skaffold/gardener-extension-shoot-rsyslog-relp
       ko:
@@ -91,6 +109,15 @@ metadata:
 build:
   insecureRegistries:
     - garden.local.gardener.cloud:5001
+  tagPolicy:
+    customTemplate:
+      template: "{{.version}}-{{.sha}}"
+      components:
+        - name: version
+          envTemplate:
+            template: "{{.EXTENSION_VERSION}}"
+        - name: sha
+          inputDigest: {}
   artifacts:
     - image: local-skaffold/gardener-extension-shoot-rsyslog-relp-admission
       ko:
