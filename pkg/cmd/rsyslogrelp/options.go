@@ -16,9 +16,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 
+	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/config"
 	apisconfig "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/config"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/config/v1alpha1"
-	controllerconfig "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/controller/config"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/controller/lifecycle"
 	oscwebhook "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/webhook/operatingsystemconfig"
 )
@@ -82,8 +82,8 @@ type RsyslogRelpServiceConfig struct {
 }
 
 // Apply applies the Options to the passed ControllerOptions instance.
-func (c *RsyslogRelpServiceConfig) Apply(config *controllerconfig.Config) {
-	config.Configuration = c.config
+func (c *RsyslogRelpServiceConfig) Apply(config *config.Configuration) {
+	*config = c.config
 }
 
 // ControllerSwitches are the cmd.ControllerSwitches for the extension controllers.
