@@ -27,6 +27,8 @@ fi
 
 source "${REPO_ROOT}"/gardener/hack/ci-common.sh
 
+clamp_mss_to_pmtu
+
 ensure_glgc_resolves_to_localhost
 
 # test setup
