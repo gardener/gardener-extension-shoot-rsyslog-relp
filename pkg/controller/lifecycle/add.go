@@ -15,8 +15,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
+	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/config"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/constants"
-	controllerconfig "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/controller/config"
 )
 
 const (
@@ -36,7 +36,7 @@ type AddOptions struct {
 	// ControllerOptions contains options for the controller.
 	ControllerOptions controller.Options
 	// Config contains configuration for the shoot rsyslog-relp controller.
-	Config controllerconfig.Config
+	Config config.Configuration
 	// IgnoreOperationAnnotation specifies whether to ignore the operation annotation or not.
 	IgnoreOperationAnnotation bool
 }
@@ -46,7 +46,7 @@ func AddToManager(ctx context.Context, mgr manager.Manager) error {
 	decoder := serializer.NewCodecFactory(mgr.GetScheme(), serializer.EnableStrict).UniversalDecoder()
 
 	return extension.Add(ctx, mgr, extension.AddArgs{
-		Actuator:          NewActuator(mgr.GetClient(), decoder, DefaultAddOptions.Config.Configuration, extensioncontroller.ChartRendererFactoryFunc(util.NewChartRendererForShoot)),
+		Actuator:          NewActuator(mgr.GetClient(), decoder, DefaultAddOptions.Config, extensioncontroller.ChartRendererFactoryFunc(util.NewChartRendererForShoot)),
 		ControllerOptions: DefaultAddOptions.ControllerOptions,
 		Name:              Name,
 		FinalizerSuffix:   FinalizerSuffix,
