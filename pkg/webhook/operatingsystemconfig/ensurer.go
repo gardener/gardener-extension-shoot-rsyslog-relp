@@ -65,7 +65,7 @@ func (e *ensurer) EnsureAdditionalFiles(ctx context.Context, gctx gcontext.Garde
 
 	shootRsyslogRelpConfig := &rsyslog.RsyslogRelpConfig{}
 	if extension.Spec.ProviderConfig != nil {
-		if _, _, err := e.decoder.Decode(extension.Spec.ProviderConfig.Raw, nil, shootRsyslogRelpConfig); err != nil {
+		if err := runtime.DecodeInto(e.decoder, extension.Spec.ProviderConfig.Raw, shootRsyslogRelpConfig); err != nil {
 			return fmt.Errorf("failed to decode provider config: %w", err)
 		}
 	}

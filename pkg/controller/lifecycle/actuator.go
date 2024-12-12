@@ -58,7 +58,7 @@ func (a *actuator) Reconcile(ctx context.Context, _ logr.Logger, ex *extensionsv
 	namespace := ex.GetNamespace()
 
 	rsyslogRelpConfig := &api.RsyslogRelpConfig{}
-	if _, _, err := a.decoder.Decode(ex.Spec.ProviderConfig.Raw, nil, rsyslogRelpConfig); err != nil {
+	if err := runtime.DecodeInto(a.decoder, ex.Spec.ProviderConfig.Raw, rsyslogRelpConfig); err != nil {
 		return fmt.Errorf("failed to decode provider config: %w", err)
 	}
 

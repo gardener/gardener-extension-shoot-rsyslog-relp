@@ -59,12 +59,16 @@ func (s *shoot) Validate(ctx context.Context, new, _ client.Object) error {
 	}
 
 	providerConfigPath := fldPath.Child("providerConfig")
-	rsyslogRelpConfig, err := decodeRsyslogRelpConfig(s.decoder, ext.ProviderConfig, providerConfigPath)
-	if err != nil {
-		return err
+	if ext.ProviderConfig == nil {
+		return field.Required(providerConfigPath, "Rsyslog relp configuration is required when using gardener-extension-shoot-rsyslog-relp")
 	}
 
-	if err = validation.ValidateRsyslogRelpConfig(rsyslogRelpConfig, providerConfigPath).ToAggregate(); err != nil {
+	rsyslogRelpConfig := &rsyslog.RsyslogRelpConfig{}
+	if err := runtime.DecodeInto(s.decoder, ext.ProviderConfig.Raw, rsyslogRelpConfig); err != nil {
+		return fmt.Errorf("could not decode rsyslog relp configuration: %w", err)
+	}
+
+	if err := validation.ValidateRsyslogRelpConfig(rsyslogRelpConfig, providerConfigPath).ToAggregate(); err != nil {
 		return err
 	}
 
@@ -165,7 +169,7 @@ func validateAuditConfigMap(decoder runtime.Decoder, configMap *corev1.ConfigMap
 
 	auditdConfig := &rsyslog.Auditd{}
 
-	_, _, err := decoder.Decode([]byte(auditdConfigString), nil, auditdConfig)
+	err := runtime.DecodeInto(decoder, []byte(auditdConfigString), auditdConfig)
 	if err != nil {
 		return fmt.Errorf("could not decode 'data.%s' field of configMap %s: %w", constants.AuditdConfigMapDataKey, configMapKey.String(), err)
 	}

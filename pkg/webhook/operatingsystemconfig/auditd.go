@@ -72,7 +72,7 @@ func getAuditConfigFromConfigMap(ctx context.Context, c client.Client, decoder r
 	}
 
 	auditdConfig := &rsyslog.Auditd{}
-	_, _, err := decoder.Decode([]byte(auditdConfigString), nil, auditdConfig)
+	err := runtime.DecodeInto(decoder, []byte(auditdConfigString), auditdConfig)
 	if err != nil {
 		return nil, err
 	}
