@@ -191,19 +191,6 @@ func isExtensionEnabled(ext *core.Extension) bool {
 	return true
 }
 
-func decodeRsyslogRelpConfig(decoder runtime.Decoder, config *runtime.RawExtension, fldPath *field.Path) (*rsyslog.RsyslogRelpConfig, error) {
-	if config == nil {
-		return nil, field.Required(fldPath, "Rsyslog relp configuration is required when using gardener-extension-shoot-rsyslog-relp")
-	}
-
-	rsyslogRelpConfig := &rsyslog.RsyslogRelpConfig{}
-	if err := runtime.DecodeInto(decoder, config.Raw, rsyslogRelpConfig); err != nil {
-		return nil, fmt.Errorf("could not decode rsyslog relp configuration: %w", err)
-	}
-
-	return rsyslogRelpConfig, nil
-}
-
 func getReferencedResourceName(shoot *core.Shoot, resourceKind, resourceName string) (string, error) {
 	if shoot != nil {
 		for _, ref := range shoot.Spec.Resources {
