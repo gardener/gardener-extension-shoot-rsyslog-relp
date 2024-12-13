@@ -59,8 +59,7 @@ func (o *Options) Complete() error {
 	}
 
 	configuration := apisconfig.Configuration{}
-	err = runtime.DecodeInto(decoder, data, &configuration)
-	if err != nil {
+	if err = runtime.DecodeInto(decoder, data, &configuration); err != nil {
 		return err
 	}
 

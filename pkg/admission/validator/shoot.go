@@ -168,8 +168,8 @@ func validateAuditConfigMap(decoder runtime.Decoder, configMap *corev1.ConfigMap
 	}
 
 	auditdConfig := &rsyslog.Auditd{}
-	err := runtime.DecodeInto(decoder, []byte(auditdConfigString), auditdConfig)
-	if err != nil {
+
+	if err := runtime.DecodeInto(decoder, []byte(auditdConfigString), auditdConfig); err != nil {
 		return fmt.Errorf("could not decode 'data.%s' field of configMap %s: %w", constants.AuditdConfigMapDataKey, configMapKey.String(), err)
 	}
 	if err := validation.ValidateAuditd(auditdConfig).ToAggregate(); err != nil {
