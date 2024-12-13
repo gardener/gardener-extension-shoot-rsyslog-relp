@@ -59,12 +59,16 @@ func (s *shoot) Validate(ctx context.Context, new, _ client.Object) error {
 	}
 
 	providerConfigPath := fldPath.Child("providerConfig")
-	rsyslogRelpConfig, err := decodeRsyslogRelpConfig(s.decoder, ext.ProviderConfig, providerConfigPath)
-	if err != nil {
-		return err
+	if ext.ProviderConfig == nil {
+		return field.Required(providerConfigPath, "Rsyslog relp configuration is required when using gardener-extension-shoot-rsyslog-relp")
 	}
 
-	if err = validation.ValidateRsyslogRelpConfig(rsyslogRelpConfig, providerConfigPath).ToAggregate(); err != nil {
+	rsyslogRelpConfig := &rsyslog.RsyslogRelpConfig{}
+	if err := runtime.DecodeInto(s.decoder, ext.ProviderConfig.Raw, rsyslogRelpConfig); err != nil {
+		return fmt.Errorf("could not decode rsyslog relp configuration: %w", err)
+	}
+
+	if err := validation.ValidateRsyslogRelpConfig(rsyslogRelpConfig, providerConfigPath).ToAggregate(); err != nil {
 		return err
 	}
 
@@ -165,8 +169,7 @@ func validateAuditConfigMap(decoder runtime.Decoder, configMap *corev1.ConfigMap
 
 	auditdConfig := &rsyslog.Auditd{}
 
-	_, _, err := decoder.Decode([]byte(auditdConfigString), nil, auditdConfig)
-	if err != nil {
+	if err := runtime.DecodeInto(decoder, []byte(auditdConfigString), auditdConfig); err != nil {
 		return fmt.Errorf("could not decode 'data.%s' field of configMap %s: %w", constants.AuditdConfigMapDataKey, configMapKey.String(), err)
 	}
 	if err := validation.ValidateAuditd(auditdConfig).ToAggregate(); err != nil {
@@ -185,19 +188,6 @@ func isExtensionEnabled(ext *core.Extension) bool {
 		return !*ext.Disabled
 	}
 	return true
-}
-
-func decodeRsyslogRelpConfig(decoder runtime.Decoder, config *runtime.RawExtension, fldPath *field.Path) (*rsyslog.RsyslogRelpConfig, error) {
-	if config == nil {
-		return nil, field.Required(fldPath, "Rsyslog relp configuration is required when using gardener-extension-shoot-rsyslog-relp")
-	}
-
-	rsyslogRelpConfig := &rsyslog.RsyslogRelpConfig{}
-	if err := runtime.DecodeInto(decoder, config.Raw, rsyslogRelpConfig); err != nil {
-		return nil, fmt.Errorf("could not decode rsyslog relp configuration: %w", err)
-	}
-
-	return rsyslogRelpConfig, nil
 }
 
 func getReferencedResourceName(shoot *core.Shoot, resourceKind, resourceName string) (string, error) {
