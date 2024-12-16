@@ -38,7 +38,7 @@ type ensurer struct {
 }
 
 // EnsureAdditionalFiles ensures that the rsyslog configuration files are added to the <new> files.
-func (e *ensurer) EnsureAdditionalFiles(ctx context.Context, gctx gcontext.GardenContext, new, _ *[]extensionsv1alpha1.File) error {
+func (e *ensurer) EnsureAdditionalFiles(ctx context.Context, gctx gcontext.GardenContext, newFiles, _ *[]extensionsv1alpha1.File) error {
 	cluster, err := gctx.GetCluster(ctx)
 	if err != nil {
 		return err
@@ -75,7 +75,7 @@ func (e *ensurer) EnsureAdditionalFiles(ctx context.Context, gctx gcontext.Garde
 		return fmt.Errorf("failed to get rsyslog files: %w", err)
 	}
 	for _, file := range rsyslogFiles {
-		*new = extensionswebhook.EnsureFileWithPath(*new, file)
+		*newFiles = extensionswebhook.EnsureFileWithPath(*newFiles, file)
 	}
 
 	if shootRsyslogRelpConfig.AuditConfig == nil || shootRsyslogRelpConfig.AuditConfig.Enabled {
@@ -84,14 +84,14 @@ func (e *ensurer) EnsureAdditionalFiles(ctx context.Context, gctx gcontext.Garde
 			return fmt.Errorf("failed to get audit files: %w", err)
 		}
 		for _, file := range auditFiles {
-			*new = extensionswebhook.EnsureFileWithPath(*new, file)
+			*newFiles = extensionswebhook.EnsureFileWithPath(*newFiles, file)
 		}
 	}
 
 	return nil
 }
 
-func (e *ensurer) EnsureAdditionalUnits(_ context.Context, _ gcontext.GardenContext, new, _ *[]extensionsv1alpha1.Unit) error {
-	*new = extensionswebhook.EnsureUnitWithName(*new, getRsyslogConfiguratorUnit())
+func (e *ensurer) EnsureAdditionalUnits(_ context.Context, _ gcontext.GardenContext, newUnits, _ *[]extensionsv1alpha1.Unit) error {
+	*newUnits = extensionswebhook.EnsureUnitWithName(*newUnits, getRsyslogConfiguratorUnit())
 	return nil
 }

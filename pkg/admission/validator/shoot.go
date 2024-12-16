@@ -38,10 +38,10 @@ func NewShootValidator(apiReader client.Reader, decoder runtime.Decoder) extensi
 }
 
 // Validate validates the given shoot object.
-func (s *shoot) Validate(ctx context.Context, new, _ client.Object) error {
-	shoot, ok := new.(*core.Shoot)
+func (s *shoot) Validate(ctx context.Context, newObj, _ client.Object) error {
+	shoot, ok := newObj.(*core.Shoot)
 	if !ok {
-		return fmt.Errorf("wrong object type %T", new)
+		return fmt.Errorf("wrong object type %T", newObj)
 	}
 
 	var ext *core.Extension
