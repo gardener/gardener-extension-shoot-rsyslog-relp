@@ -18,8 +18,6 @@ global:
     requests:
       cpu: "50m"
       memory: "64Mi"
-    limits:
-      memory: "512Mi"
   metricsPort: 8080
   healthPort: 8081
   vpa:
