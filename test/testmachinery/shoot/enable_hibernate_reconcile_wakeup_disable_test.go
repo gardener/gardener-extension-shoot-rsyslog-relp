@@ -27,7 +27,7 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 
 	f := framework.NewShootFramework(nil)
 
-	f.Serial().Beta().CIt("should enable and disable the shoot-rsyslog-relp extension", func(parentCtx context.Context) {
+	f.Serial().CIt("should enable and disable the shoot-rsyslog-relp extension", func(parentCtx context.Context) {
 		By("Deploy the rsyslog-relp-echo-server in Shoot cluster")
 		ctx, cancel := context.WithTimeout(parentCtx, time.Minute)
 		defer cancel()

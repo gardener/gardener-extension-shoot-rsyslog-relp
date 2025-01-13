@@ -1,13 +1,13 @@
 apiVersion: testmachinery.sapcloud.io
 kind: TestDefinition
 metadata:
-  name: shoot-rsyslog-relp-beta-serial-test-suite
+  name: shoot-rsyslog-relp-serial-test-suite
 spec:
   owner: gardener-oq@listserv.sap.com
-  description: shoot-rsyslog-relp extension test suite that includes all serial beta tests
+  description: shoot-rsyslog-relp extension test suite that includes all serial tests
 
   activeDeadlineSeconds: 16800
-  labels: ["shoot", "beta"]
+  labels: ["shoot"]
   behavior:
   - serial
 
@@ -19,7 +19,7 @@ spec:
       -kubecfg=$TM_KUBECONFIG_PATH/gardener.config
       -project-namespace=$PROJECT_NAMESPACE
       -shoot-name=$SHOOT_NAME
-      -ginkgo.focus="\[BETA\].*\[SERIAL\]"
+      -ginkgo.focus="\[SERIAL\]"
       -ginkgo.skip="\[DISRUPTIVE\]"
       -ginkgo.timeout=16800s
 
