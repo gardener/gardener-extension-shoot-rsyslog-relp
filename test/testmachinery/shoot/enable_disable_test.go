@@ -111,7 +111,7 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 	}, time.Minute)
 
 	Context("shoot-rsyslog-relp extension with tls disabled", Label("tls-disabled"), func() {
-		f.Serial().Beta().CIt("should enable and disable the shoot-rsyslog-relp extension", func(parentCtx context.Context) {
+		f.Serial().CIt("should enable and disable the shoot-rsyslog-relp extension", func(parentCtx context.Context) {
 			test(parentCtx, defaultExtensionAuditRules, func(shoot *gardencorev1beta1.Shoot) error {
 				common.AddOrUpdateRsyslogRelpExtension(
 					shoot,
@@ -136,7 +136,7 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 		const secretReferenceName = "rsyslog-relp-tls"
 		var createdResources []client.Object
 
-		f.Serial().Beta().CIt("should enable and disable the shoot-rsyslog-relp extension", func(parentCtx context.Context) {
+		f.Serial().CIt("should enable and disable the shoot-rsyslog-relp extension", func(parentCtx context.Context) {
 			By("Create rsyslog-relp-tls Secret")
 			ctx, cancel := context.WithTimeout(parentCtx, 2*time.Minute)
 			defer cancel()
@@ -178,7 +178,7 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 		const configMapRefName = "audit-config"
 		var createdResources []client.Object
 
-		f.Serial().Beta().CIt("should enable and disable the shoot-rsyslog-relp extension", func(parentCtx context.Context) {
+		f.Serial().CIt("should enable and disable the shoot-rsyslog-relp extension", func(parentCtx context.Context) {
 			By("Create rsyslog-relp-tls Secret")
 			ctx, cancel := context.WithTimeout(parentCtx, 2*time.Minute)
 			defer cancel()
