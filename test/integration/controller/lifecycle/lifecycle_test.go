@@ -64,6 +64,9 @@ var _ = Describe("Lifecycle controller tests", func() {
 								Image:           "registry.k8s.io/pause:3.10",
 								ImagePullPolicy: corev1.PullIfNotPresent,
 								Name:            "pause-container",
+								SecurityContext: &corev1.SecurityContext{
+									AllowPrivilegeEscalation: ptr.To(false),
+								},
 							},
 						},
 						InitContainers: []corev1.Container{
@@ -116,6 +119,9 @@ fi`,
 								Image:           "europe-docker.pkg.dev/gardener-project/releases/3rd/alpine:3.21.2",
 								ImagePullPolicy: corev1.PullIfNotPresent,
 								Name:            "rsyslog-relp-configuration-cleaner",
+								SecurityContext: &corev1.SecurityContext{
+									AllowPrivilegeEscalation: ptr.To(false),
+								},
 								Resources: corev1.ResourceRequirements{
 									Requests: corev1.ResourceList{
 										corev1.ResourceCPU:    resource.MustParse("2m"),
