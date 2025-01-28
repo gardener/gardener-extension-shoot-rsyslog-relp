@@ -30,6 +30,8 @@ spec:
       - name: rsyslog-relp-echo-server
         image: {{ .Values.images.rsyslog }}
         imagePullPolicy: {{ .Values.images.pullPolicy }}
+        securityContext:
+          allowPrivilegeEscalation: false
         ports:
         - containerPort: 10250
         - containerPort: 10350

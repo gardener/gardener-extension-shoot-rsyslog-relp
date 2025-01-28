@@ -117,6 +117,9 @@ func (r *rsyslogRelpConfigCleaner) computeResourcesData() (map[string][]byte, er
 							Image:           r.values.AlpineImage,
 							ImagePullPolicy: corev1.PullIfNotPresent,
 							Command:         computeCommand(),
+							SecurityContext: &corev1.SecurityContext{
+								AllowPrivilegeEscalation: ptr.To(false),
+							},
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
 									corev1.ResourceCPU:    resource.MustParse("2m"),
@@ -140,6 +143,9 @@ func (r *rsyslogRelpConfigCleaner) computeResourcesData() (map[string][]byte, er
 							Name:            "pause-container",
 							Image:           r.values.PauseContainerImage,
 							ImagePullPolicy: corev1.PullIfNotPresent,
+							SecurityContext: &corev1.SecurityContext{
+								AllowPrivilegeEscalation: ptr.To(false),
+							},
 						},
 					},
 					HostPID: true,
