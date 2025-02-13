@@ -122,17 +122,24 @@ build:
 deploy:
   helm:
     releases:
-      - name: shoot-rsyslog-relp-admission
+      - name: shoot-rsyslog-relp-admission-application
         namespace: garden
         wait: true
-        chartPath: charts/gardener-extension-shoot-rsyslog-relp-admission
+        chartPath: charts/gardener-extension-shoot-rsyslog-relp-admission/charts/application
         setValueTemplates:
-          global.image.repository: '{{.IMAGE_REPO_local_skaffold_gardener_extension_shoot_rsyslog_relp_admission}}'
-          global.image.tag: '{{.IMAGE_TAG_local_skaffold_gardener_extension_shoot_rsyslog_relp_admission}}@{{.IMAGE_DIGEST_local_skaffold_gardener_extension_shoot_rsyslog_relp_admission}}'
+          gardener.virtualCluster.enabled: false
+      - name: shoot-rsyslog-relp-admission-runtime
+        namespace: garden
+        wait: true
+        chartPath: charts/gardener-extension-shoot-rsyslog-relp-admission/charts/runtime
+        setValueTemplates:
+          image.repository: '{{.IMAGE_REPO_local_skaffold_gardener_extension_shoot_rsyslog_relp_admission}}'
+          image.tag: '{{.IMAGE_TAG_local_skaffold_gardener_extension_shoot_rsyslog_relp_admission}}@{{.IMAGE_DIGEST_local_skaffold_gardener_extension_shoot_rsyslog_relp_admission}}'
+          gardener.virtualCluster.enabled: false
 profiles:
   - name: remote-extension
     patches:
       - op: add
-        path: /deploy/helm/releases/0/setValues
+        path: /deploy/helm/releases/1/setValues
         value:
-          global.vpa.enabled: false
+          vpa.enabled: false
