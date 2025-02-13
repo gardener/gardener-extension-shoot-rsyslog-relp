@@ -47,9 +47,9 @@ func ForEachNode(ctx context.Context, c kubernetes.Interface, fn func(ctx contex
 }
 
 // ExecCommand uses the given RootPodExecutor to execute the given command.
-func ExecCommand(ctx context.Context, log logr.Logger, podExecutor framework.RootPodExecutor, command string) (response []byte, err error) {
+func ExecCommand(ctx context.Context, log logr.Logger, podExecutor framework.RootPodExecutor, command ...string) (response []byte, err error) {
 	err = retry.Until(ctx, 5*time.Second, func(ctx context.Context) (bool, error) {
-		response, err = podExecutor.Execute(ctx, command)
+		response, err = podExecutor.Execute(ctx, command...)
 		if err != nil {
 			log.Error(err, "Error exec'ing into pod")
 			return retry.MinorError(err)

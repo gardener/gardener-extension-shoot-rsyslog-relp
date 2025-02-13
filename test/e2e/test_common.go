@@ -36,7 +36,7 @@ func defaultShootCreationFramework() *framework.ShootCreationFramework {
 
 func installRsyslogRelp(ctx context.Context, log logr.Logger, c kubernetes.Interface, nodeName string) {
 	rootPodExecutor := framework.NewRootPodExecutor(log, c, &nodeName, "kube-system")
-	_, err := common.ExecCommand(ctx, log, rootPodExecutor, "sh -c 'apt-get update && apt-get install -y rsyslog-relp'")
+	_, err := common.ExecCommand(ctx, log, rootPodExecutor, "sh", "-c", "apt-get update && apt-get install -y rsyslog-relp")
 	ExpectWithOffset(1, err).NotTo(HaveOccurred())
 	Expect(rootPodExecutor.Clean(ctx)).To(Succeed())
 }

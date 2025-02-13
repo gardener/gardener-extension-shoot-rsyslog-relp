@@ -105,14 +105,14 @@ func (v *Verifier) VerifyExtensionDisabledForNode(ctx context.Context, nodeName 
 
 func (v *Verifier) verifyThatAuditRulesAreInstalled(ctx context.Context) {
 	EventuallyWithOffset(2, func(g Gomega) {
-		response, _ := ExecCommand(ctx, v.log, v.rootPodExecutor, "cat /etc/audit/audit.rules")
+		response, _ := ExecCommand(ctx, v.log, v.rootPodExecutor, "cat", "/etc/audit/audit.rules")
 		g.Expect(string(response)).To(Equal(v.expectedAuditRules), fmt.Sprintf("Expected the /etc/audit/audit.rules file to contain correct audit rules on node %s", v.nodeName))
 	}).WithTimeout(1 * time.Minute).WithPolling(10 * time.Second).WithContext(ctx).Should(Succeed())
 }
 
 func (v *Verifier) verifyThatRsyslogIsActiveAndConfigured(ctx context.Context) {
 	EventuallyWithOffset(2, func(g Gomega) {
-		response, _ := ExecCommand(ctx, v.log, v.rootPodExecutor, "sh -c 'test -f /etc/rsyslog.d/60-audit.conf && systemctl is-active rsyslog.service' &>/dev/null && echo 'configured' || echo 'not configured'")
+		response, _ := ExecCommand(ctx, v.log, v.rootPodExecutor, "sh", "-c", "[ -f /etc/rsyslog.d/60-audit.conf ] && systemctl is-active rsyslog.service 1>/dev/null 2>&1 && echo configured || echo not configured")
 		g.Expect(string(response)).To(Equal("configured\n"), fmt.Sprintf("Expected the /etc/rsyslog.d/60-audit.conf file to exist and the rsyslog service to be active on node %s", v.nodeName))
 	}).WithTimeout(1 * time.Minute).WithPolling(10 * time.Second).WithContext(ctx).Should(Succeed())
 }
@@ -193,7 +193,7 @@ func (v *Verifier) setNodeName(nodeName string) {
 }
 
 func (v *Verifier) generateLogs(ctx context.Context, logEntries []logEntry) error {
-	command := "sh -c '"
+	command := ""
 	for _, logEntry := range logEntries {
 		command += "echo " + logEntry.message + " | systemd-cat -t " + logEntry.program + " -p " + logEntry.severity + "; "
 	}
@@ -201,9 +201,9 @@ func (v *Verifier) generateLogs(ctx context.Context, logEntries []logEntry) erro
 		// Create a file under /etc directory so that an audit event is generated.
 		command += "echo some-content > " + fileForAuditEvent + "; rm -f " + fileForAuditEvent
 	}
-	command += "'"
+	command = strings.TrimSuffix(command, "; ")
 
-	if _, err := ExecCommand(ctx, v.log, v.rootPodExecutor, command); err != nil {
+	if _, err := ExecCommand(ctx, v.log, v.rootPodExecutor, "sh", "-c", command); err != nil {
 		return err
 	}
 	return nil
