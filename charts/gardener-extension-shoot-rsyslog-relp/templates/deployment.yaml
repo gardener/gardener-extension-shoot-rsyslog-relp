@@ -47,6 +47,8 @@ spec:
       - name: gardener-extension-{{ .Values.serviceName }}
         image: {{ include "image" . }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        securityContext:
+          allowPrivilegeEscalation: false
         args:
         - --config=/etc/rsyslog-relp/config.yaml
         - --lifecycle-max-concurrent-reconciles={{ .Values.controllers.lifecycle.concurrentSyncs }}
