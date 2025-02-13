@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/gardener/gardener/pkg/client/kubernetes"
+	kubernetesutils "github.com/gardener/gardener/pkg/utils/kubernetes"
 	"github.com/gardener/gardener/test/framework"
 	"github.com/go-logr/logr"
 	. "github.com/onsi/ginkgo/v2"
@@ -213,7 +214,7 @@ func (v *Verifier) getLogs(ctx context.Context, timeBeforeLogGeneration metav1.T
 	if err != nil {
 		return nil, err
 	}
-	logs, err := kubernetes.GetPodLogs(ctx, echoServerPodIf, echoServerPodName, &corev1.PodLogOptions{SinceTime: &timeBeforeLogGeneration})
+	logs, err := kubernetesutils.GetPodLogs(ctx, echoServerPodIf, echoServerPodName, &corev1.PodLogOptions{SinceTime: &timeBeforeLogGeneration})
 	if err != nil {
 		return nil, err
 	}

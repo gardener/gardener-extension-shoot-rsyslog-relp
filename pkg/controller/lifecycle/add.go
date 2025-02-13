@@ -45,7 +45,7 @@ type AddOptions struct {
 func AddToManager(ctx context.Context, mgr manager.Manager) error {
 	decoder := serializer.NewCodecFactory(mgr.GetScheme(), serializer.EnableStrict).UniversalDecoder()
 
-	return extension.Add(ctx, mgr, extension.AddArgs{
+	return extension.Add(mgr, extension.AddArgs{
 		Actuator:          NewActuator(mgr.GetClient(), decoder, DefaultAddOptions.Config, extensioncontroller.ChartRendererFactoryFunc(util.NewChartRendererForShoot)),
 		ControllerOptions: DefaultAddOptions.ControllerOptions,
 		Name:              Name,
