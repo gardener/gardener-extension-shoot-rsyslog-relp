@@ -140,6 +140,6 @@ profiles:
   - name: remote-extension
     patches:
       - op: add
-        path: /deploy/helm/releases/0/setValues
+        path: /deploy/helm/releases/1/setValues
         value:
           vpa.enabled: false
