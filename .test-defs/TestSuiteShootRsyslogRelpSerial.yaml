@@ -7,7 +7,6 @@ spec:
   description: shoot-rsyslog-relp extension test suite that includes all serial tests
 
   activeDeadlineSeconds: 16800
-
   behavior:
   - serial
 
