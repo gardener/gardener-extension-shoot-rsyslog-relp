@@ -19,8 +19,10 @@ Files:
   VERSION
   charts/gardener-extension-shoot-rsyslog-relp/.helmignore
   charts/gardener-extension-shoot-rsyslog-relp/templates/_helpers.tpl
-  charts/gardener-extension-shoot-rsyslog-relp-admission/.helmignore
-  charts/gardener-extension-shoot-rsyslog-relp-admission/templates/_helpers.tpl
+  charts/gardener-extension-shoot-rsyslog-relp-admission/charts/application/.helmignore
+  charts/gardener-extension-shoot-rsyslog-relp-admission/charts/application/templates/_helpers.tpl
+  charts/gardener-extension-shoot-rsyslog-relp-admission/charts/runtime/.helmignore
+  charts/gardener-extension-shoot-rsyslog-relp-admission/charts/runtime/templates/_helpers.tpl
   example/extension/.gitignore
   example/extension/extension-config-patch.yaml.tmpl
   example/local/charts/rsyslog-relp-echo-server/.helmignore
