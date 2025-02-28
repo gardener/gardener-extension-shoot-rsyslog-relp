@@ -288,7 +288,14 @@ func computeLogFilters(loggingRules []rsyslog.LoggingRule) []string {
 		} else {
 			filters = append(filters, fmt.Sprintf("$syslogseverity <= %d", rule.Severity))
 		}
+		if rule.MessageContent != nil {
+			if include := rule.MessageContent.Regex; include != nil {
+				filters = append(filters, fmt.Sprintf("and re_match($msg,'%s') == 1", *include))
+			}
+			if exclude := rule.MessageContent.Regex; exclude != nil {
+				filters = append(filters, fmt.Sprintf("and re_match($msg,'%s') == 0", *exclude))
+			}
+		}
 	}
-
 	return filters
 }

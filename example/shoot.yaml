@@ -23,6 +23,9 @@ spec:
       # only forward logs from systemd that are at Info(6) syslog severity or below to the target server
       - severity: 6
         programNames: ["systemd"]
+        messageContent:
+          regex: "foo"
+          exclude: "bar"
       # only forward logs from download-cloud-config.sh that are at Debug(7) syslog severity or below to the target server
       - severity: 7
         programNames: ["download-cloud-config.sh"]

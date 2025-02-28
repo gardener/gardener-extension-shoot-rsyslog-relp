@@ -63,6 +63,8 @@ type LoggingRule struct {
 	ProgramNames []string
 	// Severity determines which logs are sent to the target server based on their severity.
 	Severity int
+	// MessageContent contains messages, used to filter messages
+	MessageContent *MessageContent
 }
 
 // AuditConfig contains options to configure the audit system.
@@ -94,3 +96,10 @@ const (
 	// TLSLibGnuTLS specifies the gnutls tls library.
 	TLSLibGnuTLS = "gnutls"
 )
+
+type MessageContent struct {
+	// Message that should be contained
+	Regex *string
+	// Message that shouldn't be contained
+	Exclude *string
+}

@@ -296,6 +296,62 @@ int
 <p>Severity determines which logs are sent to the target server based on their severity.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>messageContent</code></br>
+<em>
+<a href="#rsyslog-relp.extensions.gardener.cloud/v1alpha1.MessageContent">
+MessageContent
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MessageContent contains messages, used to filter messages</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="rsyslog-relp.extensions.gardener.cloud/v1alpha1.MessageContent">MessageContent
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#rsyslog-relp.extensions.gardener.cloud/v1alpha1.LoggingRule">LoggingRule</a>)
+</p>
+<p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>regex,omitepmty</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Message that should be contained</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>exclude,omitepmty</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Message that shouldn&rsquo;t be contained</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="rsyslog-relp.extensions.gardener.cloud/v1alpha1.TLS">TLS

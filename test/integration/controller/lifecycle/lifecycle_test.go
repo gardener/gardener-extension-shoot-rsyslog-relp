@@ -223,8 +223,9 @@ fi`,
 			Port:   10250,
 			LoggingRules: []rsyslog.LoggingRule{
 				{
-					Severity:     5,
-					ProgramNames: []string{"systemd", "audisp-syslog"},
+					Severity:       5,
+					ProgramNames:   []string{"systemd", "audisp-syslog"},
+					MessageContent: &rsyslog.MessageContent{Regex: ptr.To("testing"), Exclude: ptr.To("not")},
 				},
 				{
 					Severity:     7,
