@@ -31,17 +31,6 @@ metadata:
 build:
   insecureRegistries:
     - garden.local.gardener.cloud:5001
-  tagPolicy:
-    customTemplate:
-      template: "{{.version}}-{{.sha}}"
-      components:
-        - name: version
-          envTemplate:
-            template: "{{.EXTENSION_VERSION}}"
-        # inputDigest is used to inject a digest of the artifact source into the built image tag
-        # and therefore into the SKAFFOLD_IMAGE environment variable which is used when generating the corresponding ControllerDeployment
-        - name: sha
-          inputDigest: {}
   artifacts:
     - image: local-skaffold/gardener-extension-shoot-rsyslog-relp
       ko:
@@ -73,11 +62,6 @@ build:
         ldflags:
           - '{{.LD_FLAGS}}'
         main: ./cmd/gardener-extension-shoot-rsyslog-relp
-      hooks:
-        after:
-          - command:
-            - bash
-            - hack/generate-kustomize-patch-controllerdeployment-shoot-rsyslog-relp.sh
 manifests:
   kustomize:
     paths:
@@ -93,6 +77,12 @@ deploy:
       apply:
         - --server-side
         - --force-conflicts
+resourceSelector:
+  # instruct skaffold to inject the built image reference into the image field in our ControllerDeployment
+  allow:
+  - groupKind: ControllerDeployment.core.gardener.cloud
+    image:
+    - .helm.values.image.ref
 ---
 apiVersion: skaffold/v4beta7
 kind: Config

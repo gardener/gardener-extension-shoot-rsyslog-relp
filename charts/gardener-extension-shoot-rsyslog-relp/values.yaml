@@ -4,6 +4,7 @@
 
 ---
 image:
+  # ref: europe-docker.pkg.dev/gardener-project/public/gardener/extensions/shoot-rsyslog-relp:latest
   repository: europe-docker.pkg.dev/gardener-project/public/gardener/extensions/shoot-rsyslog-relp
   tag: latest
   pullPolicy: IfNotPresent
