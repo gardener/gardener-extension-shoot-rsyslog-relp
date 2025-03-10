@@ -66,6 +66,11 @@ func (in *LoggingRule) DeepCopyInto(out *LoggingRule) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.Severity != nil {
+		in, out := &in.Severity, &out.Severity
+		*out = new(int)
+		**out = **in
+	}
 	if in.MessageContent != nil {
 		in, out := &in.MessageContent, &out.MessageContent
 		*out = new(MessageContent)

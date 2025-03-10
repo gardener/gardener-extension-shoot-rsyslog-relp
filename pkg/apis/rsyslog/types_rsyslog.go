@@ -62,7 +62,7 @@ type LoggingRule struct {
 	// ProgramNames are the names of the programs for which logs are sent to the target server.
 	ProgramNames []string
 	// Severity determines which logs are sent to the target server based on their severity.
-	Severity int
+	Severity *int
 	// MessageContent contains messages, used to filter messages
 	MessageContent *MessageContent
 }

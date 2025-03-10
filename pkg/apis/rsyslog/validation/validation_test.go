@@ -37,7 +37,7 @@ var _ = Describe("Validation", func() {
 			loggingRules = []rsyslog.LoggingRule{
 				{
 					ProgramNames: []string{"kubelet"},
-					Severity:     0,
+					Severity:     ptr.To(0),
 				},
 			}
 		)
@@ -104,6 +104,26 @@ var _ = Describe("Validation", func() {
 					"Field":    Equal("loggingRules"),
 					"BadValue": Equal(""),
 					"Detail":   Equal("at least one logging rule is required"),
+				})),
+			)
+
+			errorList := validation.ValidateRsyslogRelpConfig(&config, path)
+			Expect(errorList).To(matcher)
+		})
+
+		It("should not allow empty no field of a logging rule to be set", func() {
+			config := rsyslog.RsyslogRelpConfig{
+				Target:       relpTarget,
+				Port:         relpTargetPort,
+				LoggingRules: []rsyslog.LoggingRule{{}},
+			}
+
+			matcher := ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeRequired),
+					"Field":    Equal("loggingRules[0]"),
+					"BadValue": Equal(""),
+					"Detail":   Equal("at least one field of the logging rule is required"),
 				})),
 			)
 

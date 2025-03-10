@@ -130,7 +130,7 @@ func Convert_rsyslog_Auditd_To_v1alpha1_Auditd(in *rsyslog.Auditd, out *Auditd, 
 
 func autoConvert_v1alpha1_LoggingRule_To_rsyslog_LoggingRule(in *LoggingRule, out *rsyslog.LoggingRule, s conversion.Scope) error {
 	out.ProgramNames = *(*[]string)(unsafe.Pointer(&in.ProgramNames))
-	out.Severity = in.Severity
+	out.Severity = (*int)(unsafe.Pointer(in.Severity))
 	out.MessageContent = (*rsyslog.MessageContent)(unsafe.Pointer(in.MessageContent))
 	return nil
 }
@@ -142,7 +142,7 @@ func Convert_v1alpha1_LoggingRule_To_rsyslog_LoggingRule(in *LoggingRule, out *r
 
 func autoConvert_rsyslog_LoggingRule_To_v1alpha1_LoggingRule(in *rsyslog.LoggingRule, out *LoggingRule, s conversion.Scope) error {
 	out.ProgramNames = *(*[]string)(unsafe.Pointer(&in.ProgramNames))
-	out.Severity = in.Severity
+	out.Severity = (*int)(unsafe.Pointer(in.Severity))
 	out.MessageContent = (*MessageContent)(unsafe.Pointer(in.MessageContent))
 	return nil
 }

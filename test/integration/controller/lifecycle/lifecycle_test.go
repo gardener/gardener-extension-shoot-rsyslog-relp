@@ -223,16 +223,16 @@ fi`,
 			Port:   10250,
 			LoggingRules: []rsyslog.LoggingRule{
 				{
-					Severity:       5,
+					Severity:       ptr.To(5),
 					ProgramNames:   []string{"systemd", "audisp-syslog"},
 					MessageContent: &rsyslog.MessageContent{Regex: ptr.To("testing"), Exclude: ptr.To("not")},
 				},
 				{
-					Severity:     7,
+					Severity:     ptr.To(7),
 					ProgramNames: []string{"kubelet"},
 				},
 				{
-					Severity: 2,
+					Severity: ptr.To(2),
 				},
 			},
 		}
