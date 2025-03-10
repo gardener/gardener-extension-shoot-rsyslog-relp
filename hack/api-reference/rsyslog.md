@@ -319,6 +319,7 @@ MessageContent
 <a href="#rsyslog-relp.extensions.gardener.cloud/v1alpha1.LoggingRule">LoggingRule</a>)
 </p>
 <p>
+<p>MessageContent contains fields for including and excluding messages</p>
 </p>
 <table>
 <thead>

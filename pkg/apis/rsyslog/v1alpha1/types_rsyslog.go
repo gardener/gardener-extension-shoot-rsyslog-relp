@@ -111,6 +111,7 @@ const (
 	TLSLibGnuTLS = "gnutls"
 )
 
+// MessageContent contains fields for including and excluding messages
 type MessageContent struct {
 	// Message that should be contained
 	// +optional
