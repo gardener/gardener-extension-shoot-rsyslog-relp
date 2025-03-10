@@ -114,8 +114,8 @@ const (
 type MessageContent struct {
 	// Message that should be contained
 	// +optional
-	Regex *string `json:"regex,omitepmty"`
+	Regex *string `json:"regex,omitempty"`
 	// Message that shouldn't be contained
 	// +optional
-	Exclude *string `json:"exclude,omitepmty"`
+	Exclude *string `json:"exclude,omitempty"`
 }

@@ -330,7 +330,7 @@ MessageContent
 <tbody>
 <tr>
 <td>
-<code>regex,omitepmty</code></br>
+<code>regex</code></br>
 <em>
 string
 </em>
@@ -342,7 +342,7 @@ string
 </tr>
 <tr>
 <td>
-<code>exclude,omitepmty</code></br>
+<code>exclude</code></br>
 <em>
 string
 </em>
