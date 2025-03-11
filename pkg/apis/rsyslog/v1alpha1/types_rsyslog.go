@@ -75,7 +75,7 @@ type LoggingRule struct {
 	ProgramNames []string `json:"programNames,omitempty"`
 	// Severity determines which logs are sent to the target server based on their severity.
 	Severity *int `json:"severity,omitempty"`
-	// MessageContent contains messages, used to filter messages
+	// MessageContent contains fields for including and excluding messages
 	// +optional
 	MessageContent *MessageContent `json:"messageContent,omitempty"`
 }

@@ -307,7 +307,7 @@ MessageContent
 </td>
 <td>
 <em>(Optional)</em>
-<p>MessageContent contains messages, used to filter messages</p>
+<p>MessageContent contains fields for including and excluding messages</p>
 </td>
 </tr>
 </tbody>
