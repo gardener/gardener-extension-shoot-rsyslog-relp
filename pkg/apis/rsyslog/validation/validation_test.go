@@ -111,11 +111,13 @@ var _ = Describe("Validation", func() {
 			Expect(errorList).To(matcher)
 		})
 
-		It("should not allow empty no field of a logging rule to be set", func() {
+		It("should not allow a logging rule to be empty (no fields set)", func() {
 			config := rsyslog.RsyslogRelpConfig{
-				Target:       relpTarget,
-				Port:         relpTargetPort,
-				LoggingRules: []rsyslog.LoggingRule{{}},
+				Target: relpTarget,
+				Port:   relpTargetPort,
+				LoggingRules: []rsyslog.LoggingRule{
+					{}, {ProgramNames: []string{"kubelet"}, Severity: ptr.To(4)},
+				},
 			}
 
 			matcher := ConsistOf(
