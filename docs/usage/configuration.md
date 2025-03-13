@@ -42,6 +42,10 @@ spec:
       loggingRules:
       - severity: 4
         programNames: ["kubelet", "audisp-syslog"]
+        # Set regexes to match and include or exclude messages with certain content
+        # messageContent:
+        #   regex: "foo"
+        #   exclude: "bar"
       - severity: 1
         programNames: ["audisp-syslog"]
       # Define an interval of 90 seconds at which the current connection is broken and re-established.
@@ -92,7 +96,7 @@ spec:
 
 ### Choosing Which Log Messages to Send to the Target Server
 
-The `.loggingRules` field defines rules about which logs should be sent to the target server. When a log is processed by rsyslog, it is compared against the list of rules in order. If the program name and the syslog severity of the log messages matches the rule, the message is forwarded to the target server. The following table describes the syslog severity and their corresponding codes:
+The `.loggingRules` field defines rules about which logs should be sent to the target server. When a log is processed by rsyslog, it is compared against the list of rules in order. If the program name and the syslog severity of the log messages matches the rule, the message is forwarded to the target server. If present, the `.messageContent` field can contain optional `.regex` to include and `.exclude` to exclude the matched messages. The following table describes the syslog severity and their corresponding codes:
 
 ```
 Numerical         Severity
@@ -108,7 +112,7 @@ Numerical         Severity
   7               Debug: debug-level messages
 ```
 
-Below is an example with a `.loggingRules` section that will only forward logs from the `kubelet` program with syslog severity of 6 or lower and any other program with syslog severity of 2 or lower:
+Below is an example with a `.loggingRules` section that will only forward logs from the `kubelet` program with syslog severity of 6 or lower that don't contain "bar" and any other program with syslog severity of 2 or lower:
 
 ```yaml
 apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
@@ -118,6 +122,8 @@ port: 1520
 loggingRules:
 - severity: 6
   programNames: ["kubelet"]
+  messageContent:
+    exclude: "bar"
 - severity: 2
 ```
 
