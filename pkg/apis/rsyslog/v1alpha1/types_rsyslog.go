@@ -75,7 +75,7 @@ type LoggingRule struct {
 	ProgramNames []string `json:"programNames,omitempty"`
 	// Severity determines which logs are sent to the target server based on their severity.
 	Severity *int `json:"severity,omitempty"`
-	// MessageContent contains fields for including and excluding messages
+	// MessageContent defines regular expressions for including and excluding logs based on their message content.
 	// +optional
 	MessageContent *MessageContent `json:"messageContent,omitempty"`
 }
@@ -111,12 +111,12 @@ const (
 	TLSLibGnuTLS = "gnutls"
 )
 
-// MessageContent contains fields for including and excluding messages
+// MessageContent defines regular expressions for including and excluding logs based on their message content.
 type MessageContent struct {
-	// Message that should be contained
+	// Regex is a regular expression to match the message content of logs that that should be sent to the target server.
 	// +optional
 	Regex *string `json:"regex,omitempty"`
-	// Message that shouldn't be contained
+	// Exclude is a regular expression to match the message content of logs that should not be sent to the target server.
 	// +optional
 	Exclude *string `json:"exclude,omitempty"`
 }

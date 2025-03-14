@@ -89,7 +89,7 @@ func validateLoggingRules(loggingRules []rsyslog.LoggingRule, fldPath *field.Pat
 	} else {
 		for index, rule := range loggingRules {
 			if len(rule.ProgramNames) == 0 && rule.Severity == nil && rule.MessageContent == nil {
-				allErrs = append(allErrs, field.Required(fldPath.Index(index), "at least one field of the logging rule is required"))
+				allErrs = append(allErrs, field.Required(fldPath.Index(index), "at least one of .programNames, .messageContent, or .severity is required"))
 			}
 		}
 	}

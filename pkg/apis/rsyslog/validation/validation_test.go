@@ -125,7 +125,7 @@ var _ = Describe("Validation", func() {
 					"Type":     Equal(field.ErrorTypeRequired),
 					"Field":    Equal("loggingRules[0]"),
 					"BadValue": Equal(""),
-					"Detail":   Equal("at least one field of the logging rule is required"),
+					"Detail":   Equal("at least one of .programNames, .messageContent, or .severity is required"),
 				})),
 			)
 
