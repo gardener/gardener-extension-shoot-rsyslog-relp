@@ -40,10 +40,15 @@ type Verifier struct {
 	expectedAuditRules string
 }
 
+// LogEntry is a struct used in the verification of logs, based on the logging rules
 type LogEntry struct {
-	Program           string
-	Severity          string
-	Message           string
+	// Program bane for entry
+	Program string
+	// Severity for entry
+	Severity string
+	// Message for entry
+	Message string
+	// Whether or not the log shoudld be forwarded to echo server
 	ShouldBeForwarded bool
 }
 
