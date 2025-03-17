@@ -307,7 +307,7 @@ MessageContent
 </td>
 <td>
 <em>(Optional)</em>
-<p>MessageContent contains fields for including and excluding messages</p>
+<p>MessageContent defines regular expressions for including and excluding logs based on their message content.</p>
 </td>
 </tr>
 </tbody>
@@ -319,7 +319,7 @@ MessageContent
 <a href="#rsyslog-relp.extensions.gardener.cloud/v1alpha1.LoggingRule">LoggingRule</a>)
 </p>
 <p>
-<p>MessageContent contains fields for including and excluding messages</p>
+<p>MessageContent defines regular expressions for including and excluding logs based on their message content.</p>
 </p>
 <table>
 <thead>
@@ -338,7 +338,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Message that should be contained</p>
+<p>Regex is a regular expression to match the message content of logs that that should be sent to the target server.</p>
 </td>
 </tr>
 <tr>
@@ -350,7 +350,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Message that shouldn&rsquo;t be contained</p>
+<p>Exclude is a regular expression to match the message content of logs that should not be sent to the target server.</p>
 </td>
 </tr>
 </tbody>
