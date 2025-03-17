@@ -15,13 +15,15 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog/v1alpha1"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/test/common"
 )
 
 var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
-	test := func(f *framework.ShootCreationFramework, shootMutateFn func(shoot *gardencorev1beta1.Shoot) error) {
+	test := func(f *framework.ShootCreationFramework, shootMutateFn func(shoot *gardencorev1beta1.Shoot) error, additionalLogEntries ...common.LogEntry) {
 		It("Create Shoot, enable shoot-rsyslog-relp extension then disable it and delete Shoot", Offset(1), func() {
 			ctx, cancel := context.WithTimeout(parentCtx, 20*time.Minute)
 			DeferCleanup(cancel)
@@ -53,7 +55,7 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 			verifier := common.NewVerifier(f.Logger, f.ShootFramework.ShootClient, f.ShootFramework.SeedClient, f.Shoot.Spec.Provider.Type, f.ShootFramework.Project.Name, f.Shoot.Name, string(f.Shoot.UID), false, "")
 
 			common.ForEachNode(ctx, f.ShootFramework.ShootClient, func(ctx context.Context, node *corev1.Node) {
-				verifier.VerifyExtensionForNode(ctx, node.Name)
+				verifier.VerifyExtensionForNode(ctx, node.Name, additionalLogEntries...)
 			})
 
 			By("Disable the shoot-rsyslog-relp extension")
@@ -121,5 +123,31 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 		})
 
 		test(f, enableExtensionFunc)
+	})
+
+	Context("shoot-rsyslog-relp extension with filtering messages by regexes", Label("messageContent-filtering"), func() {
+		f := defaultShootCreationFramework()
+		f.Shoot = e2e.DefaultShoot("e2e-rslog-relp")
+
+		additionalLogEntries := []common.LogEntry{
+			{Program: "filter-program", Severity: "3", Message: "this included log should get sent to echo server", ShouldBeForwarded: true},
+			{Program: "filter-program", Severity: "3", Message: "this excluded log should not get sent to echo server", ShouldBeForwarded: false},
+		}
+		enableExtensionFunc := func(shoot *gardencorev1beta1.Shoot) error {
+			common.AddOrUpdateRsyslogRelpExtension(shoot)
+			loggingRule := v1alpha1.LoggingRule{
+				ProgramNames: []string{"filter-program"},
+				Severity:     ptr.To(3),
+				MessageContent: &v1alpha1.MessageContent{
+					Regex:   ptr.To("included"),
+					Exclude: ptr.To("excluded"),
+				},
+			}
+
+			common.AddOrUpdateRsyslogRelpExtension(shoot, common.AppendLoggingRule(loggingRule))
+			return nil
+		}
+
+		test(f, enableExtensionFunc, additionalLogEntries...)
 	})
 })
