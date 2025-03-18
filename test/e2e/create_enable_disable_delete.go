@@ -127,7 +127,7 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 
 	Context("shoot-rsyslog-relp extension with filtering messages by regexes", Label("messageContent-filtering"), func() {
 		f := defaultShootCreationFramework()
-		f.Shoot = e2e.DefaultShoot("e2e-rslog-relp")
+		f.Shoot = e2e.DefaultShoot("e2e-rslog-filter")
 
 		additionalLogEntries := []common.LogEntry{
 			{Program: "filter-program", Severity: "3", Message: "this included log should get sent to echo server", ShouldBeForwarded: true},
