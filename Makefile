@@ -17,7 +17,7 @@ EFFECTIVE_VERSION           := $(VERSION)-$(shell git rev-parse HEAD)
 ECHO_SERVER_VERSION         := v0.2.0
 IMAGE_TAG                   := $(EFFECTIVE_VERSION)
 LD_FLAGS                    := "-w $(shell EFFECTIVE_VERSION=$(EFFECTIVE_VERSION) bash $(GARDENER_HACK_DIR)/get-build-ld-flags.sh k8s.io/component-base $(REPO_ROOT)/VERSION $(EXTENSION_PREFIX)-$(NAME))"
-PARALLEL_E2E_TESTS          := 2
+PARALLEL_E2E_TESTS          := 3
 GARDENER_REPO_ROOT          ?= $(REPO_ROOT)/../gardener
 SEED_NAME                   := provider-extensions
 SEED_KUBECONFIG             := $(GARDENER_REPO_ROOT)/example/provider-extensions/seed/kubeconfig
