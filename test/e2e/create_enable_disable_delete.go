@@ -84,7 +84,7 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 		f.Shoot = e2e.DefaultShoot("e2e-rslog-relp")
 
 		enableExtensionFunc := func(shoot *gardencorev1beta1.Shoot) error {
-			common.AddOrUpdateRsyslogRelpExtension(shoot)
+			common.AddOrUpdateRsyslogRelpExtension(shoot, common.WithAuditConfig(&v1alpha1.AuditConfig{Enabled: false}))
 			return nil
 		}
 
@@ -97,7 +97,7 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 		f.Shoot = e2e.DefaultShoot("e2e-rslog-tls")
 
 		enableExtensionFunc := func(shoot *gardencorev1beta1.Shoot) error {
-			common.AddOrUpdateRsyslogRelpExtension(shoot, common.WithPort(443), common.WithTLSWithSecretRefNameAndTLSLib("rsyslog-relp-tls", "openssl"))
+			common.AddOrUpdateRsyslogRelpExtension(shoot, common.WithPort(443), common.WithTLSWithSecretRefNameAndTLSLib("rsyslog-relp-tls", "openssl"), common.WithAuditConfig(&v1alpha1.AuditConfig{Enabled: false}))
 			common.AddOrUpdateResourceReference(shoot, "rsyslog-relp-tls", "Secret", createdResources[0].GetName())
 			return nil
 		}
@@ -134,7 +134,6 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 			{Program: "filter-program", Severity: "3", Message: "this excluded log should not get sent to echo server", ShouldBeForwarded: false},
 		}
 		enableExtensionFunc := func(shoot *gardencorev1beta1.Shoot) error {
-			common.AddOrUpdateRsyslogRelpExtension(shoot)
 			loggingRule := v1alpha1.LoggingRule{
 				ProgramNames: []string{"filter-program"},
 				Severity:     ptr.To(3),
@@ -144,7 +143,7 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 				},
 			}
 
-			common.AddOrUpdateRsyslogRelpExtension(shoot, common.AppendLoggingRule(loggingRule))
+			common.AddOrUpdateRsyslogRelpExtension(shoot, common.AppendLoggingRule(loggingRule), common.WithAuditConfig(&v1alpha1.AuditConfig{Enabled: false}))
 			return nil
 		}
 

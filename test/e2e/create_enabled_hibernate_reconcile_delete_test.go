@@ -13,13 +13,14 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 
+	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog/v1alpha1"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/test/common"
 )
 
 var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 	f := defaultShootCreationFramework()
 	f.Shoot = e2e.DefaultShoot("e2e-rslog-hib")
-	common.AddOrUpdateRsyslogRelpExtension(f.Shoot)
+	common.AddOrUpdateRsyslogRelpExtension(f.Shoot, common.WithAuditConfig(&v1alpha1.AuditConfig{Enabled: false}))
 
 	It("Create Shoot with shoot-rsyslog-relp extension enabled, hibernate Shoot, reconcile Shoot, wake up Shoot, delete Shoot", Label("hibernation"), func() {
 		By("Create Shoot")
