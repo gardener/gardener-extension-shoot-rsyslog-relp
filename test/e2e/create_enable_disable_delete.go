@@ -17,6 +17,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog/v1alpha1"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/test/common"
 )
 
@@ -82,7 +83,7 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 		f.Shoot = e2e.DefaultShoot("e2e-rslog-relp")
 
 		enableExtensionFunc := func(shoot *gardencorev1beta1.Shoot) error {
-			common.AddOrUpdateRsyslogRelpExtension(shoot)
+			common.AddOrUpdateRsyslogRelpExtension(shoot, common.WithAuditConfig(&v1alpha1.AuditConfig{Enabled: false}))
 			return nil
 		}
 
@@ -95,7 +96,7 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 		f.Shoot = e2e.DefaultShoot("e2e-rslog-tls")
 
 		enableExtensionFunc := func(shoot *gardencorev1beta1.Shoot) error {
-			common.AddOrUpdateRsyslogRelpExtension(shoot, common.WithPort(443), common.WithTLSWithSecretRefNameAndTLSLib("rsyslog-relp-tls", "openssl"))
+			common.AddOrUpdateRsyslogRelpExtension(shoot, common.WithPort(443), common.WithTLSWithSecretRefNameAndTLSLib("rsyslog-relp-tls", "openssl"), common.WithAuditConfig(&v1alpha1.AuditConfig{Enabled: false}))
 			common.AddOrUpdateResourceReference(shoot, "rsyslog-relp-tls", "Secret", createdResources[0].GetName())
 			return nil
 		}
