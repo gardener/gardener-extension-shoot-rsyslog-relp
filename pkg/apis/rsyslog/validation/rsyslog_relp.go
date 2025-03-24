@@ -5,6 +5,8 @@
 package validation
 
 import (
+	"regexp"
+
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
@@ -90,6 +92,21 @@ func validateLoggingRules(loggingRules []rsyslog.LoggingRule, fldPath *field.Pat
 		for index, rule := range loggingRules {
 			if len(rule.ProgramNames) == 0 && rule.Severity == nil && rule.MessageContent == nil {
 				allErrs = append(allErrs, field.Required(fldPath.Index(index), "at least one of .programNames, .messageContent, or .severity is required"))
+			}
+			if rule.MessageContent != nil {
+				if rule.MessageContent.Regex == nil && rule.MessageContent.Exclude == nil {
+					allErrs = append(allErrs, field.Required(fldPath.Index(index).Child("messageContent"), "at least one of .Regex and .Exclude is required"))
+				}
+				if regex := rule.MessageContent.Regex; regex != nil {
+					if _, err := regexp.CompilePOSIX(*regex); err != nil {
+						allErrs = append(allErrs, field.Required(fldPath.Index(index).Child("messageContent").Child("regex"), ".Regex can't be compiled"))
+					}
+				}
+				if exclude := rule.MessageContent.Exclude; exclude != nil {
+					if _, err := regexp.CompilePOSIX(*exclude); err != nil {
+						allErrs = append(allErrs, field.Required(fldPath.Index(index).Child("messageContent").Child("exclude"), ".Exclude can't be compiled"))
+					}
+				}
 			}
 		}
 	}

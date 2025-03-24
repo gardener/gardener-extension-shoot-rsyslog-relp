@@ -99,7 +99,7 @@ const (
 
 // MessageContent defines regular expressions for including and excluding logs based on their message content.
 type MessageContent struct {
-	// Regex is a regular expression to match the message content of logs that that should be sent to the target server.
+	// Regex is a regular expression to match the message content of logs that should be sent to the target server.
 	Regex *string
 	// Exclude is a regular expression to match the message content of logs that should not be sent to the target server.
 	Exclude *string

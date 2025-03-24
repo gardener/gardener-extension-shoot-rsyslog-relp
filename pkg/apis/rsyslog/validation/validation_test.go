@@ -133,6 +133,58 @@ var _ = Describe("Validation", func() {
 			Expect(errorList).To(matcher)
 		})
 
+		It("should not allow a logging rule with a set MessageContent to be empty", func() {
+			config := rsyslog.RsyslogRelpConfig{
+				Target: relpTarget,
+				Port:   relpTargetPort,
+				LoggingRules: []rsyslog.LoggingRule{
+					{ProgramNames: []string{"kubelet"}, Severity: ptr.To(4)},
+					{MessageContent: &rsyslog.MessageContent{}},
+				},
+			}
+
+			matcher := ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeRequired),
+					"Field":    Equal("loggingRules[1].messageContent"),
+					"BadValue": Equal(""),
+					"Detail":   Equal("at least one of .Regex and .Exclude is required"),
+				})),
+			)
+
+			errorList := validation.ValidateRsyslogRelpConfig(&config, path)
+			Expect(errorList).To(matcher)
+		})
+
+		It("should not allow a logging rule with a set MessageContent to have invalid regular expressions", func() {
+			config := rsyslog.RsyslogRelpConfig{
+				Target: relpTarget,
+				Port:   relpTargetPort,
+				LoggingRules: []rsyslog.LoggingRule{
+					{MessageContent: &rsyslog.MessageContent{Regex: ptr.To("(match")}},
+					{MessageContent: &rsyslog.MessageContent{Exclude: ptr.To("(match")}},
+				},
+			}
+
+			matcher := ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeRequired),
+					"Field":    Equal("loggingRules[0].messageContent.regex"),
+					"BadValue": Equal(""),
+					"Detail":   Equal(".Regex can't be compiled"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeRequired),
+					"Field":    Equal("loggingRules[1].messageContent.exclude"),
+					"BadValue": Equal(""),
+					"Detail":   Equal(".Exclude can't be compiled"),
+				})),
+			)
+
+			errorList := validation.ValidateRsyslogRelpConfig(&config, path)
+			Expect(errorList).To(matcher)
+		})
+
 		Context("Configuration", func() {
 			DescribeTable("General Configuration",
 				func(config rsyslog.RsyslogRelpConfig, matcher gomegatypes.GomegaMatcher) {

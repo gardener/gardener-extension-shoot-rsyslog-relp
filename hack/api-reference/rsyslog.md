@@ -338,7 +338,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Regex is a regular expression to match the message content of logs that that should be sent to the target server.</p>
+<p>Regex is a regular expression to match the message content of logs that should be sent to the target server.</p>
 </td>
 </tr>
 <tr>

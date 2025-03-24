@@ -42,13 +42,13 @@ type Verifier struct {
 
 // LogEntry is a struct used in the verification of logs, based on the logging rules
 type LogEntry struct {
-	// Program bane for entry
+	// Program name for entry.
 	Program string
-	// Severity for entry
+	// Severity for entry.
 	Severity string
-	// Message for entry
+	// Message for entry.
 	Message string
-	// Whether or not the log shoudld be forwarded to echo server
+	// ShouldBeForwarded determines whether or not the log should be forwarded to echo server.
 	ShouldBeForwarded bool
 }
 
