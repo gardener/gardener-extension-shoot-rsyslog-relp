@@ -148,7 +148,7 @@ var _ = Describe("Validation", func() {
 					"Type":     Equal(field.ErrorTypeRequired),
 					"Field":    Equal("loggingRules[1].messageContent"),
 					"BadValue": Equal(""),
-					"Detail":   Equal("at least one of .Regex and .Exclude is required"),
+					"Detail":   Equal("either .regex or .exclude has to be provided"),
 				})),
 			)
 
@@ -171,13 +171,13 @@ var _ = Describe("Validation", func() {
 					"Type":     Equal(field.ErrorTypeRequired),
 					"Field":    Equal("loggingRules[0].messageContent.regex"),
 					"BadValue": Equal(""),
-					"Detail":   Equal(".Regex can't be compiled"),
+					"Detail":   Equal("not a valid POSIX ERE regular expression: error parsing regexp: missing closing ): `(match`"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeRequired),
 					"Field":    Equal("loggingRules[1].messageContent.exclude"),
 					"BadValue": Equal(""),
-					"Detail":   Equal(".Exclude can't be compiled"),
+					"Detail":   Equal("not a valid POSIX ERE regular expression: error parsing regexp: missing closing ): `(match`"),
 				})),
 			)
 

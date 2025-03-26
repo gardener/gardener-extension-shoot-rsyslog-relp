@@ -1,0 +1,9 @@
+apiVersion: core.gardener.cloud/v1
+kind: ControllerDeployment
+metadata:
+  name: extension-shoot-rsyslog-relp
+helm:
+  values:
+    image:
+      repository: garden.local.gardener.cloud:5001/local-skaffold_gardener-extension-shoot-rsyslog-relp
+      tag: v0.8.0-dev-66c13d01ad1f224a945d39bb3045afdf09d4245731c63b427d95c0474ca7e28d

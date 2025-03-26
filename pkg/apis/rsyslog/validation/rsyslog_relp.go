@@ -5,6 +5,7 @@
 package validation
 
 import (
+	"fmt"
 	"regexp"
 
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -95,16 +96,16 @@ func validateLoggingRules(loggingRules []rsyslog.LoggingRule, fldPath *field.Pat
 			}
 			if rule.MessageContent != nil {
 				if rule.MessageContent.Regex == nil && rule.MessageContent.Exclude == nil {
-					allErrs = append(allErrs, field.Required(fldPath.Index(index).Child("messageContent"), "at least one of .Regex and .Exclude is required"))
+					allErrs = append(allErrs, field.Required(fldPath.Index(index).Child("messageContent"), "either .regex or .exclude has to be provided"))
 				}
 				if regex := rule.MessageContent.Regex; regex != nil {
 					if _, err := regexp.CompilePOSIX(*regex); err != nil {
-						allErrs = append(allErrs, field.Required(fldPath.Index(index).Child("messageContent").Child("regex"), ".Regex can't be compiled"))
+						allErrs = append(allErrs, field.Required(fldPath.Index(index).Child("messageContent").Child("regex"), fmt.Sprintf("not a valid POSIX ERE regular expression: %v", err)))
 					}
 				}
 				if exclude := rule.MessageContent.Exclude; exclude != nil {
 					if _, err := regexp.CompilePOSIX(*exclude); err != nil {
-						allErrs = append(allErrs, field.Required(fldPath.Index(index).Child("messageContent").Child("exclude"), ".Exclude can't be compiled"))
+						allErrs = append(allErrs, field.Required(fldPath.Index(index).Child("messageContent").Child("exclude"), fmt.Sprintf("not a valid POSIX ERE regular expression: %v", err)))
 					}
 				}
 			}
