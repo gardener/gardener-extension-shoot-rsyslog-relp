@@ -292,10 +292,12 @@ func computeLogFilters(loggingRules []rsyslog.LoggingRule) []string {
 		}
 		if rule.MessageContent != nil {
 			if include := rule.MessageContent.Regex; include != nil {
-				currentFilters = append(currentFilters, fmt.Sprintf("re_match($msg,'%s') == 1", *include))
+				quotedRegex := strconv.Quote(*include)
+				currentFilters = append(currentFilters, fmt.Sprintf("re_match($msg, %s) == 1", quotedRegex))
 			}
 			if exclude := rule.MessageContent.Exclude; exclude != nil {
-				currentFilters = append(currentFilters, fmt.Sprintf("re_match($msg,'%s') == 0", *exclude))
+				quotedRegex := strconv.Quote(*exclude)
+				currentFilters = append(currentFilters, fmt.Sprintf("re_match($msg, %s) == 0", quotedRegex))
 			}
 		}
 		filters = append(filters, strings.Join(currentFilters, " and "))

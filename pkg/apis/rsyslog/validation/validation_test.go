@@ -171,13 +171,13 @@ var _ = Describe("Validation", func() {
 					"Type":     Equal(field.ErrorTypeRequired),
 					"Field":    Equal("loggingRules[0].messageContent.regex"),
 					"BadValue": Equal(""),
-					"Detail":   Equal("not a valid POSIX ERE regular expression: error parsing regexp: missing closing ): `(match`"),
+					"Detail":   Equal("not a valid POSIX ERE regular expression: error parsing regexp: missing closing ): `\"(match\"`"),
 				})),
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":     Equal(field.ErrorTypeRequired),
 					"Field":    Equal("loggingRules[1].messageContent.exclude"),
 					"BadValue": Equal(""),
-					"Detail":   Equal("not a valid POSIX ERE regular expression: error parsing regexp: missing closing ): `(match`"),
+					"Detail":   Equal("not a valid POSIX ERE regular expression: error parsing regexp: missing closing ): `\"(match\"`"),
 				})),
 			)
 

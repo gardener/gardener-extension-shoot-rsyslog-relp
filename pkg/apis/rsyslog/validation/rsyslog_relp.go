@@ -7,6 +7,7 @@ package validation
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -98,19 +99,25 @@ func validateLoggingRules(loggingRules []rsyslog.LoggingRule, fldPath *field.Pat
 				if rule.MessageContent.Regex == nil && rule.MessageContent.Exclude == nil {
 					allErrs = append(allErrs, field.Required(fldPath.Index(index).Child("messageContent"), "either .regex or .exclude has to be provided"))
 				}
-				if regex := rule.MessageContent.Regex; regex != nil {
-					if _, err := regexp.CompilePOSIX(*regex); err != nil {
-						allErrs = append(allErrs, field.Required(fldPath.Index(index).Child("messageContent").Child("regex"), fmt.Sprintf("not a valid POSIX ERE regular expression: %v", err)))
-					}
+				if err := validateRegex(rule.MessageContent.Regex); err != nil {
+					allErrs = append(allErrs, field.Required(fldPath.Index(index).Child("messageContent").Child("regex"), fmt.Sprintf("not a valid POSIX ERE regular expression: %v", err)))
 				}
-				if exclude := rule.MessageContent.Exclude; exclude != nil {
-					if _, err := regexp.CompilePOSIX(*exclude); err != nil {
-						allErrs = append(allErrs, field.Required(fldPath.Index(index).Child("messageContent").Child("exclude"), fmt.Sprintf("not a valid POSIX ERE regular expression: %v", err)))
-					}
+				if err := validateRegex(rule.MessageContent.Exclude); err != nil {
+					allErrs = append(allErrs, field.Required(fldPath.Index(index).Child("messageContent").Child("exclude"), fmt.Sprintf("not a valid POSIX ERE regular expression: %v", err)))
 				}
 			}
 		}
 	}
 
 	return allErrs
+}
+
+func validateRegex(regex *string) error {
+	if regex != nil {
+		quotedRegex := strconv.Quote(*regex)
+		_, err := regexp.CompilePOSIX(quotedRegex)
+		return err
+	}
+
+	return nil
 }

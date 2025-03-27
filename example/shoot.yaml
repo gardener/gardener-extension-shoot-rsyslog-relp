@@ -23,7 +23,7 @@ spec:
       # only forward logs from systemd that are at Info(6) syslog severity or below to the target server
       - severity: 6
         programNames: ["systemd"]
-        # Set regexes to match and include or exclude messages with certain content
+        # set regexes to match and include or exclude messages with certain content
         # messageContent:
         #   regex: "foo"
         #   exclude: "bar"
