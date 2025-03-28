@@ -37,7 +37,7 @@ var _ = Describe("Validation", func() {
 			loggingRules = []rsyslog.LoggingRule{
 				{
 					ProgramNames: []string{"kubelet"},
-					Severity:     0,
+					Severity:     ptr.To(0),
 				},
 			}
 		)
@@ -104,6 +104,80 @@ var _ = Describe("Validation", func() {
 					"Field":    Equal("loggingRules"),
 					"BadValue": Equal(""),
 					"Detail":   Equal("at least one logging rule is required"),
+				})),
+			)
+
+			errorList := validation.ValidateRsyslogRelpConfig(&config, path)
+			Expect(errorList).To(matcher)
+		})
+
+		It("should not allow a logging rule to be empty (no fields set)", func() {
+			config := rsyslog.RsyslogRelpConfig{
+				Target: relpTarget,
+				Port:   relpTargetPort,
+				LoggingRules: []rsyslog.LoggingRule{
+					{}, {ProgramNames: []string{"kubelet"}, Severity: ptr.To(4)},
+				},
+			}
+
+			matcher := ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeRequired),
+					"Field":    Equal("loggingRules[0]"),
+					"BadValue": Equal(""),
+					"Detail":   Equal("at least one of .programNames, .messageContent, or .severity is required"),
+				})),
+			)
+
+			errorList := validation.ValidateRsyslogRelpConfig(&config, path)
+			Expect(errorList).To(matcher)
+		})
+
+		It("should not allow a logging rule with a set MessageContent to be empty", func() {
+			config := rsyslog.RsyslogRelpConfig{
+				Target: relpTarget,
+				Port:   relpTargetPort,
+				LoggingRules: []rsyslog.LoggingRule{
+					{ProgramNames: []string{"kubelet"}, Severity: ptr.To(4)},
+					{MessageContent: &rsyslog.MessageContent{}},
+				},
+			}
+
+			matcher := ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeRequired),
+					"Field":    Equal("loggingRules[1].messageContent"),
+					"BadValue": Equal(""),
+					"Detail":   Equal("either .regex or .exclude has to be provided"),
+				})),
+			)
+
+			errorList := validation.ValidateRsyslogRelpConfig(&config, path)
+			Expect(errorList).To(matcher)
+		})
+
+		It("should not allow a logging rule with a set MessageContent to have invalid regular expressions", func() {
+			config := rsyslog.RsyslogRelpConfig{
+				Target: relpTarget,
+				Port:   relpTargetPort,
+				LoggingRules: []rsyslog.LoggingRule{
+					{MessageContent: &rsyslog.MessageContent{Regex: ptr.To("(match")}},
+					{MessageContent: &rsyslog.MessageContent{Exclude: ptr.To("(match")}},
+				},
+			}
+
+			matcher := ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeRequired),
+					"Field":    Equal("loggingRules[0].messageContent.regex"),
+					"BadValue": Equal(""),
+					"Detail":   Equal("not a valid POSIX ERE regular expression: error parsing regexp: missing closing ): `\"(match\"`"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeRequired),
+					"Field":    Equal("loggingRules[1].messageContent.exclude"),
+					"BadValue": Equal(""),
+					"Detail":   Equal("not a valid POSIX ERE regular expression: error parsing regexp: missing closing ): `\"(match\"`"),
 				})),
 			)
 

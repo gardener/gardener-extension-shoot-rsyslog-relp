@@ -40,11 +40,16 @@ type Verifier struct {
 	expectedAuditRules string
 }
 
-type logEntry struct {
-	program           string
-	severity          string
-	message           string
-	shouldBeForwarded bool
+// LogEntry is a struct used in the verification of logs, based on the logging rules
+type LogEntry struct {
+	// Program name for entry.
+	Program string
+	// Severity for entry.
+	Severity string
+	// Message for entry.
+	Message string
+	// ShouldBeForwarded determines whether or not the log should be forwarded to echo server.
+	ShouldBeForwarded bool
 }
 
 // NewVerifier creates a new Verifier.
@@ -68,7 +73,7 @@ func NewVerifier(log logr.Logger,
 
 // VerifyExtensionForNode verifies whether the shoot-rsyslog-relp extension has properly configured
 // the rsyslog service running on the given node.
-func (v *Verifier) VerifyExtensionForNode(ctx context.Context, nodeName string) {
+func (v *Verifier) VerifyExtensionForNode(ctx context.Context, nodeName string, logEntries ...LogEntry) {
 	v.setPodExecutor(framework.NewRootPodExecutor(v.log, v.client, &nodeName, "kube-system"))
 	defer v.cleanPodExecutor(ctx)
 
@@ -81,12 +86,13 @@ func (v *Verifier) VerifyExtensionForNode(ctx context.Context, nodeName string) 
 		v.verifyThatAuditRulesAreInstalled(ctx)
 	}
 
-	v.verifyLogsAreForwardedToEchoServer(
-		ctx,
-		logEntry{program: "test-program", severity: "1", message: "this should get sent to echo server", shouldBeForwarded: true},
-		logEntry{program: "test-program", severity: "3", message: "this should not get sent to echo server", shouldBeForwarded: false},
-		logEntry{program: "other-program", severity: "1", message: "this should not get sent to echo server", shouldBeForwarded: false},
+	logEntries = append(logEntries,
+		LogEntry{Program: "test-program", Severity: "1", Message: "this should get sent to echo server", ShouldBeForwarded: true},
+		LogEntry{Program: "test-program", Severity: "3", Message: "this should not get sent to echo server", ShouldBeForwarded: false},
+		LogEntry{Program: "other-program", Severity: "1", Message: "this should not get sent to echo server", ShouldBeForwarded: false},
 	)
+
+	v.verifyLogsAreForwardedToEchoServer(ctx, logEntries...)
 }
 
 // VerifyExtensionDisabledForNode verifies whether the configuration done by the shoot-rsyslog-relp extension
@@ -99,7 +105,7 @@ func (v *Verifier) VerifyExtensionDisabledForNode(ctx context.Context, nodeName 
 	defer v.setNodeName("")
 
 	v.verifyThatLogsAreNotForwardedToEchoServer(ctx,
-		logEntry{program: "test-program", severity: "1", message: "this should not get sent to echo server"},
+		LogEntry{Program: "test-program", Severity: "1", Message: "this should not get sent to echo server"},
 	)
 }
 
@@ -117,7 +123,7 @@ func (v *Verifier) verifyThatRsyslogIsActiveAndConfigured(ctx context.Context) {
 	}).WithTimeout(1 * time.Minute).WithPolling(10 * time.Second).WithContext(ctx).Should(Succeed())
 }
 
-func (v *Verifier) verifyLogsAreForwardedToEchoServer(ctx context.Context, logEntries ...logEntry) {
+func (v *Verifier) verifyLogsAreForwardedToEchoServer(ctx context.Context, logEntries ...LogEntry) {
 	timeBeforeLogGeneration := metav1.Now()
 	EventuallyWithOffset(2, func() error {
 		return v.generateLogs(ctx, logEntries)
@@ -153,7 +159,7 @@ func (v *Verifier) verifyLogsAreForwardedToEchoServer(ctx context.Context, logEn
 	}
 }
 
-func (v *Verifier) verifyThatLogsAreNotForwardedToEchoServer(ctx context.Context, logEntries ...logEntry) {
+func (v *Verifier) verifyThatLogsAreNotForwardedToEchoServer(ctx context.Context, logEntries ...LogEntry) {
 	timeBeforeLogGeneration := metav1.Now()
 	EventuallyWithOffset(2, func() error {
 		return v.generateLogs(ctx, logEntries)
@@ -169,7 +175,7 @@ func (v *Verifier) verifyThatLogsAreNotForwardedToEchoServer(ctx context.Context
 
 	notForwardedLogs := make([]types.GomegaMatcher, 0, len(logEntries))
 	for _, log := range logEntries {
-		notForwardedLogs = append(notForwardedLogs, ContainSubstring(log.message))
+		notForwardedLogs = append(notForwardedLogs, ContainSubstring(log.Message))
 	}
 
 	By("Verify that there are no logs")
@@ -192,10 +198,10 @@ func (v *Verifier) setNodeName(nodeName string) {
 	v.nodeName = nodeName
 }
 
-func (v *Verifier) generateLogs(ctx context.Context, logEntries []logEntry) error {
+func (v *Verifier) generateLogs(ctx context.Context, logEntries []LogEntry) error {
 	command := ""
 	for _, logEntry := range logEntries {
-		command += "echo " + logEntry.message + " | systemd-cat -t " + logEntry.program + " -p " + logEntry.severity + "; "
+		command += "echo " + logEntry.Message + " | systemd-cat -t " + logEntry.Program + " -p " + logEntry.Severity + "; "
 	}
 	if v.testAuditLogging {
 		// Create a file under /etc directory so that an audit event is generated.
@@ -227,7 +233,7 @@ func (v *Verifier) getLogs(ctx context.Context, timeBeforeLogGeneration metav1.T
 	return logLines, nil
 }
 
-func (v *Verifier) constructLogMatchers(logEntries []logEntry) ([]interface{}, []interface{}) {
+func (v *Verifier) constructLogMatchers(logEntries []LogEntry) ([]interface{}, []interface{}) {
 	var (
 		expectedNodeHostName    string
 		forwardedLogMatchers    []interface{}
@@ -250,8 +256,8 @@ func (v *Verifier) constructLogMatchers(logEntries []logEntry) ([]interface{}, [
 	}
 
 	for _, logEntry := range logEntries {
-		matchRegexp := MatchRegexp(fmt.Sprintf(`%s %s %s %s \d+ %s\[\d+\]: .* %s`, v.projectName, v.shootName, v.shootUID, expectedNodeHostName, logEntry.program, logEntry.message))
-		if logEntry.shouldBeForwarded {
+		matchRegexp := MatchRegexp(fmt.Sprintf(`%s %s %s %s \d+ %s\[\d+\]: .* %s`, v.projectName, v.shootName, v.shootUID, expectedNodeHostName, logEntry.Program, logEntry.Message))
+		if logEntry.ShouldBeForwarded {
 			forwardedLogMatchers = append(forwardedLogMatchers, matchRegexp)
 		} else {
 			notForwardedLogMatchers = append(notForwardedLogMatchers, matchRegexp)

@@ -62,7 +62,9 @@ type LoggingRule struct {
 	// ProgramNames are the names of the programs for which logs are sent to the target server.
 	ProgramNames []string
 	// Severity determines which logs are sent to the target server based on their severity.
-	Severity int
+	Severity *int
+	// MessageContent defines regular expressions for including and excluding logs based on their message content.
+	MessageContent *MessageContent
 }
 
 // AuditConfig contains options to configure the audit system.
@@ -94,3 +96,11 @@ const (
 	// TLSLibGnuTLS specifies the gnutls tls library.
 	TLSLibGnuTLS = "gnutls"
 )
+
+// MessageContent defines regular expressions for including and excluding logs based on their message content.
+type MessageContent struct {
+	// Regex is a regular expression to match the message content of logs that should be sent to the target server.
+	Regex *string
+	// Exclude is a regular expression to match the message content of logs that should not be sent to the target server.
+	Exclude *string
+}

@@ -5,6 +5,10 @@
 package validation
 
 import (
+	"fmt"
+	"regexp"
+	"strconv"
+
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
@@ -86,7 +90,34 @@ func validateLoggingRules(loggingRules []rsyslog.LoggingRule, fldPath *field.Pat
 	allErrs := field.ErrorList{}
 	if len(loggingRules) == 0 {
 		allErrs = append(allErrs, field.Required(fldPath, "at least one logging rule is required"))
+	} else {
+		for index, rule := range loggingRules {
+			if len(rule.ProgramNames) == 0 && rule.Severity == nil && rule.MessageContent == nil {
+				allErrs = append(allErrs, field.Required(fldPath.Index(index), "at least one of .programNames, .messageContent, or .severity is required"))
+			}
+			if rule.MessageContent != nil {
+				if rule.MessageContent.Regex == nil && rule.MessageContent.Exclude == nil {
+					allErrs = append(allErrs, field.Required(fldPath.Index(index).Child("messageContent"), "either .regex or .exclude has to be provided"))
+				}
+				if err := validateRegex(rule.MessageContent.Regex); err != nil {
+					allErrs = append(allErrs, field.Required(fldPath.Index(index).Child("messageContent").Child("regex"), fmt.Sprintf("not a valid POSIX ERE regular expression: %v", err)))
+				}
+				if err := validateRegex(rule.MessageContent.Exclude); err != nil {
+					allErrs = append(allErrs, field.Required(fldPath.Index(index).Child("messageContent").Child("exclude"), fmt.Sprintf("not a valid POSIX ERE regular expression: %v", err)))
+				}
+			}
+		}
 	}
 
 	return allErrs
+}
+
+func validateRegex(regex *string) error {
+	if regex != nil {
+		quotedRegex := strconv.Quote(*regex)
+		_, err := regexp.CompilePOSIX(quotedRegex)
+		return err
+	}
+
+	return nil
 }

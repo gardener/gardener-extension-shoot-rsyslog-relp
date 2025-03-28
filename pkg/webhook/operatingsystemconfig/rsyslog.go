@@ -280,15 +280,27 @@ func computeLogFilters(loggingRules []rsyslog.LoggingRule) []string {
 	var filters []string
 	for _, rule := range loggingRules {
 		var programNames []string
+		var currentFilters []string
 		for _, programName := range rule.ProgramNames {
 			programNames = append(programNames, strconv.Quote(programName))
 		}
 		if len(programNames) > 0 {
-			filters = append(filters, fmt.Sprintf("$programname == [%s] and $syslogseverity <= %d", strings.Join(programNames, ","), rule.Severity))
-		} else {
-			filters = append(filters, fmt.Sprintf("$syslogseverity <= %d", rule.Severity))
+			currentFilters = append(currentFilters, fmt.Sprintf("$programname == [%s]", strings.Join(programNames, ",")))
 		}
+		if rule.Severity != nil {
+			currentFilters = append(currentFilters, fmt.Sprintf("$syslogseverity <= %d", *rule.Severity))
+		}
+		if rule.MessageContent != nil {
+			if include := rule.MessageContent.Regex; include != nil {
+				quotedRegex := strconv.Quote(*include)
+				currentFilters = append(currentFilters, fmt.Sprintf("re_match($msg, %s) == 1", quotedRegex))
+			}
+			if exclude := rule.MessageContent.Exclude; exclude != nil {
+				quotedRegex := strconv.Quote(*exclude)
+				currentFilters = append(currentFilters, fmt.Sprintf("re_match($msg, %s) == 0", quotedRegex))
+			}
+		}
+		filters = append(filters, strings.Join(currentFilters, " and "))
 	}
-
 	return filters
 }

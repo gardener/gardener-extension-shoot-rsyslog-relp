@@ -13,6 +13,7 @@ import (
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/ptr"
 
 	rsyslogv1alpha1 "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog/v1alpha1"
 )
@@ -29,7 +30,7 @@ func AddOrUpdateRsyslogRelpExtension(shoot *gardencorev1beta1.Shoot, opts ...fun
 		LoggingRules: []rsyslogv1alpha1.LoggingRule{
 			{
 				ProgramNames: []string{"test-program"},
-				Severity:     1,
+				Severity:     ptr.To(1),
 			},
 		},
 	}

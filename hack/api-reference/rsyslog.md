@@ -296,6 +296,63 @@ int
 <p>Severity determines which logs are sent to the target server based on their severity.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>messageContent</code></br>
+<em>
+<a href="#rsyslog-relp.extensions.gardener.cloud/v1alpha1.MessageContent">
+MessageContent
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MessageContent defines regular expressions for including and excluding logs based on their message content.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="rsyslog-relp.extensions.gardener.cloud/v1alpha1.MessageContent">MessageContent
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#rsyslog-relp.extensions.gardener.cloud/v1alpha1.LoggingRule">LoggingRule</a>)
+</p>
+<p>
+<p>MessageContent defines regular expressions for including and excluding logs based on their message content.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>regex</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Regex is a regular expression to match the message content of logs that should be sent to the target server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>exclude</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Exclude is a regular expression to match the message content of logs that should not be sent to the target server.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="rsyslog-relp.extensions.gardener.cloud/v1alpha1.TLS">TLS
