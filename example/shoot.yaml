@@ -19,6 +19,10 @@ spec:
       target: 10.2.64.54
       port: 80
     # port: 443 # Use this port if you plan on enabling tls.
+      auditConfig:
+      # explicitly disable configuration of audit rules for local setup because the audit system does not work in the local shoot's machine
+        enabled: false
+      # configMapReferenceName: audit-config
       loggingRules:
       # only forward logs from systemd that are at Info(6) syslog severity or below to the target server
       - severity: 6
@@ -28,8 +32,6 @@ spec:
         #   regex: "foo"
         #   exclude: "bar"
       # only forward logs from download-cloud-config.sh that are at Debug(7) syslog severity or below to the target server
-      - severity: 7
-        programNames: ["download-cloud-config.sh"]
       resumeRetryCount: -1 # never discard logs if the target server is not available
     # timeout: 90
     # rebindInterval: 1000
@@ -41,9 +43,6 @@ spec:
     #   tlsLib: openssl # {openssl, gnutls}
     #   permittedPeer:
     #   - "rsyslog-server"
-    # auditConfig:
-    #   enabled: true
-    #   configMapReferenceName: audit-config
 # resources:
 # - name: rsyslog-tls-certificates
 #   resourceRef:
