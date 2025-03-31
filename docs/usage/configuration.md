@@ -8,7 +8,7 @@ As a cluster owner, you might need audit logs on a Shoot node level. With these 
 
 The `shoot-rsyslog-relp` extension is used to configure `rsyslog` on each Shoot node so that the following can take place:
 1. `Rsyslog` reads logs from the `auditd` and `journald` sockets.
-2. The logs are filtered based on the program name and syslog severity of the message.
+2. The logs are filtered based on the program name, syslog severity and content of the message.
 3. The logs are enriched with metadata containing the name of the Project in which the Shoot is created, the name of the Shoot, the UID of the Shoot, and the hostname of the node on which the log event occurred.
 4. The enriched logs are sent to the target remote server via the RELP protocol.
 
