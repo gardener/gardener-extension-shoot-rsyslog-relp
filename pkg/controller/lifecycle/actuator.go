@@ -8,7 +8,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	extensionscontroller "github.com/gardener/gardener/extensions/pkg/controller"
 	"github.com/gardener/gardener/extensions/pkg/controller/extension"
@@ -25,15 +24,8 @@ import (
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/constants"
 )
 
-const (
-	// ActuatorName is the name of the rsyslog relp actuator.
-	ActuatorName = constants.ServiceName + "-actuator"
-
-	releaseName                      = "rsyslog-relp-configurator"
-	configurationCleanerReleaseName  = "rsyslog-relp-configuration-cleaner"
-	deletionTimeout                  = time.Minute * 2
-	nodeExporterTextfileCollectorDir = "/var/lib/node-exporter/textfile-collector"
-)
+// ActuatorName is the name of the rsyslog relp actuator.
+const ActuatorName = constants.ServiceName + "-actuator"
 
 // NewActuator returns an actuator responsible for Extension resources.
 func NewActuator(client client.Client, decoder runtime.Decoder, config apisconfig.Configuration, chartRendererFactory extensionscontroller.ChartRendererFactory) extension.Actuator {
