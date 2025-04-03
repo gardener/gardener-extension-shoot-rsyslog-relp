@@ -67,7 +67,7 @@ function configure_auditd() {
 
     augenrules_load_metric="# HELP rsyslog_augenrules_load_success shows whether the 'augenrules --load' command was executed successfully or not.\n# TYPE rsyslog_augenrules_load_success gauge\nrsyslog_augenrules_load_success"
     error=$(augenrules --load 2>&1 > /dev/null)
-    # Writing to the output prom file has to be done with an atomic operation. This is why we first write to a temporary file
+    # Writing to the output ".prom" file has to be done with an atomic operation. This is why we first write to a temporary file
     # and then we move/rename the temporary file to the actual output file.
     if [[ -n "$error" ]]; then
       logger -p error "Error loading audit rules: $error"
