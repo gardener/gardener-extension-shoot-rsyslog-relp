@@ -26,7 +26,10 @@ function remove_auditd_config() {
     ## The original audit rules might be erroneus so we ignore any errors here.
     augenrules --load || true
     systemctl restart auditd
-    rm -f "${auditd_metrics_file}"
+
+    if [[ -f "${auditd_metrics_file}" ]]; then
+      rm -f "${auditd_metrics_file}"
+    fi
     rm -rf /etc/audit/rules.d.original
   fi
 }
@@ -50,15 +53,29 @@ function configure_auditd() {
     rm -rf /etc/audit/rules.d/*
     cp -fL /var/lib/rsyslog-relp-configurator/audit/rules.d/* /etc/audit/rules.d/
 
+    restart_auditd=true
+  fi
+
+  # TODO(plkokanov): remove the additional check whether $auditd_metrics_file exists after v0.9.0 is released.
+  # This check is temporarily necessary for nodes on which the `configure-rsyslog.sh` script already ran and
+  # the audit rules were configured, but the $auditd_metrics_file was not created because its parent dir was missing.
+  # Reference: https://github.com/gardener/gardener-extension-shoot-rsyslog-relp/pull/256
+  if [ "${restart_auditd}" ] || [[ ! -f "${auditd_metrics_file}" ]]; then
+    if [[ ! -d /var/lib/node-exporter/textfile-collector ]]; then
+      mkdir -p "/var/lib/node-exporter/textfile-collector"
+    fi
+
     augenrules_load_metric="# HELP rsyslog_augenrules_load_success shows whether the 'augenrules --load' command was executed successfully or not.\n# TYPE rsyslog_augenrules_load_success gauge\nrsyslog_augenrules_load_success"
     error=$(augenrules --load 2>&1 > /dev/null)
+    # Writing to the output ".prom" file has to be done with an atomic operation. This is why we first write to a temporary file
+    # and then we move/rename the temporary file to the actual output file.
     if [[ -n "$error" ]]; then
       logger -p error "Error loading audit rules: $error"
-      echo -e "${augenrules_load_metric} 0" > "${auditd_metrics_file}"
+      echo -e "${augenrules_load_metric} 0" > "${auditd_metrics_file}.tmp"
     else
-      echo -e "${augenrules_load_metric} 1" > "${auditd_metrics_file}"
+      echo -e "${augenrules_load_metric} 1" > "${auditd_metrics_file}.tmp"
     fi
-    restart_auditd=true
+    mv "${auditd_metrics_file}.tmp" "${auditd_metrics_file}"
   fi
 
   path_syslog_audit_plugin=/etc/audit/plugins.d/syslog.conf
