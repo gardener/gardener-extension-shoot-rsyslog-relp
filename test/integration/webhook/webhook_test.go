@@ -22,9 +22,12 @@ import (
 )
 
 type configData struct {
+	// ProjectName to fill in template for config
 	ProjectName string
-	Target      string
-	Port        int
+	// Target to fill in template for config
+	Target string
+	// Port to fill in template for config
+	Port int
 }
 
 var _ = Describe("Webhook tests", func() {

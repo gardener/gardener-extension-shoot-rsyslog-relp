@@ -149,7 +149,7 @@ func GetAuditRulesFiles(useExpectedContent bool) []extensionsv1alpha1.File {
 	}
 }
 
-// GetAuditRulesFiles returns default Rsyslog files
+// GetRsyslogFiles returns default Rsyslog files
 func GetRsyslogFiles(rsyslogConfig []byte, useExpectedContent bool) []extensionsv1alpha1.File {
 	return []extensionsv1alpha1.File{
 		{
