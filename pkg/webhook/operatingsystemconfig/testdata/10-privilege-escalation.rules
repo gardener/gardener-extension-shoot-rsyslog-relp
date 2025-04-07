@@ -1,9 +1,0 @@
-## SPDX-FileCopyrightText: 2024 SAP SE or an SAP affiliate company and Gardener contributors
-##
-## SPDX-License-Identifier: Apache-2.0
-
-## This file is managed by the shoot-rsyslog-relp extension
-## The original file was moved to /etc/audit/rules.d.original
-
--a exit,always -F arch=b64 -S setuid -S setreuid -S setgid -S setregid -F auid>0 -F auid!=-1 -F key=privilege_escalation
--a exit,always -F arch=b64 -S execve -S execveat -F euid=0 -F auid>0 -F auid!=-1 -F key=privilege_escalation
