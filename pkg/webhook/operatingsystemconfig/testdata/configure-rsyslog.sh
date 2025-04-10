@@ -60,7 +60,7 @@ function configure_auditd() {
   # This check is temporarily necessary for nodes on which the `configure-rsyslog.sh` script already ran and
   # the audit rules were configured, but the $auditd_metrics_file was not created because its parent dir was missing.
   # Reference: https://github.com/gardener/gardener-extension-shoot-rsyslog-relp/pull/256
-  if [ "${restart_auditd}" ] || [[ ! -f "${auditd_metrics_file}" ]]; then
+  if [ "${restart_auditd}" = true ] || [[ ! -f "${auditd_metrics_file}" ]]; then
     if [[ ! -d /var/lib/node-exporter/textfile-collector ]]; then
       mkdir -p "/var/lib/node-exporter/textfile-collector"
     fi
