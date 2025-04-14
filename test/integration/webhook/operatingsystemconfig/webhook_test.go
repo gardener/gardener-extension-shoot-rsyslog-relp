@@ -150,7 +150,6 @@ var _ = Describe("Webhook tests", func() {
 					},
 				},
 			}
-			// We use a tpl file to add the dynamically created in the test env .projectName
 			tmpl, err := template.New("config").Parse(string(testcommon.GetSimpleRsyslogConfig()))
 			Expect(err).NotTo(HaveOccurred())
 			var simpleRsyslogConfig bytes.Buffer
@@ -160,9 +159,6 @@ var _ = Describe("Webhook tests", func() {
 			expectedFiles = append(expectedFiles, testcommon.GetRsyslogFiles(simpleRsyslogConfig.Bytes(), true)...)
 			expectedFiles = append(expectedFiles, testcommon.GetAuditRulesFiles(true)...)
 			Expect(len(expectedFiles)).To(Equal(len(osc.Spec.Files)))
-			for i, file := range osc.Spec.Files {
-				Expect(file).To(Equal(expectedFiles[i]))
-			}
 			Expect(expectedFiles).To(Equal(osc.Spec.Files))
 		})
 
@@ -181,9 +177,6 @@ var _ = Describe("Webhook tests", func() {
 			}
 			expectedUnits = append(expectedUnits, []extensionsv1alpha1.Unit{testcommon.GetRsyslogConfiguratorUnit(true)}...)
 			Expect(len(expectedUnits)).To(Equal(len(osc.Spec.Units)))
-			for i, unit := range osc.Spec.Units {
-				Expect(unit).To(Equal(expectedUnits[i]))
-			}
 			Expect(expectedUnits).To(Equal(osc.Spec.Units))
 		})
 	})
