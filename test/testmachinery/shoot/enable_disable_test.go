@@ -107,7 +107,7 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 
 	framework.CAfterEach(func(ctx context.Context) {
 		By("Delete rsyslog-relp-echo-server from Shoot cluster")
-		Expect(deleteRsyslogRelpEchoServer(ctx, f))
+		Expect(deleteRsyslogRelpEchoServer(ctx, f)).To(Succeed())
 	}, time.Minute)
 
 	Context("shoot-rsyslog-relp extension with tls disabled", Label("tls-disabled"), func() {
@@ -144,7 +144,7 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 			var err error
 			createdResources, err = common.CreateResourcesFromFile(ctx, f.GardenClient.Client(), f.ProjectNamespace, "../../common/testdata/tls")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(len(createdResources)).ToNot(BeZero())
+			Expect(createdResources).ToNot(BeEmpty())
 
 			test(parentCtx, defaultExtensionAuditRules, func(shoot *gardencorev1beta1.Shoot) error {
 				common.AddOrUpdateRsyslogRelpExtension(
@@ -186,7 +186,7 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 			var err error
 			createdResources, err = common.CreateResourcesFromFile(ctx, f.GardenClient.Client(), f.ProjectNamespace, "../../common/testdata/audit")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(len(createdResources)).ToNot(BeZero())
+			Expect(createdResources).ToNot(BeEmpty())
 
 			test(parentCtx, customAuditRules, func(shoot *gardencorev1beta1.Shoot) error {
 				common.AddOrUpdateRsyslogRelpExtension(
