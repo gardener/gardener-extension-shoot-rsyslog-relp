@@ -23,6 +23,7 @@ config.ign.merged
 config.img
 config.vmdk
 
+.golangci.yaml
 # Virtual go & fuse
 .virtualgo
 .fuse_hidden*

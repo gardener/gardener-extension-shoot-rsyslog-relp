@@ -240,13 +240,13 @@ func (v *Verifier) constructLogMatchers(logEntries []LogEntry) ([]interface{}, [
 		notForwardedLogMatchers []interface{}
 	)
 
-	switch {
-	case v.providerType == "aws":
+	switch v.providerType {
+	case "aws":
 		// On aws the nodes are named by adding the regional domain name after the instance, e.g.:
 		// `ip-xxx-xxx-xxx-xxx.ec2.<region>.internal`. However the rsyslog `hostname` property only returns the
 		// instance name - `ip-xxx-xxx-xxx-xxx`.
 		expectedNodeHostName = strings.SplitN(v.nodeName, ".", 2)[0]
-	case v.providerType == "alicloud":
+	case "alicloud":
 		// On alicloud the name of a node is made of lower case characters, e.g. `izgw846obiag360olq8sdaz`.
 		// However, the rsyslog `hostname` property can also contain upper case characters, e.g. `iZgw846obiag360olq8sdaZ`.
 		// This is why we use the (?i:...) - to turn on case-insensitive mode for the hostname matching.
