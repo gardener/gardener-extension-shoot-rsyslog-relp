@@ -14,6 +14,12 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
 rules:
 - apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - list
+- apiGroups:
   - coordination.k8s.io
   resources:
   - leases
@@ -31,3 +37,12 @@ rules:
   verbs:
   - update
   - get
+- apiGroups:
+  - ""
+  - events.k8s.io
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+  - update
