@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package webhook_test
+package operatingsystemconfig_test
 
 import (
 	"bytes"
@@ -22,11 +22,11 @@ import (
 )
 
 type configData struct {
-	// ProjectName to fill in template for config
+	// ProjectName to fill in template for config.
 	ProjectName string
-	// Target to fill in template for config
+	// Target to fill in template for config.
 	Target string
-	// Port to fill in template for config
+	// Port to fill in template for config.
 	Port int
 }
 
