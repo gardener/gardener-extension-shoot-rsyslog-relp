@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package webhook_test
+package operatingsystemconfig_test
 
 import (
 	"context"
@@ -45,16 +45,16 @@ import (
 
 func TestWebhook(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Test Integration Webhook Suite")
+	RunSpecs(t, "Test Integration Webhook OperatingSystemConfig Suite")
 }
 
 const (
-	testID       = "webhook-test"
+	testID       = "webhook-operatingsystemconfig-test"
 	providerName = "test-provider"
 )
 
 var (
-	ctx = context.TODO()
+	ctx = context.Background()
 	log logr.Logger
 
 	restConfig *rest.Config
@@ -168,6 +168,7 @@ var _ = BeforeSuite(func() {
 	}
 	shootJSON, err := json.Marshal(shoot)
 	Expect(err).To(Succeed())
+
 	cluster = &extensionsv1alpha1.Cluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: testNamespace.Name,
