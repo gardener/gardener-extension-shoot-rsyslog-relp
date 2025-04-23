@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"text/template"
 
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,7 +18,6 @@ import (
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
 	testcommon "github.com/gardener/gardener-extension-shoot-rsyslog-relp/test/common"
-	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 )
 
 type configData struct {
@@ -43,7 +43,7 @@ var _ = Describe("Webhook tests", func() {
 		extension := &extensionsv1alpha1.Extension{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "shoot-rsyslog-relp",
-				Namespace: cluster.ObjectMeta.Name,
+				Namespace: cluster.Name,
 			},
 			Spec: extensionsv1alpha1.ExtensionSpec{
 				DefaultSpec: extensionsv1alpha1.DefaultSpec{
@@ -152,7 +152,7 @@ var _ = Describe("Webhook tests", func() {
 
 			expectedFiles = append(expectedFiles, testcommon.GetRsyslogFiles(simpleRsyslogConfig.Bytes(), true)...)
 			expectedFiles = append(expectedFiles, testcommon.GetAuditRulesFiles(true)...)
-			Expect(len(expectedFiles)).To(Equal(len(osc.Spec.Files)))
+			Expect(expectedFiles).To(HaveLen(len(osc.Spec.Files)))
 			Expect(expectedFiles).To(Equal(osc.Spec.Files))
 		})
 
@@ -170,7 +170,7 @@ var _ = Describe("Webhook tests", func() {
 				},
 			}
 			expectedUnits = append(expectedUnits, []extensionsv1alpha1.Unit{testcommon.GetRsyslogConfiguratorUnit(true)}...)
-			Expect(len(expectedUnits)).To(Equal(len(osc.Spec.Units)))
+			Expect(expectedUnits).To(HaveLen(len(osc.Spec.Units)))
 			Expect(expectedUnits).To(Equal(osc.Spec.Units))
 		})
 	})
