@@ -17,7 +17,6 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/config"
-	apisconfig "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/config"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/config/v1alpha1"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/controller/lifecycle"
 	oscwebhook "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/webhook/operatingsystemconfig"
@@ -30,7 +29,7 @@ var (
 
 func init() {
 	scheme = runtime.NewScheme()
-	utilruntime.Must(apisconfig.AddToScheme(scheme))
+	utilruntime.Must(config.AddToScheme(scheme))
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))
 
 	decoder = serializer.NewCodecFactory(scheme).UniversalDecoder()
@@ -58,7 +57,7 @@ func (o *Options) Complete() error {
 		return err
 	}
 
-	configuration := apisconfig.Configuration{}
+	configuration := config.Configuration{}
 	if err = runtime.DecodeInto(decoder, data, &configuration); err != nil {
 		return err
 	}
@@ -77,7 +76,7 @@ func (o *Options) Completed() *RsyslogRelpServiceConfig {
 
 // RsyslogRelpServiceConfig contains configuration information about the rsyslog relp service.
 type RsyslogRelpServiceConfig struct {
-	config apisconfig.Configuration
+	config config.Configuration
 }
 
 // Apply applies the Options to the passed ControllerOptions instance.

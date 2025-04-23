@@ -94,6 +94,6 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 		}
 
 		By("Delete rsyslog-relp-echo-server from Shoot cluster")
-		Expect(deleteRsyslogRelpEchoServer(ctx, f))
+		Expect(deleteRsyslogRelpEchoServer(ctx, f)).To(Succeed())
 	}, hibernationTestCleanupTimeout))
 })

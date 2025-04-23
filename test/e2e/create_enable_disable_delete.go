@@ -110,7 +110,7 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 			var err error
 			createdResources, err = common.CreateResourcesFromFile(ctx, f.GardenClient.Client(), f.ProjectNamespace, "../common/testdata/tls")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(len(createdResources)).ToNot(BeZero())
+			Expect(createdResources).ToNot(BeEmpty())
 		})
 
 		AfterEach(func() {
