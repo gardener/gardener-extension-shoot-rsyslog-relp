@@ -6,7 +6,6 @@ package common
 
 import (
 	"context"
-	_ "embed"
 	"errors"
 	"time"
 
