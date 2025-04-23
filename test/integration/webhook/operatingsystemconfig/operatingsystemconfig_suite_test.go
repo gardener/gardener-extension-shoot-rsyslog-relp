@@ -16,17 +16,13 @@ import (
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
-
-	rsyslogrelpcmd "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/cmd/rsyslogrelp"
-	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/constants"
-
 	"github.com/gardener/gardener/pkg/client/kubernetes"
 	"github.com/gardener/gardener/pkg/logger"
 	. "github.com/gardener/gardener/pkg/utils/test/matchers"
 	"github.com/go-logr/logr"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -41,6 +37,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+
+	rsyslogrelpcmd "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/cmd/rsyslogrelp"
+	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/constants"
 )
 
 func TestWebhook(t *testing.T) {
@@ -49,8 +48,7 @@ func TestWebhook(t *testing.T) {
 }
 
 const (
-	testID       = "webhook-operatingsystemconfig-test"
-	providerName = "test-provider"
+	testID = "webhook-operatingsystemconfig-test"
 )
 
 var (
@@ -67,6 +65,7 @@ var (
 )
 
 var _ = BeforeSuite(func() {
+	repoRoot := filepath.Join("..", "..", "..", "..")
 	logf.SetLogger(logger.MustNewZapLogger(logger.DebugLevel, logger.FormatJSON, zap.WriteTo(GinkgoWriter)))
 	log = logf.Log.WithName(testID)
 
@@ -74,9 +73,9 @@ var _ = BeforeSuite(func() {
 	testEnv = &envtest.Environment{
 		CRDInstallOptions: envtest.CRDInstallOptions{
 			Paths: []string{
-				filepath.Join("resources", "crd-extensions.gardener.cloud_extensions.yaml"),
-				filepath.Join("resources", "crd-extensions.gardener.cloud_operatingsystemconfigs.yaml"),
-				filepath.Join("resources", "crd-extensions.gardener.cloud_clusters.yaml"),
+				filepath.Join(repoRoot, "example", "crd-extensions.gardener.cloud_extensions.yaml"),
+				filepath.Join(repoRoot, "example", "crd-extensions.gardener.cloud_operatingsystemconfigs.yaml"),
+				filepath.Join(repoRoot, "example", "crd-extensions.gardener.cloud_clusters.yaml"),
 			},
 		},
 		ErrorIfCRDPathMissing: true,
@@ -154,7 +153,6 @@ var _ = BeforeSuite(func() {
 	}).Should(Succeed())
 
 	By("Create Cluster")
-
 	shoot := &gardencorev1beta1.Shoot{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "foo",
@@ -167,7 +165,7 @@ var _ = BeforeSuite(func() {
 		},
 	}
 	shootJSON, err := json.Marshal(shoot)
-	Expect(err).To(Succeed())
+	Expect(err).NotTo(HaveOccurred())
 
 	cluster = &extensionsv1alpha1.Cluster{
 		ObjectMeta: metav1.ObjectMeta{

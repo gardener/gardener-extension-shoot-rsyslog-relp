@@ -6,7 +6,6 @@ package operatingsystemconfig_test
 
 import (
 	"bytes"
-	_ "embed"
 	"encoding/json"
 	"text/template"
 
@@ -67,10 +66,6 @@ var _ = Describe("Webhook tests", func() {
 				Namespace: testNamespace.Name,
 			},
 			Spec: extensionsv1alpha1.OperatingSystemConfigSpec{
-				DefaultSpec: extensionsv1alpha1.DefaultSpec{
-					Type:           "",
-					ProviderConfig: &runtime.RawExtension{},
-				},
 				Purpose: extensionsv1alpha1.OperatingSystemConfigPurposeReconcile,
 				Units: []extensionsv1alpha1.Unit{
 					{
@@ -108,7 +103,7 @@ var _ = Describe("Webhook tests", func() {
 		}
 		configData.ProjectName = testNamespace.Name
 		By("Create OSC")
-		// we use Eventually because webhook may still not be ready to receive traffic
+		// Eventually is used because webhook may still not be ready to receive traffic
 		Eventually(func() error {
 			return testClient.Create(ctx, osc)
 		}).Should(Succeed())
@@ -129,7 +124,7 @@ var _ = Describe("Webhook tests", func() {
 			configData.Port = 1520
 		})
 
-		It("Should have all expected files attached", func() {
+		It("should have all expected files attached", func() {
 			expectedFiles := []extensionsv1alpha1.File{
 				{
 					Path: "foo/bar",
@@ -153,8 +148,7 @@ var _ = Describe("Webhook tests", func() {
 			tmpl, err := template.New("config").Parse(string(testcommon.GetSimpleRsyslogConfig()))
 			Expect(err).NotTo(HaveOccurred())
 			var simpleRsyslogConfig bytes.Buffer
-			err = tmpl.Execute(&simpleRsyslogConfig, configData)
-			Expect(err).NotTo(HaveOccurred())
+			Expect(tmpl.Execute(&simpleRsyslogConfig, configData)).To(Succeed())
 
 			expectedFiles = append(expectedFiles, testcommon.GetRsyslogFiles(simpleRsyslogConfig.Bytes(), true)...)
 			expectedFiles = append(expectedFiles, testcommon.GetAuditRulesFiles(true)...)
@@ -162,7 +156,7 @@ var _ = Describe("Webhook tests", func() {
 			Expect(expectedFiles).To(Equal(osc.Spec.Files))
 		})
 
-		It("Should have all expected units attached", func() {
+		It("should have all expected units attached", func() {
 			expectedUnits := []extensionsv1alpha1.Unit{
 				{
 					Name: "foo",
