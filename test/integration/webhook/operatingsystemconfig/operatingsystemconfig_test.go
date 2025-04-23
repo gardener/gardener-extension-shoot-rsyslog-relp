@@ -17,7 +17,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
-	testcommon "github.com/gardener/gardener-extension-shoot-rsyslog-relp/test/common"
+	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/webhook/operatingsystemconfig/testdata"
 )
 
 type configData struct {
@@ -145,13 +145,13 @@ var _ = Describe("Webhook tests", func() {
 					},
 				},
 			}
-			tmpl, err := template.New("config").Parse(string(testcommon.GetSimpleRsyslogConfig()))
+			tmpl, err := template.New("config").Parse(string(testdata.GetSimpleRsyslogConfig()))
 			Expect(err).NotTo(HaveOccurred())
 			var simpleRsyslogConfig bytes.Buffer
 			Expect(tmpl.Execute(&simpleRsyslogConfig, configData)).To(Succeed())
 
-			expectedFiles = append(expectedFiles, testcommon.GetRsyslogFiles(simpleRsyslogConfig.Bytes(), true)...)
-			expectedFiles = append(expectedFiles, testcommon.GetAuditRulesFiles(true)...)
+			expectedFiles = append(expectedFiles, testdata.GetRsyslogFiles(simpleRsyslogConfig.Bytes(), true)...)
+			expectedFiles = append(expectedFiles, testdata.GetAuditRulesFiles(true)...)
 			Expect(expectedFiles).To(HaveLen(len(osc.Spec.Files)))
 			Expect(expectedFiles).To(Equal(osc.Spec.Files))
 		})
@@ -169,7 +169,7 @@ var _ = Describe("Webhook tests", func() {
 					FilePaths: []string{"/foo-bar-file"},
 				},
 			}
-			expectedUnits = append(expectedUnits, []extensionsv1alpha1.Unit{testcommon.GetRsyslogConfiguratorUnit(true)}...)
+			expectedUnits = append(expectedUnits, []extensionsv1alpha1.Unit{testdata.GetRsyslogConfiguratorUnit(true)}...)
 			Expect(expectedUnits).To(HaveLen(len(osc.Spec.Units)))
 			Expect(expectedUnits).To(Equal(osc.Spec.Units))
 		})
