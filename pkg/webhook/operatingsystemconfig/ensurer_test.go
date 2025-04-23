@@ -32,7 +32,7 @@ import (
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
 	rsysloginstall "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog/install"
 	. "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/webhook/operatingsystemconfig"
-	testcommon "github.com/gardener/gardener-extension-shoot-rsyslog-relp/test/common"
+	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/webhook/operatingsystemconfig/testdata"
 )
 
 var _ = Describe("Ensurer", func() {
@@ -151,12 +151,12 @@ var _ = Describe("Ensurer", func() {
 		BeforeEach(func() {
 			ensurer = NewEnsurer(fakeClient, decoder, logger)
 			files = []extensionsv1alpha1.File{oldFile}
-			expectedFiles = append([]extensionsv1alpha1.File{oldFile}, testcommon.GetAuditRulesFiles(true)...)
+			expectedFiles = append([]extensionsv1alpha1.File{oldFile}, testdata.GetAuditRulesFiles(true)...)
 		})
 
 		Context("when tls is not enabled", func() {
 			BeforeEach(func() {
-				expectedFiles = append(expectedFiles, testcommon.GetRsyslogFiles(testcommon.GetTestingRsyslogConfig(), true)...)
+				expectedFiles = append(expectedFiles, testdata.GetRsyslogFiles(testdata.GetTestingRsyslogConfig(), true)...)
 			})
 
 			It("should add additional files to the current ones", func() {
@@ -165,8 +165,8 @@ var _ = Describe("Ensurer", func() {
 			})
 
 			It("should modify already existing rsyslog configuration files", func() {
-				files = append(files, testcommon.GetRsyslogFiles(testcommon.GetTestingRsyslogConfig(), false)...)
-				files = append(files, testcommon.GetAuditRulesFiles(false)...)
+				files = append(files, testdata.GetRsyslogFiles(testdata.GetTestingRsyslogConfig(), false)...)
+				files = append(files, testdata.GetAuditRulesFiles(false)...)
 
 				Expect(ensurer.EnsureAdditionalFiles(ctx, gctx, &files, nil)).To(Succeed())
 				Expect(files).To(ConsistOf(expectedFiles))
@@ -206,8 +206,8 @@ var _ = Describe("Ensurer", func() {
 					PermittedPeer:       []string{"rsyslog-server.foo", "rsyslog-server.foo.bar"},
 				}
 
-				expectedFiles = append(expectedFiles, testcommon.GetRsyslogFiles(testcommon.GetRsyslogConfigWithTLS(), true)...)
-				expectedFiles = append(expectedFiles, testcommon.GetRsyslogTLSFiles(true)...)
+				expectedFiles = append(expectedFiles, testdata.GetRsyslogFiles(testdata.GetRsyslogConfigWithTLS(), true)...)
+				expectedFiles = append(expectedFiles, testdata.GetRsyslogTLSFiles(true)...)
 			})
 
 			It("should add additional files to the current ones", func() {
@@ -216,9 +216,9 @@ var _ = Describe("Ensurer", func() {
 			})
 
 			It("should modify already existing rsyslog configuration files", func() {
-				files = append(files, testcommon.GetRsyslogFiles(testcommon.GetRsyslogConfigWithTLS(), false)...)
-				files = append(files, testcommon.GetAuditRulesFiles(false)...)
-				files = append(files, testcommon.GetRsyslogTLSFiles(false)...)
+				files = append(files, testdata.GetRsyslogFiles(testdata.GetRsyslogConfigWithTLS(), false)...)
+				files = append(files, testdata.GetAuditRulesFiles(false)...)
+				files = append(files, testdata.GetRsyslogTLSFiles(false)...)
 
 				Expect(ensurer.EnsureAdditionalFiles(ctx, gctx, &files, nil)).To(Succeed())
 				Expect(files).To(ConsistOf(expectedFiles))
@@ -256,7 +256,7 @@ auditRules: |
 					ConfigMapReferenceName: ptr.To("audit-rules"),
 				}
 
-				expectedFiles = append([]extensionsv1alpha1.File{oldFile}, testcommon.GetRsyslogFiles(testcommon.GetTestingRsyslogConfig(), true)...)
+				expectedFiles = append([]extensionsv1alpha1.File{oldFile}, testdata.GetRsyslogFiles(testdata.GetTestingRsyslogConfig(), true)...)
 				expectedFiles = append(expectedFiles, []extensionsv1alpha1.File{
 					{
 						Path:        "/var/lib/rsyslog-relp-configurator/audit/rules.d/00_shoot_rsyslog_relp.rules",
@@ -282,7 +282,7 @@ auditRules: |
 				extensionProviderConfig.AuditConfig = &rsyslog.AuditConfig{
 					Enabled: false,
 				}
-				expectedFiles = append([]extensionsv1alpha1.File{oldFile}, testcommon.GetRsyslogFiles(testcommon.GetTestingRsyslogConfig(), true)...)
+				expectedFiles = append([]extensionsv1alpha1.File{oldFile}, testdata.GetRsyslogFiles(testdata.GetTestingRsyslogConfig(), true)...)
 			})
 
 			It("should add additional files to the current ones, but not include audit rules files", func() {
@@ -306,7 +306,7 @@ auditRules: |
 		BeforeEach(func() {
 			ensurer = NewEnsurer(fakeClient, decoder, logger)
 			units = []extensionsv1alpha1.Unit{oldUnit}
-			expectedUnits = append([]extensionsv1alpha1.Unit{oldUnit}, testcommon.GetRsyslogConfiguratorUnit(true))
+			expectedUnits = append([]extensionsv1alpha1.Unit{oldUnit}, testdata.GetRsyslogConfiguratorUnit(true))
 		})
 
 		It("should add additional units to the current ones", func() {
@@ -315,7 +315,7 @@ auditRules: |
 		})
 
 		It("should modify existing units", func() {
-			units = append(units, testcommon.GetRsyslogConfiguratorUnit(false))
+			units = append(units, testdata.GetRsyslogConfiguratorUnit(false))
 
 			Expect(ensurer.EnsureAdditionalUnits(ctx, nil, &units, nil)).To(Succeed())
 			Expect(units).To(ConsistOf(expectedUnits))
