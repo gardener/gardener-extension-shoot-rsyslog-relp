@@ -65,7 +65,7 @@ var (
 )
 
 var _ = BeforeSuite(func() {
-	repoRoot := filepath.Join("..", "..", "..", "..")
+	resourcesPath := filepath.Join("..", "..", "resources")
 	logf.SetLogger(logger.MustNewZapLogger(logger.DebugLevel, logger.FormatJSON, zap.WriteTo(GinkgoWriter)))
 	log = logf.Log.WithName(testID)
 
@@ -73,9 +73,9 @@ var _ = BeforeSuite(func() {
 	testEnv = &envtest.Environment{
 		CRDInstallOptions: envtest.CRDInstallOptions{
 			Paths: []string{
-				filepath.Join(repoRoot, "example", "crd-extensions.gardener.cloud_extensions.yaml"),
-				filepath.Join(repoRoot, "example", "crd-extensions.gardener.cloud_operatingsystemconfigs.yaml"),
-				filepath.Join(repoRoot, "example", "crd-extensions.gardener.cloud_clusters.yaml"),
+				filepath.Join(resourcesPath, "crd-extensions.gardener.cloud_extensions.yaml"),
+				filepath.Join(resourcesPath, "crd-extensions.gardener.cloud_operatingsystemconfigs.yaml"),
+				filepath.Join(resourcesPath, "crd-extensions.gardener.cloud_clusters.yaml"),
 			},
 		},
 		ErrorIfCRDPathMissing: true,

@@ -49,7 +49,7 @@ var (
 )
 
 var _ = BeforeSuite(func() {
-	repoRoot := filepath.Join("..", "..", "..", "..")
+	resourcesPath := filepath.Join("..", "..", "resources")
 	logf.SetLogger(logger.MustNewZapLogger(logger.DebugLevel, logger.FormatJSON, zap.WriteTo(GinkgoWriter)))
 	log = logf.Log.WithName(testID)
 
@@ -57,11 +57,11 @@ var _ = BeforeSuite(func() {
 	testEnv = &envtest.Environment{
 		CRDInstallOptions: envtest.CRDInstallOptions{
 			Paths: []string{
-				filepath.Join(repoRoot, "example", "crd-extensions.gardener.cloud_extensions.yaml"),
-				filepath.Join(repoRoot, "example", "crd-extensions.gardener.cloud_clusters.yaml"),
-				filepath.Join(repoRoot, "example", "crd-resources.gardener.cloud_managedresources.yaml"),
-				filepath.Join(repoRoot, "example", "crd-monitoring.coreos.com_prometheusrules.yaml"),
-				filepath.Join(repoRoot, "example", "crd-monitoring.coreos.com_scrapeconfigs.yaml"),
+				filepath.Join(resourcesPath, "crd-extensions.gardener.cloud_extensions.yaml"),
+				filepath.Join(resourcesPath, "crd-extensions.gardener.cloud_clusters.yaml"),
+				filepath.Join(resourcesPath, "crd-resources.gardener.cloud_managedresources.yaml"),
+				filepath.Join(resourcesPath, "crd-monitoring.coreos.com_prometheusrules.yaml"),
+				filepath.Join(resourcesPath, "crd-monitoring.coreos.com_scrapeconfigs.yaml"),
 			},
 			ErrorIfPathMissing: true,
 		},
