@@ -152,8 +152,8 @@ var _ = Describe("Webhook tests", func() {
 
 			expectedFiles = append(expectedFiles, testdata.GetRsyslogFiles(simpleRsyslogConfig.Bytes(), true)...)
 			expectedFiles = append(expectedFiles, testdata.GetAuditRulesFiles(true)...)
-			Expect(expectedFiles).To(HaveLen(len(osc.Spec.Files)))
-			Expect(expectedFiles).To(Equal(osc.Spec.Files))
+			Expect(osc.Spec.Files).To(HaveLen(len(expectedFiles)))
+			Expect(osc.Spec.Files).To(Equal(expectedFiles))
 		})
 
 		It("should have all expected units attached", func() {
@@ -170,8 +170,8 @@ var _ = Describe("Webhook tests", func() {
 				},
 			}
 			expectedUnits = append(expectedUnits, []extensionsv1alpha1.Unit{testdata.GetRsyslogConfiguratorUnit(true)}...)
-			Expect(expectedUnits).To(HaveLen(len(osc.Spec.Units)))
-			Expect(expectedUnits).To(Equal(osc.Spec.Units))
+			Expect(osc.Spec.Units).To(HaveLen(len(expectedUnits)))
+			Expect(osc.Spec.Units).To(Equal(expectedUnits))
 		})
 	})
 
