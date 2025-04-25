@@ -38,8 +38,8 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	rsyslogrelpcmd "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/cmd/rsyslogrelp"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/constants"
+	oscwebhook "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/webhook/operatingsystemconfig"
 )
 
 func TestWebhook(t *testing.T) {
@@ -149,7 +149,7 @@ var _ = BeforeSuite(func() {
 
 	By("Wait for MutatingWebhookConfiguration")
 	Eventually(func() error {
-		return testClient.Get(ctx, client.ObjectKey{Name: "gardener-extension-shoot-rsyslog-relp"}, &admissionregistrationv1.MutatingWebhookConfiguration{})
+		return testClient.Get(ctx, client.ObjectKey{Name: "gardener-extension-shoot-rsyslog-relp-" + testNamespace.Name}, &admissionregistrationv1.MutatingWebhookConfiguration{})
 	}).Should(Succeed())
 
 	By("Create Cluster")
@@ -189,11 +189,22 @@ var _ = BeforeSuite(func() {
 })
 
 func addTestWebhookToManager(mgr manager.Manager) error {
-	webhookSwitches := rsyslogrelpcmd.WebhookSwitchOptions()
+	webhookSwitches := webhookcmd.NewSwitchOptions(
+		webhookcmd.Switch("shoot-rsyslog-relp", func(mgr manager.Manager) (*extensionswebhook.Webhook, error) {
+			webhook, err := oscwebhook.New(mgr)
+			if err != nil {
+				return nil, err
+			}
+			webhook.NamespaceSelector.MatchExpressions = append(webhook.NamespaceSelector.MatchExpressions,
+				metav1.LabelSelectorRequirement{Key: corev1.LabelMetadataName, Operator: metav1.LabelSelectorOpIn, Values: []string{testNamespace.Name}},
+			)
+			return webhook, nil
+		}),
+	)
 	webhookOptions := webhookcmd.NewAddToManagerOptions(
-		"shoot-rsyslog-relp",
+		"shoot-rsyslog-relp-"+testNamespace.Name,
 		"",
-		nil,
+		map[string]string{corev1.LabelMetadataName: testNamespace.Name},
 		&webhookcmd.ServerOptions{
 			Mode: extensionswebhook.ModeURL,
 			URL:  fmt.Sprintf("%s:%d", testEnv.WebhookInstallOptions.LocalServingHost, testEnv.WebhookInstallOptions.LocalServingPort),
