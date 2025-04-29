@@ -42,9 +42,10 @@ rules:
   resources:
   - managedresources
   verbs:
+  - create
+  - get
   - list
   - watch
-  - create
 - apiGroups:
   - resources.gardener.cloud
   resources:
@@ -52,7 +53,6 @@ rules:
   resourceNames:
   - extension-shoot-rsyslog-relp-configuration-cleaner
   verbs:
-  - get
   - update
   - patch
   - delete
@@ -86,6 +86,7 @@ rules:
   resources:
   - extensions
   verbs:
+  - get
   - list
   - watch
 - apiGroups:
@@ -96,7 +97,6 @@ rules:
   resourceNames:
   - shoot-rsyslog-relp
   verbs:
-  - get
   - patch
   - update
 - apiGroups:
@@ -104,8 +104,8 @@ rules:
   resources:
   - secrets
   verbs:
-  - get
   - create
+  - get
   - update
   - patch
   - delete
@@ -122,9 +122,10 @@ rules:
   - scrapeconfigs
   - prometheusrules
   verbs:
+  - create
+  - get
   - list
   - watch
-  - create
 - apiGroups:
   - monitoring.coreos.com
   resources:
@@ -133,7 +134,6 @@ rules:
   resourceNames:
   - shoot-shoot-rsyslog-relp
   verbs:
-  - get
   - update
   - patch
   - delete

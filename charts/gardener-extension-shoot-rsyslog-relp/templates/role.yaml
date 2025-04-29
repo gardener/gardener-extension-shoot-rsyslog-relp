@@ -25,6 +25,7 @@ rules:
   - leases
   verbs:
   - create
+  - get
   - list
   - watch
 - apiGroups:
@@ -35,8 +36,8 @@ rules:
   - {{ include "leaderelectionid" . }}
   - gardener-extension-heartbeat
   verbs:
+  - patch
   - update
-  - get
 - apiGroups:
   - ""
   - events.k8s.io
