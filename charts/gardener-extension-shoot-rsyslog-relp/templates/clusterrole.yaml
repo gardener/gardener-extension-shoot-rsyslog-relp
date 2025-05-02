@@ -27,21 +27,52 @@ rules:
   - get
   - list
   - watch
-  - update
   - create
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - mutatingwebhookconfigurations
+  resourceNames:
+  - gardener-extension-{{ .Values.serviceName }}
+  verbs:
+  - update
   - patch
 - apiGroups:
   - resources.gardener.cloud
   resources:
   - managedresources
   verbs:
-  - "*"
+  - create
+  - get
+  - list
+  - watch
+- apiGroups:
+  - resources.gardener.cloud
+  resources:
+  - managedresources
+  resourceNames:
+  - extension-shoot-rsyslog-relp-configuration-cleaner
+  verbs:
+  - update
+  - patch
+  - delete
 - apiGroups:
   - ""
   resources:
   - configmaps
   verbs:
-  - "*"
+  - create
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  resourceNames:
+  - shoot-rsyslog-relp-dashboards
+  verbs:
+  - update
+  - patch
+  - delete
 - apiGroups:
   - ""
   resources:
@@ -54,11 +85,18 @@ rules:
   - extensions.gardener.cloud
   resources:
   - extensions
-  - extensions/status
   verbs:
   - get
   - list
   - watch
+- apiGroups:
+  - extensions.gardener.cloud
+  resources:
+  - extensions
+  - extensions/status
+  resourceNames:
+  - shoot-rsyslog-relp
+  verbs:
   - patch
   - update
 - apiGroups:
@@ -66,13 +104,16 @@ rules:
   resources:
   - secrets
   verbs:
-  - "*"
+  - create
+  - get
+  - update
+  - patch
+  - delete
 - apiGroups:
   - coordination.k8s.io
   resources:
   - leases
   verbs:
-  - create
   - list
   - watch
 - apiGroups:
@@ -81,10 +122,18 @@ rules:
   - scrapeconfigs
   - prometheusrules
   verbs:
+  - create
   - get
   - list
   - watch
-  - create
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - scrapeconfigs
+  - prometheusrules
+  resourceNames:
+  - shoot-shoot-rsyslog-relp
+  verbs:
   - update
   - patch
   - delete

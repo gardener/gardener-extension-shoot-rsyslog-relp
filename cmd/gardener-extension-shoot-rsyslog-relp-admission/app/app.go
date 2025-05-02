@@ -16,11 +16,13 @@ import (
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	gardenerhealthz "github.com/gardener/gardener/pkg/healthz"
 	"github.com/spf13/cobra"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	componentbaseconfigv1alpha1 "k8s.io/component-base/config/v1alpha1"
 	"k8s.io/component-base/version/verflag"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -107,6 +109,13 @@ func NewAdmissionCommand(ctx context.Context) *cobra.Command {
 					return err
 				}
 				managerOptions.LeaderElectionConfig = sourceClusterConfig
+			} else {
+				// Restrict the cache for secrets to the configured namespace to avoid the need for cluster-wide list/watch permissions.
+				managerOptions.Cache = cache.Options{
+					ByObject: map[client.Object]cache.ByObject{
+						&corev1.Secret{}: {Namespaces: map[string]cache.Config{webhookOptions.Server.Completed().Namespace: {}}},
+					},
+				}
 			}
 
 			mgr, err := manager.New(restOpts.Completed().Config, managerOptions)

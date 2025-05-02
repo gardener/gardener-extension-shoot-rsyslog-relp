@@ -10,19 +10,16 @@ metadata:
 {{ include "labels" . | indent 4 }}
 rules:
 - apiGroups:
-  - core.gardener.cloud
-  resources:
-  - shoots
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
   - ""
   resources:
   - secrets
-  - namespaces
   - configmaps
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
   verbs:
   - get
   - list
@@ -36,5 +33,12 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - validatingwebhookconfigurations
+  resourceNames:
+  - {{ include "name" . }}
+  verbs:
   - patch
   - update
