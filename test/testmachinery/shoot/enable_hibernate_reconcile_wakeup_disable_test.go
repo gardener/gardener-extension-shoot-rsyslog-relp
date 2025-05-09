@@ -25,9 +25,15 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 		hibernationTestCleanupTimeout = 25 * time.Minute
 	)
 
-	f := framework.NewShootFramework(nil)
+	var (
+		f = framework.NewShootFramework(nil)
+
+		isShootHibernated bool
+	)
 
 	f.Serial().CIt("should enable and disable the shoot-rsyslog-relp extension", func(parentCtx context.Context) {
+		Expect(f.ShootClient).NotTo(BeNil(), "Shoot client should not be nil. If it is the Shoot might be hibernated")
+
 		By("Deploy the rsyslog-relp-echo-server in Shoot cluster")
 		ctx, cancel := context.WithTimeout(parentCtx, time.Minute)
 		defer cancel()
@@ -56,6 +62,7 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 		ctx, cancel = context.WithTimeout(parentCtx, 15*time.Minute)
 		defer cancel()
 		Expect(f.HibernateShoot(ctx)).To(Succeed())
+		isShootHibernated = true
 
 		By("Reconcile Shoot")
 		ctx, cancel = context.WithTimeout(parentCtx, 5*time.Minute)
@@ -70,6 +77,7 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 		ctx, cancel = context.WithTimeout(parentCtx, 15*time.Minute)
 		defer cancel()
 		Expect(f.WakeUpShoot(ctx)).To(Succeed())
+		isShootHibernated = false
 
 		By("Verify shoot-rsyslog-relp works after Shoot is woken up")
 		ctx, cancel = context.WithTimeout(parentCtx, 10*time.Minute)
@@ -80,7 +88,7 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 		})
 
 	}, hibernationTestTimeout, framework.WithCAfterTest(func(ctx context.Context) {
-		if v1beta1helper.HibernationIsEnabled(f.Shoot) {
+		if isShootHibernated && v1beta1helper.HibernationIsEnabled(f.Shoot) {
 			By("Wake up Shoot")
 			Expect(f.WakeUpShoot(ctx)).To(Succeed())
 		}
@@ -92,6 +100,10 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 				return nil
 			})).To(Succeed())
 		}
+
+		// The shoot client is required to delete the rsyslog-relp-echo-server. In cases where the shoot was
+		// unexpectedly hibernated before the test started, the client could still be nil at this point.
+		Expect(f.ShootClient).NotTo(BeNil(), "Shoot client should not be nil. If it is, the Shoot might have been hibernated before the test started")
 
 		By("Delete rsyslog-relp-echo-server from Shoot cluster")
 		Expect(deleteRsyslogRelpEchoServer(ctx, f)).To(Succeed())

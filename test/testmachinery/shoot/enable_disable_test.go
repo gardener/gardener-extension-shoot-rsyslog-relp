@@ -99,6 +99,8 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 	}
 
 	framework.CBeforeEach(func(ctx context.Context) {
+		Expect(f.ShootClient).NotTo(BeNil(), "Shoot client should not be nil. If it is the Shoot might be hibernated")
+
 		By("Deploy rsyslog-relp-echo-server in Shoot cluster")
 		var err error
 		echoServerIP, err = createRsyslogRelpEchoServer(ctx, f)
@@ -106,6 +108,8 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 	}, time.Minute)
 
 	framework.CAfterEach(func(ctx context.Context) {
+		Expect(f.ShootClient).NotTo(BeNil(), "Shoot client should not be nil. If it is the Shoot might be hibernated")
+
 		By("Delete rsyslog-relp-echo-server from Shoot cluster")
 		Expect(deleteRsyslogRelpEchoServer(ctx, f)).To(Succeed())
 	}, time.Minute)
