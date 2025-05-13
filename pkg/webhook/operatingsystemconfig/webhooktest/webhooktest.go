@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package testdata
+package webhooktest
 
 import (
 	_ "embed"
@@ -14,25 +14,25 @@ import (
 )
 
 var (
-	//go:embed 60-audit.conf
+	//go:embed testdata/60-audit.conf
 	rsyslogConfig []byte
-	//go:embed 60-audit-with-tls.conf
+	//go:embed testdata/60-audit-with-tls.conf
 	rsyslogConfigWithTLS []byte
-	//go:embed rsyslog-config-simple.conf.tpl
+	//go:embed testdata/rsyslog-config-simple.conf.tpl
 	rsyslogConfigSimple []byte
 
-	//go:embed configure-rsyslog.sh
+	//go:embed testdata/configure-rsyslog.sh
 	confiugreRsyslogScript []byte
-	//go:embed process-rsyslog-pstats.sh
+	//go:embed testdata/process-rsyslog-pstats.sh
 	processRsyslogPstatsScript []byte
 
-	//go:embed 00-base-config.rules
+	//go:embed testdata/00-base-config.rules
 	baseConfigRules []byte
-	//go:embed 10-privilege-escalation.rules
+	//go:embed testdata/10-privilege-escalation.rules
 	privilegeEscalationRules []byte
-	//go:embed 11-privileged-special.rules
+	//go:embed testdata/11-privileged-special.rules
 	privilegeSpecialRules []byte
-	//go:embed 12-system-integrity.rules
+	//go:embed testdata/12-system-integrity.rules
 	systemIntegrityRules []byte
 )
 
