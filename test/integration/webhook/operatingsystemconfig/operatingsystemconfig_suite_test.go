@@ -214,6 +214,6 @@ func addTestWebhookToManager(mgr manager.Manager) error {
 	if err := webhookOptions.Complete(); err != nil {
 		return err
 	}
-	_, err := webhookOptions.Completed().AddToManager(ctx, mgr, nil)
+	_, err := webhookOptions.Completed().AddToManager(ctx, mgr, nil, false)
 	return err
 }
