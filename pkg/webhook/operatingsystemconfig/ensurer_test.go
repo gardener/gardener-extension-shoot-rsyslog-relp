@@ -6,8 +6,6 @@ package operatingsystemconfig_test
 
 import (
 	"context"
-	_ "embed"
-	"encoding/base64"
 	"fmt"
 
 	gcontext "github.com/gardener/gardener/extensions/pkg/webhook/context"
@@ -33,27 +31,7 @@ import (
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
 	rsysloginstall "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog/install"
 	. "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/webhook/operatingsystemconfig"
-)
-
-var (
-	//go:embed testdata/60-audit.conf
-	rsyslogConfig []byte
-	//go:embed testdata/60-audit-with-tls.conf
-	rsyslogConfigWithTLS []byte
-
-	//go:embed testdata/configure-rsyslog.sh
-	confiugreRsyslogScript []byte
-	//go:embed testdata/process-rsyslog-pstats.sh
-	processRsyslogPstatsScript []byte
-
-	//go:embed testdata/00-base-config.rules
-	baseConfigRules []byte
-	//go:embed testdata/10-privilege-escalation.rules
-	privilegeEscalationRules []byte
-	//go:embed testdata/11-privileged-special.rules
-	privilegeSpecialRules []byte
-	//go:embed testdata/12-system-integrity.rules
-	systemIntegrityRules []byte
+	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/webhook/operatingsystemconfig/webhooktest"
 )
 
 var _ = Describe("Ensurer", func() {
@@ -172,12 +150,12 @@ var _ = Describe("Ensurer", func() {
 		BeforeEach(func() {
 			ensurer = NewEnsurer(fakeClient, decoder, logger)
 			files = []extensionsv1alpha1.File{oldFile}
-			expectedFiles = append([]extensionsv1alpha1.File{oldFile}, getAuditRulesFiles(true)...)
+			expectedFiles = append([]extensionsv1alpha1.File{oldFile}, webhooktest.GetAuditRulesFiles(true)...)
 		})
 
 		Context("when tls is not enabled", func() {
 			BeforeEach(func() {
-				expectedFiles = append(expectedFiles, getRsyslogFiles(rsyslogConfig, true)...)
+				expectedFiles = append(expectedFiles, webhooktest.GetRsyslogFiles(webhooktest.GetTestingRsyslogConfig(), true)...)
 			})
 
 			It("should add additional files to the current ones", func() {
@@ -186,8 +164,8 @@ var _ = Describe("Ensurer", func() {
 			})
 
 			It("should modify already existing rsyslog configuration files", func() {
-				files = append(files, getRsyslogFiles(rsyslogConfig, false)...)
-				files = append(files, getAuditRulesFiles(false)...)
+				files = append(files, webhooktest.GetRsyslogFiles(webhooktest.GetTestingRsyslogConfig(), false)...)
+				files = append(files, webhooktest.GetAuditRulesFiles(false)...)
 
 				Expect(ensurer.EnsureAdditionalFiles(ctx, gctx, &files, nil)).To(Succeed())
 				Expect(files).To(ConsistOf(expectedFiles))
@@ -227,8 +205,8 @@ var _ = Describe("Ensurer", func() {
 					PermittedPeer:       []string{"rsyslog-server.foo", "rsyslog-server.foo.bar"},
 				}
 
-				expectedFiles = append(expectedFiles, getRsyslogFiles(rsyslogConfigWithTLS, true)...)
-				expectedFiles = append(expectedFiles, getRsyslogTLSFiles(true)...)
+				expectedFiles = append(expectedFiles, webhooktest.GetRsyslogFiles(webhooktest.GetRsyslogConfigWithTLS(), true)...)
+				expectedFiles = append(expectedFiles, webhooktest.GetRsyslogTLSFiles(true)...)
 			})
 
 			It("should add additional files to the current ones", func() {
@@ -237,9 +215,9 @@ var _ = Describe("Ensurer", func() {
 			})
 
 			It("should modify already existing rsyslog configuration files", func() {
-				files = append(files, getRsyslogFiles(rsyslogConfigWithTLS, false)...)
-				files = append(files, getAuditRulesFiles(false)...)
-				files = append(files, getRsyslogTLSFiles(false)...)
+				files = append(files, webhooktest.GetRsyslogFiles(webhooktest.GetRsyslogConfigWithTLS(), false)...)
+				files = append(files, webhooktest.GetAuditRulesFiles(false)...)
+				files = append(files, webhooktest.GetRsyslogTLSFiles(false)...)
 
 				Expect(ensurer.EnsureAdditionalFiles(ctx, gctx, &files, nil)).To(Succeed())
 				Expect(files).To(ConsistOf(expectedFiles))
@@ -277,7 +255,7 @@ auditRules: |
 					ConfigMapReferenceName: ptr.To("audit-rules"),
 				}
 
-				expectedFiles = append([]extensionsv1alpha1.File{oldFile}, getRsyslogFiles(rsyslogConfig, true)...)
+				expectedFiles = append([]extensionsv1alpha1.File{oldFile}, webhooktest.GetRsyslogFiles(webhooktest.GetTestingRsyslogConfig(), true)...)
 				expectedFiles = append(expectedFiles, []extensionsv1alpha1.File{
 					{
 						Path:        "/var/lib/rsyslog-relp-configurator/audit/rules.d/00_shoot_rsyslog_relp.rules",
@@ -303,7 +281,7 @@ auditRules: |
 				extensionProviderConfig.AuditConfig = &rsyslog.AuditConfig{
 					Enabled: false,
 				}
-				expectedFiles = append([]extensionsv1alpha1.File{oldFile}, getRsyslogFiles(rsyslogConfig, true)...)
+				expectedFiles = append([]extensionsv1alpha1.File{oldFile}, webhooktest.GetRsyslogFiles(webhooktest.GetTestingRsyslogConfig(), true)...)
 			})
 
 			It("should add additional files to the current ones, but not include audit rules files", func() {
@@ -327,7 +305,7 @@ auditRules: |
 		BeforeEach(func() {
 			ensurer = NewEnsurer(fakeClient, decoder, logger)
 			units = []extensionsv1alpha1.Unit{oldUnit}
-			expectedUnits = append([]extensionsv1alpha1.Unit{oldUnit}, getRsyslogConfiguratorUnit(true))
+			expectedUnits = append([]extensionsv1alpha1.Unit{oldUnit}, webhooktest.GetRsyslogConfiguratorUnit(true))
 		})
 
 		It("should add additional units to the current ones", func() {
@@ -336,163 +314,10 @@ auditRules: |
 		})
 
 		It("should modify existing units", func() {
-			units = append(units, getRsyslogConfiguratorUnit(false))
+			units = append(units, webhooktest.GetRsyslogConfiguratorUnit(false))
 
 			Expect(ensurer.EnsureAdditionalUnits(ctx, nil, &units, nil)).To(Succeed())
 			Expect(units).To(ConsistOf(expectedUnits))
 		})
 	})
 })
-
-func getAuditRulesFiles(useExpectedContent bool) []extensionsv1alpha1.File {
-	return []extensionsv1alpha1.File{
-		{
-			Path:        "/var/lib/rsyslog-relp-configurator/audit/rules.d/00-base-config.rules",
-			Permissions: ptr.To(uint32(0744)),
-			Content: extensionsv1alpha1.FileContent{
-				Inline: &extensionsv1alpha1.FileContentInline{
-					Encoding: "b64",
-					Data:     gardenerutils.EncodeBase64(getBasedOnCondition(useExpectedContent, baseConfigRules, []byte("oldContent"))),
-				},
-			},
-		},
-		{
-			Path:        "/var/lib/rsyslog-relp-configurator/audit/rules.d/10-privilege-escalation.rules",
-			Permissions: ptr.To(uint32(0744)),
-			Content: extensionsv1alpha1.FileContent{
-				Inline: &extensionsv1alpha1.FileContentInline{
-					Encoding: "b64",
-					Data:     gardenerutils.EncodeBase64(getBasedOnCondition(useExpectedContent, privilegeEscalationRules, []byte("oldContent"))),
-				},
-			},
-		},
-		{
-			Path:        "/var/lib/rsyslog-relp-configurator/audit/rules.d/11-privileged-special.rules",
-			Permissions: ptr.To(uint32(0744)),
-			Content: extensionsv1alpha1.FileContent{
-				Inline: &extensionsv1alpha1.FileContentInline{
-					Encoding: "b64",
-					Data:     gardenerutils.EncodeBase64(getBasedOnCondition(useExpectedContent, privilegeSpecialRules, []byte("oldContent"))),
-				},
-			},
-		},
-		{
-			Path:        "/var/lib/rsyslog-relp-configurator/audit/rules.d/12-system-integrity.rules",
-			Permissions: ptr.To(uint32(0744)),
-			Content: extensionsv1alpha1.FileContent{
-				Inline: &extensionsv1alpha1.FileContentInline{
-					Encoding: "b64",
-					Data:     gardenerutils.EncodeBase64(getBasedOnCondition(useExpectedContent, systemIntegrityRules, []byte("oldContent"))),
-				},
-			},
-		},
-	}
-}
-
-func getRsyslogFiles(rsyslogConfig []byte, useExpectedContent bool) []extensionsv1alpha1.File {
-	return []extensionsv1alpha1.File{
-		{
-			Path:        "/var/lib/rsyslog-relp-configurator/rsyslog.d/60-audit.conf",
-			Permissions: ptr.To(uint32(0744)),
-			Content: extensionsv1alpha1.FileContent{
-				Inline: &extensionsv1alpha1.FileContentInline{
-					Encoding: "b64",
-					Data:     base64.StdEncoding.EncodeToString(getBasedOnCondition(useExpectedContent, rsyslogConfig, []byte("oldContent"))),
-				},
-			},
-		},
-		{
-			Path:        "/var/lib/rsyslog-relp-configurator/configure-rsyslog.sh",
-			Permissions: ptr.To(uint32(0744)),
-			Content: extensionsv1alpha1.FileContent{
-				Inline: &extensionsv1alpha1.FileContentInline{
-					Encoding: "b64",
-					Data:     base64.StdEncoding.EncodeToString(getBasedOnCondition(useExpectedContent, confiugreRsyslogScript, []byte("oldContent"))),
-				},
-			},
-		},
-		{
-			Path:        "/var/lib/rsyslog-relp-configurator/process-rsyslog-pstats.sh",
-			Permissions: ptr.To(uint32(0744)),
-			Content: extensionsv1alpha1.FileContent{
-				Inline: &extensionsv1alpha1.FileContentInline{
-					Encoding: "b64",
-					Data:     base64.StdEncoding.EncodeToString(getBasedOnCondition(useExpectedContent, processRsyslogPstatsScript, []byte("oldContent"))),
-				},
-			},
-		},
-		{
-			Path:        "/etc/systemd/system/rsyslog.service.d/10-shoot-rsyslog-relp-memory-limits.conf",
-			Permissions: ptr.To(uint32(0644)),
-			Content: extensionsv1alpha1.FileContent{
-				Inline: &extensionsv1alpha1.FileContentInline{
-					Data: getBasedOnCondition(useExpectedContent, `[Service]
-MemoryMin=15M
-MemoryHigh=150M
-MemoryMax=300M
-MemorySwapMax=0`, "old"),
-				},
-			},
-		},
-	}
-}
-
-func getRsyslogTLSFiles(useExpectedContent bool) []extensionsv1alpha1.File {
-	return []extensionsv1alpha1.File{
-		{
-			Path:        "/var/lib/rsyslog-relp-configurator/tls/ca.crt",
-			Permissions: ptr.To(uint32(0600)),
-			Content: extensionsv1alpha1.FileContent{
-				SecretRef: &extensionsv1alpha1.FileContentSecretRef{
-					Name:    getBasedOnCondition(useExpectedContent, "ref-rsyslog-tls", "ref-rsyslog-tls-old"),
-					DataKey: "ca",
-				},
-			},
-		},
-		{
-			Path:        "/var/lib/rsyslog-relp-configurator/tls/tls.crt",
-			Permissions: ptr.To(uint32(0600)),
-			Content: extensionsv1alpha1.FileContent{
-				SecretRef: &extensionsv1alpha1.FileContentSecretRef{
-					Name:    getBasedOnCondition(useExpectedContent, "ref-rsyslog-tls", "ref-rsyslog-tls-old"),
-					DataKey: "crt",
-				},
-			},
-		},
-		{
-			Path:        "/var/lib/rsyslog-relp-configurator/tls/tls.key",
-			Permissions: ptr.To(uint32(0600)),
-			Content: extensionsv1alpha1.FileContent{
-				SecretRef: &extensionsv1alpha1.FileContentSecretRef{
-					Name:    getBasedOnCondition(useExpectedContent, "ref-rsyslog-tls", "ref-rsyslog-tls-old"),
-					DataKey: "key",
-				},
-			},
-		},
-	}
-}
-
-func getBasedOnCondition[T any](condition bool, whenTrue, whenFalse T) T {
-	if condition {
-		return whenTrue
-	}
-	return whenFalse
-}
-
-func getRsyslogConfiguratorUnit(useExpectedContent bool) extensionsv1alpha1.Unit {
-	return extensionsv1alpha1.Unit{
-		Name:    "rsyslog-configurator.service",
-		Command: ptr.To(extensionsv1alpha1.CommandStart),
-		Enable:  ptr.To(true),
-		Content: ptr.To(getBasedOnCondition(useExpectedContent, `[Unit]
-Description=rsyslog configurator daemon
-Documentation=https://github.com/gardener/gardener-extension-shoot-rsyslog-relp
-[Service]
-Type=simple
-Restart=always
-RestartSec=15
-ExecStart=/var/lib/rsyslog-relp-configurator/configure-rsyslog.sh
-[Install]
-WantedBy=multi-user.target`, `old`)),
-	}
-}
