@@ -6,9 +6,9 @@ package e2e_test
 
 import (
 	"context"
+	"os"
 
 	"github.com/gardener/gardener/pkg/client/kubernetes"
-	e2e "github.com/gardener/gardener/test/e2e/gardener"
 	"github.com/gardener/gardener/test/framework"
 	"github.com/go-logr/logr"
 	. "github.com/onsi/ginkgo/v2"
@@ -30,7 +30,13 @@ var _ = BeforeEach(func() {
 
 func defaultShootCreationFramework() *framework.ShootCreationFramework {
 	return framework.NewShootCreationFramework(&framework.ShootCreationConfig{
-		GardenerConfig: e2e.DefaultGardenConfig("garden-local"),
+		GardenerConfig: &framework.GardenerConfig{
+			CommonConfig: &framework.CommonConfig{
+				DisableStateDump: true,
+			},
+			ProjectNamespace:   "garden-local",
+			GardenerKubeconfig: os.Getenv("KUBECONFIG"),
+		},
 	})
 }
 
