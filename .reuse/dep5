@@ -36,7 +36,7 @@ Files:
   go.mod
   go.sum
   skaffold.yaml
-Copyright: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+Copyright: SAP SE or an SAP affiliate company and Gardener contributors
 License: Apache-2.0
 
 # --------------------------------------------------
@@ -44,5 +44,5 @@ License: Apache-2.0
 Files:
   docs/**
   *.md
-Copyright: 2023 SAP SE or an SAP affiliate company and Gardener contributors
+Copyright: SAP SE or an SAP affiliate company and Gardener contributors
 License: CC-BY-4.0
