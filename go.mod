@@ -6,7 +6,7 @@ require (
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/ahmetb/gen-crd-api-reference-docs v0.3.0
 	github.com/gardener/gardener v1.122.1
-	github.com/gardener/gardener/hack/tools/logcheck v0.0.0-20250415072957-98a8da46a80a
+	github.com/gardener/gardener/hack/tools/logcheck v0.0.0-20250523171839-485c25124ea5
 	github.com/go-logr/logr v1.4.2
 	github.com/onsi/ginkgo/v2 v2.23.4
 	github.com/onsi/gomega v1.37.0
