@@ -30,7 +30,7 @@ Files:
   example/kustomization.yaml
   hack/api-reference/*.json
   hack/cherry-pick-pull.sh
-  test/integration/controller/lifecycle/resources/*.yaml
+  test/integration/resources/*.yaml
   **/testdata/**
   local-setup
   go.mod
