@@ -79,7 +79,7 @@ var _ = Describe("Ensurer", func() {
 					Workers: []gardencorev1beta1.Worker{{Name: "worker"}},
 				},
 				Kubernetes: gardencorev1beta1.Kubernetes{
-					Version: "1.27.2",
+					Version: "1.29.0",
 				},
 			},
 		}
