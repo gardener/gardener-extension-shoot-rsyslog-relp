@@ -78,9 +78,6 @@ var _ = Describe("Ensurer", func() {
 				Provider: gardencorev1beta1.Provider{
 					Workers: []gardencorev1beta1.Worker{{Name: "worker"}},
 				},
-				Kubernetes: gardencorev1beta1.Kubernetes{
-					Version: "1.29.0",
-				},
 			},
 		}
 
