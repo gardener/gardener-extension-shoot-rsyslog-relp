@@ -160,7 +160,7 @@ var _ = BeforeSuite(func() {
 		},
 		Spec: gardencorev1beta1.ShootSpec{
 			Kubernetes: gardencorev1beta1.Kubernetes{
-				Version: "1.29.0",
+				Version: "1.33.0",
 			},
 		},
 	}
