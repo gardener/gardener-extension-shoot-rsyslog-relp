@@ -1,0 +1,47 @@
+version = 1
+SPDX-PackageName = "Gardener gardener-extension-shoot-rsyslog-relp"
+SPDX-PackageSupplier = "The Gardener project <gardener@googlegroups.com>"
+SPDX-PackageDownloadLocation = "https://github.com/gardener/gardener-extension-shoot-rsyslog-relp"
+
+[[annotations]]
+path = [
+    ".gitignore",
+    ".github/**",
+    ".golangci.yaml.in",
+    ".test-defs/**",
+    "CODEOWNERS",
+    "OWNERS",
+    "OWNERS_ALIASES",
+    "VERSION",
+    "charts/gardener-extension-shoot-rsyslog-relp/.helmignore",
+    "charts/gardener-extension-shoot-rsyslog-relp/templates/_helpers.tpl",
+    "charts/gardener-extension-shoot-rsyslog-relp-admission/charts/application/.helmignore",
+    "charts/gardener-extension-shoot-rsyslog-relp-admission/charts/application/templates/_helpers.tpl",
+    "charts/gardener-extension-shoot-rsyslog-relp-admission/charts/runtime/.helmignore",
+    "charts/gardener-extension-shoot-rsyslog-relp-admission/charts/runtime/templates/_helpers.tpl",
+    "example/extension/.gitignore",
+    "example/extension/extension-config-patch.yaml.tmpl",
+    "example/local/charts/rsyslog-relp-echo-server/.helmignore",
+    "example/controller-registration.yaml",
+    "example/kustomization.yaml",
+    "hack/api-reference/**.json",
+    "hack/cherry-pick-pull.sh",
+    "test/integration/resources/**.yaml",
+    "**/testdata/**",
+    "local-setup/**",
+    "go.mod",
+    "go.sum",
+    "skaffold.yaml"
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "SAP SE or an SAP affiliate company and Gardener contributors"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = [
+    "docs/**",
+    "**.md"
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "SAP SE or an SAP affiliate company and Gardener contributors"
+SPDX-License-Identifier = "CC-BY-4.0"
