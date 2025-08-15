@@ -5,9 +5,10 @@ SPDX-PackageDownloadLocation = "https://github.com/gardener/gardener-extension-s
 
 [[annotations]]
 path = [
-    ".gitignore",
     ".github/**",
+    ".gitignore",
     ".golangci.yaml.in",
+    ".ocm/**",
     ".test-defs/**",
     "CODEOWNERS",
     "OWNERS",
