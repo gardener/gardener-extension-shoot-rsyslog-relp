@@ -29,7 +29,7 @@ jobs:
       linter: gosec
       run: |
         set -euo pipefail
-        if [ '${{ inputs.mode }} ' == 'release' ]; then
+        if [ '${{ inputs.mode }}' == 'release' ]; then
           make verify-extended
           # verify-extended depends on `sast-report` target, which generates `gosec-report.sarif`
         else
