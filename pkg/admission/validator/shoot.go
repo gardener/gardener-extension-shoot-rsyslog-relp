@@ -163,6 +163,9 @@ func validateAuditConfigMap(decoder runtime.Decoder, configMap *corev1.ConfigMap
 	if !ok {
 		return fmt.Errorf("missing 'data.%s' field in configMap %s", constants.AuditdConfigMapDataKey, configMapKey.String())
 	}
+	if len(configMap.Data) != 1 {
+		return fmt.Errorf("configmap %s should have only one entry", configMapKey.String())
+	}
 	if len(auditdConfigString) == 0 {
 		return fmt.Errorf("empty auditd config. Provide non-empty auditd config in configMap %s", configMapKey.String())
 	}
