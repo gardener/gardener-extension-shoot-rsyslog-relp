@@ -360,12 +360,15 @@ auditConfig:
 					Expect(shootValidator.Validate(ctx, shoot, nil)).To(MatchError(ContainSubstring("referenced configMap bar/audit-configmap does not exist")))
 				})
 
-				DescribeTable("when referenced configMap is not valid",
-					func(auditdData string, immutable bool, matcher types.GomegaMatcher) {
+				DescribeTable("validating referenced configMap",
+					func(auditdData *string, extraData string, immutable bool, matcher types.GomegaMatcher) {
 						var data = map[string]string{}
 
-						if len(auditdData) > 0 {
-							data["auditd"] = auditdData
+						if auditdData != nil {
+							data["auditd"] = *auditdData
+						}
+						if len(extraData) > 0 {
+							data["extra"] = extraData
 						}
 
 						configMap := &corev1.ConfigMap{
@@ -382,23 +385,28 @@ auditConfig:
 					},
 					Entry(
 						"should return error when referenced configmap is mutable",
-						"", false,
+						ptr.To(""), "", false,
 						MatchError(ContainSubstring("configMap bar/audit-configmap must be immutable")),
 					),
 					Entry(
 						"should return error if referenced configMap is empty",
-						"", true,
+						nil, "", true,
 						MatchError(ContainSubstring("missing 'data.auditd' field in configMap bar/audit-configmap")),
 					),
 					Entry(
+						"should return error if referenced configMap has no data in 'data.auditd'",
+						ptr.To(""), "", true,
+						MatchError(ContainSubstring("empty auditd config. Provide non-empty auditd config in configMap bar/audit-configmap")),
+					),
+					Entry(
 						"should return error if referenced configMap contains invalid config",
-						"some policy", true,
+						ptr.To("some policy"), "", true,
 						MatchError(ContainSubstring("could not decode 'data.auditd' field of configMap bar/audit-configmap")),
 					),
 					Entry(
 						"should return error if referenced configMap contains config with invalid kind",
-						`apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
-kind: Foo`,
+						ptr.To(`apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
+kind: Foo`), "",
 						true,
 						MatchError(runtime.NewNotRegisteredErrForKind(
 							kubernetes.GardenScheme.Name(),
@@ -411,8 +419,8 @@ kind: Foo`,
 					),
 					Entry(
 						"should return error if referenced configMap contains invalid auditd config",
-						`apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
-kind: Auditd`,
+						ptr.To(`apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
+kind: Auditd`), "",
 						true,
 						ConsistOf(
 							PointTo(MatchFields(IgnoreExtras, Fields{
@@ -423,10 +431,18 @@ kind: Auditd`,
 							}))),
 					),
 					Entry(
-						"should return error if secret is mutable",
-						`apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
+						"should return error if configmap contains extra data",
+						ptr.To(`apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
 kind: Auditd
-auditRules: -a exit,always -F arch=b64 -S setuid -S setreuid -S setgid -S setregid -F auid>0 -F auid!=-1 -F key=privilege_escalation`,
+auditRules: -a exit,always -F arch=b64 -S setuid -S setreuid -S setgid -S setregid -F auid>0 -F auid!=-1 -F key=privilege_escalation`), "foo",
+						true,
+						MatchError(ContainSubstring("configmap bar/audit-configmap should have only one entry")),
+					),
+					Entry(
+						"should succeed",
+						ptr.To(`apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
+kind: Auditd
+auditRules: -a exit,always -F arch=b64 -S setuid -S setreuid -S setgid -S setregid -F auid>0 -F auid!=-1 -F key=privilege_escalation`), "",
 						true,
 						Succeed(),
 					),
