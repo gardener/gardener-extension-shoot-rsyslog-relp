@@ -101,8 +101,8 @@ check: $(GOIMPORTS) $(GOLANGCI_LINT) $(HELM) $(YQ) $(LOGCHECK)
 	@GARDENER_HACK_DIR=$(GARDENER_HACK_DIR) $(HACK_DIR)/check-skaffold-deps.sh
 
 .PHONY: generate
-generate: $(VGOPATH) $(CONTROLLER_GEN) $(GEN_CRD_API_REFERENCE_DOCS) $(GOIMPORTS) $(HELM) $(YQ)
-	@REPO_ROOT=$(REPO_ROOT) VGOPATH=$(VGOPATH) GARDENER_HACK_DIR=$(GARDENER_HACK_DIR) bash $(GARDENER_HACK_DIR)/generate-sequential.sh ./charts/... ./cmd/... ./pkg/... ./imagevector/... ./test/...
+generate: $(VGOPATH) $(CONTROLLER_GEN) $(EXTENSION_GEN) $(GEN_CRD_API_REFERENCE_DOCS) $(GOIMPORTS) $(HELM) $(KUSTOMIZE) $(YQ)
+	@REPO_ROOT=$(REPO_ROOT) VGOPATH=$(VGOPATH) GARDENER_HACK_DIR=$(GARDENER_HACK_DIR) bash $(GARDENER_HACK_DIR)/generate-sequential.sh ./charts/... ./cmd/... ./example/... ./imagevector/... ./pkg/... ./test/...
 
 .PHONY: generate-controller-registration
 generate-controller-registration:
