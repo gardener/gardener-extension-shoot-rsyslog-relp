@@ -1,3 +1,5 @@
 *
+!registration/
+!registration/**
 !.gitignore
 !extension-config-patch.yaml.tmpl

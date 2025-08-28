@@ -1,0 +1,22 @@
+apiVersion: operator.gardener.cloud/v1alpha1
+kind: Extension
+metadata:
+  name: extension-shoot-rsyslog-relp
+spec:
+  deployment:
+    admission:
+      runtimeCluster:
+        helm:
+          ociRepository:
+            ref: europe-docker.pkg.dev/gardener-project/public/charts/gardener/extensions/shoot-rsyslog-relp-admission-runtime:v0.11.0-dev
+      virtualCluster:
+        helm:
+          ociRepository:
+            ref: europe-docker.pkg.dev/gardener-project/public/charts/gardener/extensions/shoot-rsyslog-relp-admission-application:v0.11.0-dev
+    extension:
+      helm:
+        ociRepository:
+          ref: europe-docker.pkg.dev/gardener-project/public/charts/gardener/extensions/shoot-rsyslog-relp:v0.11.0-dev
+  resources:
+  - kind: Extension
+    type: shoot-rsyslog-relp
