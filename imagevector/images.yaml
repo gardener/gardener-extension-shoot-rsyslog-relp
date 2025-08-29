@@ -5,6 +5,7 @@
 ---
 images:
 - name: alpine
+  sourceRepository: github.com/alpinelinux/docker-alpine
   repository: europe-docker.pkg.dev/gardener-project/releases/3rd/alpine
   tag: "3.22.1"
   labels:
