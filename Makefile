@@ -105,7 +105,7 @@ generate: $(VGOPATH) $(CONTROLLER_GEN) $(EXTENSION_GEN) $(GEN_CRD_API_REFERENCE_
 	@REPO_ROOT=$(REPO_ROOT) VGOPATH=$(VGOPATH) GARDENER_HACK_DIR=$(GARDENER_HACK_DIR) bash $(GARDENER_HACK_DIR)/generate-sequential.sh ./charts/... ./cmd/... ./example/... ./imagevector/... ./pkg/... ./test/...
 
 .PHONY: generate-extension
-generate-extension:
+generate-extension: $(EXTENSION_GEN) $(KUSTOMIZE)
 	@bash $(GARDENER_HACK_DIR)/generate-sequential.sh ./example/...
 
 .PHONY: generate-controller-registration
