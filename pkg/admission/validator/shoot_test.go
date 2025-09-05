@@ -112,6 +112,12 @@ loggingRules:
 					"BadValue": Equal(""),
 					"Detail":   Equal("target must not be empty"),
 				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("target"),
+					"BadValue": Equal(""),
+					"Detail":   Equal("target must be a valid IPv4/IPv6 address, domain or hostname"),
+				})),
 			))
 		})
 

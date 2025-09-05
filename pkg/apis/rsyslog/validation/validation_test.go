@@ -66,6 +66,52 @@ var _ = Describe("Validation", func() {
 					"BadValue": Equal(""),
 					"Detail":   Equal("target must not be empty"),
 				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("target"),
+					"BadValue": Equal(""),
+					"Detail":   Equal("target must be a valid IPv4/IPv6 address, domain or hostname"),
+				})),
+			)
+
+			errorList := validation.ValidateRsyslogRelpConfig(&config, field.NewPath(""))
+			Expect(errorList).To(matcher)
+		})
+
+		It("should not allow a non-canonical IPv6 address for a target", func() {
+			config := rsyslog.RsyslogRelpConfig{
+				Target:       "2001:db8:0:0:0:0:0:1",
+				Port:         relpTargetPort,
+				LoggingRules: loggingRules,
+			}
+
+			matcher := ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("target"),
+					"BadValue": Equal("2001:db8:0:0:0:0:0:1"),
+					"Detail":   Equal("target must be a valid IPv4/IPv6 address, domain or hostname"),
+				})),
+			)
+
+			errorList := validation.ValidateRsyslogRelpConfig(&config, field.NewPath(""))
+			Expect(errorList).To(matcher)
+		})
+
+		It("should not allow an invalid domain for a target", func() {
+			config := rsyslog.RsyslogRelpConfig{
+				Target:       ".blah.blah",
+				Port:         relpTargetPort,
+				LoggingRules: loggingRules,
+			}
+
+			matcher := ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("target"),
+					"BadValue": Equal(".blah.blah"),
+					"Detail":   Equal("target must be a valid IPv4/IPv6 address, domain or hostname"),
+				})),
 			)
 
 			errorList := validation.ValidateRsyslogRelpConfig(&config, field.NewPath(""))

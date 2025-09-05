@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
@@ -31,6 +32,9 @@ func validateTarget(target string, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 	if target == "" {
 		allErrs = append(allErrs, field.Required(fldPath, "target must not be empty"))
+	}
+	if len(validation.IsValidIP(fldPath, target)) != 0 && len(validation.IsFullyQualifiedDomainName(fldPath, target)) != 0 && len(validation.IsDNS1123Subdomain(target)) != 0 {
+		allErrs = append(allErrs, field.Invalid(fldPath, target, "target must be a valid IPv4/IPv6 address, domain or hostname"))
 	}
 
 	return allErrs
