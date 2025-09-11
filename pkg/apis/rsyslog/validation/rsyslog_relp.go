@@ -99,6 +99,7 @@ func validateLoggingRules(loggingRules []rsyslog.LoggingRule, fldPath *field.Pat
 			if len(rule.ProgramNames) == 0 && rule.Severity == nil && rule.MessageContent == nil {
 				allErrs = append(allErrs, field.Required(fldPath.Index(index), "at least one of .programNames, .messageContent, or .severity is required"))
 			}
+			allErrs = append(allErrs, validateProgramNames(rule.ProgramNames, fldPath.Child("programNames"))...)
 			if rule.MessageContent != nil {
 				if rule.MessageContent.Regex == nil && rule.MessageContent.Exclude == nil {
 					allErrs = append(allErrs, field.Required(fldPath.Index(index).Child("messageContent"), "either .regex or .exclude has to be provided"))
@@ -113,6 +114,17 @@ func validateLoggingRules(loggingRules []rsyslog.LoggingRule, fldPath *field.Pat
 		}
 	}
 
+	return allErrs
+}
+
+func validateProgramNames(programNames []string, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+	validatingRegex, _ := regexp.CompilePOSIX(`[[:/]`)
+	for index, name := range programNames {
+		if validatingRegex.MatchString(name) {
+			allErrs = append(allErrs, field.Invalid(fldPath.Index(index), name, ".programNames can't contain `[`, `:` or `/`"))
+		}
+	}
 	return allErrs
 }
 

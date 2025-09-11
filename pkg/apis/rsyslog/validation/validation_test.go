@@ -157,6 +157,38 @@ var _ = Describe("Validation", func() {
 			Expect(errorList).To(matcher)
 		})
 
+		It("should not allow a logging rule with set programNames to have invalid characters in the names", func() {
+			config := rsyslog.RsyslogRelpConfig{
+				Target:       relpTarget,
+				Port:         relpTargetPort,
+				LoggingRules: []rsyslog.LoggingRule{{ProgramNames: []string{"kube[let", ":kubelet", "kubelet/kubelet"}, Severity: ptr.To(4)}},
+			}
+
+			matcher := ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("loggingRules.programNames[0]"),
+					"BadValue": Equal("kube[let"),
+					"Detail":   Equal(".programNames can't contain `[`, `:` or `/`"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("loggingRules.programNames[1]"),
+					"BadValue": Equal(":kubelet"),
+					"Detail":   Equal(".programNames can't contain `[`, `:` or `/`"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("loggingRules.programNames[2]"),
+					"BadValue": Equal("kubelet/kubelet"),
+					"Detail":   Equal(".programNames can't contain `[`, `:` or `/`"),
+				})),
+			)
+
+			errorList := validation.ValidateRsyslogRelpConfig(&config, path)
+			Expect(errorList).To(matcher)
+		})
+
 		It("should not allow a logging rule to be empty (no fields set)", func() {
 			config := rsyslog.RsyslogRelpConfig{
 				Target: relpTarget,
