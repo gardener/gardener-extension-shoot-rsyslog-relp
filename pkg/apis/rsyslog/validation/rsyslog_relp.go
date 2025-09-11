@@ -85,6 +85,10 @@ func validateTLS(tls *rsyslog.TLS, fldPath *field.Path) field.ErrorList {
 		if permittedPeer == "" {
 			allErrs = append(allErrs, field.Required(fldPath.Child("permittedPeer").Index(i), "value cannot be empty"))
 		}
+		validatingRegex, _ := regexp.CompilePOSIX(`^SHA1:[0-9A-Fa-f]{40}$`)
+		if !validatingRegex.MatchString(permittedPeer) && len(validation.IsWildcardDNS1123Subdomain(permittedPeer)) != 0 && len(validation.IsDNS1123Subdomain(permittedPeer)) != 0 {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("permittedPeer").Index(i), permittedPeer, ".permitedPeer elements can only match `^SHA1:[0-9A-Fa-f]{40}$` or be a hostname (wildcards allowed)"))
+		}
 	}
 
 	return allErrs

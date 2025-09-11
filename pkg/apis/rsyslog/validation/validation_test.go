@@ -368,6 +368,36 @@ var _ = Describe("Validation", func() {
 							"BadValue": Equal(""),
 							"Detail":   Equal("value cannot be empty"),
 						})),
+						PointTo(MatchFields(IgnoreExtras, Fields{
+							"Type":     Equal(field.ErrorTypeInvalid),
+							"Field":    Equal("tls.permittedPeer[1]"),
+							"BadValue": Equal(""),
+							"Detail":   Equal(".permitedPeer elements can only match `^SHA1:[0-9A-Fa-f]{40}$` or be a hostname (wildcards allowed)"),
+						})),
+					),
+				),
+
+				Entry("should forbid config if any permittedPeer isn't an allowed value",
+					rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secret-name"), PermittedPeer: []string{"peer1", "SHA1:zzz", "*.*.bar.com", "/peer1"}},
+					ConsistOf(
+						PointTo(MatchFields(IgnoreExtras, Fields{
+							"Type":     Equal(field.ErrorTypeInvalid),
+							"Field":    Equal("tls.permittedPeer[1]"),
+							"BadValue": Equal("SHA1:zzz"),
+							"Detail":   Equal(".permitedPeer elements can only match `^SHA1:[0-9A-Fa-f]{40}$` or be a hostname (wildcards allowed)"),
+						})),
+						PointTo(MatchFields(IgnoreExtras, Fields{
+							"Type":     Equal(field.ErrorTypeInvalid),
+							"Field":    Equal("tls.permittedPeer[2]"),
+							"BadValue": Equal("*.*.bar.com"),
+							"Detail":   Equal(".permitedPeer elements can only match `^SHA1:[0-9A-Fa-f]{40}$` or be a hostname (wildcards allowed)"),
+						})),
+						PointTo(MatchFields(IgnoreExtras, Fields{
+							"Type":     Equal(field.ErrorTypeInvalid),
+							"Field":    Equal("tls.permittedPeer[3]"),
+							"BadValue": Equal("/peer1"),
+							"Detail":   Equal(".permitedPeer elements can only match `^SHA1:[0-9A-Fa-f]{40}$` or be a hostname (wildcards allowed)"),
+						})),
 					),
 				),
 			)

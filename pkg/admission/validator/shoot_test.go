@@ -338,6 +338,12 @@ tls:
 								"BadValue": Equal(""),
 								"Detail":   Equal("value cannot be empty"),
 							})),
+							PointTo(MatchFields(IgnoreExtras, Fields{
+								"Type":     Equal(field.ErrorTypeInvalid),
+								"Field":    Equal("tls.permittedPeer[1]"),
+								"BadValue": Equal(""),
+								"Detail":   Equal(".permitedPeer elements can only match `^SHA1:[0-9A-Fa-f]{40}$` or be a hostname (wildcards allowed)"),
+							})),
 						))
 					})
 				})
