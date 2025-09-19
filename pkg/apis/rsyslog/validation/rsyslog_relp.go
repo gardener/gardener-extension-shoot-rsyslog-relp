@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
@@ -31,6 +32,9 @@ func validateTarget(target string, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 	if target == "" {
 		allErrs = append(allErrs, field.Required(fldPath, "target must not be empty"))
+	}
+	if len(validation.IsValidIP(fldPath, target)) != 0 && len(validation.IsFullyQualifiedDomainName(fldPath, target)) != 0 && len(validation.IsDNS1123Subdomain(target)) != 0 {
+		allErrs = append(allErrs, field.Invalid(fldPath, target, "target must be a valid IPv4/IPv6 address, domain or hostname"))
 	}
 
 	return allErrs
@@ -81,6 +85,10 @@ func validateTLS(tls *rsyslog.TLS, fldPath *field.Path) field.ErrorList {
 		if permittedPeer == "" {
 			allErrs = append(allErrs, field.Required(fldPath.Child("permittedPeer").Index(i), "value cannot be empty"))
 		}
+		validatingRegex, _ := regexp.CompilePOSIX(`^SHA1:[0-9A-Fa-f]{40}$`)
+		if !validatingRegex.MatchString(permittedPeer) && len(validation.IsWildcardDNS1123Subdomain(permittedPeer)) != 0 && len(validation.IsDNS1123Subdomain(permittedPeer)) != 0 {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("permittedPeer").Index(i), permittedPeer, ".permitedPeer elements can only match `^SHA1:[0-9A-Fa-f]{40}$` or be a hostname (wildcards allowed)"))
+		}
 	}
 
 	return allErrs
@@ -95,6 +103,7 @@ func validateLoggingRules(loggingRules []rsyslog.LoggingRule, fldPath *field.Pat
 			if len(rule.ProgramNames) == 0 && rule.Severity == nil && rule.MessageContent == nil {
 				allErrs = append(allErrs, field.Required(fldPath.Index(index), "at least one of .programNames, .messageContent, or .severity is required"))
 			}
+			allErrs = append(allErrs, validateProgramNames(rule.ProgramNames, fldPath.Child("programNames"))...)
 			if rule.MessageContent != nil {
 				if rule.MessageContent.Regex == nil && rule.MessageContent.Exclude == nil {
 					allErrs = append(allErrs, field.Required(fldPath.Index(index).Child("messageContent"), "either .regex or .exclude has to be provided"))
@@ -109,6 +118,17 @@ func validateLoggingRules(loggingRules []rsyslog.LoggingRule, fldPath *field.Pat
 		}
 	}
 
+	return allErrs
+}
+
+func validateProgramNames(programNames []string, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+	validatingRegex, _ := regexp.CompilePOSIX(`[[:/]`)
+	for index, name := range programNames {
+		if validatingRegex.MatchString(name) {
+			allErrs = append(allErrs, field.Invalid(fldPath.Index(index), name, ".programNames can't contain `[`, `:` or `/`"))
+		}
+	}
 	return allErrs
 }
 
