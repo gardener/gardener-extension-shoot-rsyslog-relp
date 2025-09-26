@@ -66,6 +66,52 @@ var _ = Describe("Validation", func() {
 					"BadValue": Equal(""),
 					"Detail":   Equal("target must not be empty"),
 				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("target"),
+					"BadValue": Equal(""),
+					"Detail":   Equal("target must be a valid IPv4/IPv6 address, domain or hostname"),
+				})),
+			)
+
+			errorList := validation.ValidateRsyslogRelpConfig(&config, field.NewPath(""))
+			Expect(errorList).To(matcher)
+		})
+
+		It("should not allow a non-canonical IPv6 address for a target", func() {
+			config := rsyslog.RsyslogRelpConfig{
+				Target:       "2001:db8:0:0:0:0:0:1",
+				Port:         relpTargetPort,
+				LoggingRules: loggingRules,
+			}
+
+			matcher := ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("target"),
+					"BadValue": Equal("2001:db8:0:0:0:0:0:1"),
+					"Detail":   Equal("target must be a valid IPv4/IPv6 address, domain or hostname"),
+				})),
+			)
+
+			errorList := validation.ValidateRsyslogRelpConfig(&config, field.NewPath(""))
+			Expect(errorList).To(matcher)
+		})
+
+		It("should not allow an invalid domain for a target", func() {
+			config := rsyslog.RsyslogRelpConfig{
+				Target:       ".blah.blah",
+				Port:         relpTargetPort,
+				LoggingRules: loggingRules,
+			}
+
+			matcher := ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("target"),
+					"BadValue": Equal(".blah.blah"),
+					"Detail":   Equal("target must be a valid IPv4/IPv6 address, domain or hostname"),
+				})),
 			)
 
 			errorList := validation.ValidateRsyslogRelpConfig(&config, field.NewPath(""))
@@ -104,6 +150,38 @@ var _ = Describe("Validation", func() {
 					"Field":    Equal("loggingRules"),
 					"BadValue": Equal(""),
 					"Detail":   Equal("at least one logging rule is required"),
+				})),
+			)
+
+			errorList := validation.ValidateRsyslogRelpConfig(&config, path)
+			Expect(errorList).To(matcher)
+		})
+
+		It("should not allow a logging rule with set programNames to have invalid characters in the names", func() {
+			config := rsyslog.RsyslogRelpConfig{
+				Target:       relpTarget,
+				Port:         relpTargetPort,
+				LoggingRules: []rsyslog.LoggingRule{{ProgramNames: []string{"kube[let", ":kubelet", "kubelet/kubelet"}, Severity: ptr.To(4)}},
+			}
+
+			matcher := ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("loggingRules.programNames[0]"),
+					"BadValue": Equal("kube[let"),
+					"Detail":   Equal(".programNames can't contain `[`, `:` or `/`"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("loggingRules.programNames[1]"),
+					"BadValue": Equal(":kubelet"),
+					"Detail":   Equal(".programNames can't contain `[`, `:` or `/`"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("loggingRules.programNames[2]"),
+					"BadValue": Equal("kubelet/kubelet"),
+					"Detail":   Equal(".programNames can't contain `[`, `:` or `/`"),
 				})),
 			)
 
@@ -289,6 +367,36 @@ var _ = Describe("Validation", func() {
 							"Field":    Equal("tls.permittedPeer[1]"),
 							"BadValue": Equal(""),
 							"Detail":   Equal("value cannot be empty"),
+						})),
+						PointTo(MatchFields(IgnoreExtras, Fields{
+							"Type":     Equal(field.ErrorTypeInvalid),
+							"Field":    Equal("tls.permittedPeer[1]"),
+							"BadValue": Equal(""),
+							"Detail":   Equal(".permitedPeer elements can only match `^SHA1:[0-9A-Fa-f]{40}$` or be a hostname (wildcards allowed)"),
+						})),
+					),
+				),
+
+				Entry("should forbid config if any permittedPeer isn't an allowed value",
+					rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secret-name"), PermittedPeer: []string{"peer1", "SHA1:zzz", "*.*.bar.com", "/peer1"}},
+					ConsistOf(
+						PointTo(MatchFields(IgnoreExtras, Fields{
+							"Type":     Equal(field.ErrorTypeInvalid),
+							"Field":    Equal("tls.permittedPeer[1]"),
+							"BadValue": Equal("SHA1:zzz"),
+							"Detail":   Equal(".permitedPeer elements can only match `^SHA1:[0-9A-Fa-f]{40}$` or be a hostname (wildcards allowed)"),
+						})),
+						PointTo(MatchFields(IgnoreExtras, Fields{
+							"Type":     Equal(field.ErrorTypeInvalid),
+							"Field":    Equal("tls.permittedPeer[2]"),
+							"BadValue": Equal("*.*.bar.com"),
+							"Detail":   Equal(".permitedPeer elements can only match `^SHA1:[0-9A-Fa-f]{40}$` or be a hostname (wildcards allowed)"),
+						})),
+						PointTo(MatchFields(IgnoreExtras, Fields{
+							"Type":     Equal(field.ErrorTypeInvalid),
+							"Field":    Equal("tls.permittedPeer[3]"),
+							"BadValue": Equal("/peer1"),
+							"Detail":   Equal(".permitedPeer elements can only match `^SHA1:[0-9A-Fa-f]{40}$` or be a hostname (wildcards allowed)"),
 						})),
 					),
 				),
