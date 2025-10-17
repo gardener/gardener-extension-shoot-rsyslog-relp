@@ -104,6 +104,7 @@ check: $(GOIMPORTS) $(GOLANGCI_LINT) $(HELM) $(YQ) $(LOGCHECK)
 .PHONY: generate
 generate: $(VGOPATH) $(CONTROLLER_GEN) $(EXTENSION_GEN) $(GEN_CRD_API_REFERENCE_DOCS) $(GOIMPORTS) $(HELM) $(KUSTOMIZE) $(YQ)
 	@REPO_ROOT=$(REPO_ROOT) VGOPATH=$(VGOPATH) GARDENER_HACK_DIR=$(GARDENER_HACK_DIR) bash $(GARDENER_HACK_DIR)/generate-sequential.sh ./charts/... ./cmd/... ./example/... ./imagevector/... ./pkg/... ./test/...
+	$(MAKE) format
 
 .PHONY: generate-extension
 generate-extension: $(EXTENSION_GEN) $(KUSTOMIZE)
