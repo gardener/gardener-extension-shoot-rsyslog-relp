@@ -66,12 +66,6 @@ var _ = Describe("Validation", func() {
 					"BadValue": Equal(""),
 					"Detail":   Equal("target must not be empty"),
 				})),
-				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("target"),
-					"BadValue": Equal(""),
-					"Detail":   Equal("target must be a valid IPv4/IPv6 address, domain or hostname"),
-				})),
 			)
 
 			errorList := validation.ValidateRsyslogRelpConfig(&config, field.NewPath(""))
@@ -90,7 +84,13 @@ var _ = Describe("Validation", func() {
 					"Type":     Equal(field.ErrorTypeInvalid),
 					"Field":    Equal("target"),
 					"BadValue": Equal("2001:db8:0:0:0:0:0:1"),
-					"Detail":   Equal("target must be a valid IPv4/IPv6 address, domain or hostname"),
+					"Detail":   Equal("must be in canonical form (\"2001:db8::1\")"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("target"),
+					"BadValue": Equal("2001:db8:0:0:0:0:0:1"),
+					"Detail":   Equal("a lowercase RFC 1123 subdomain must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character (e.g. 'example.com', regex used for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*')"),
 				})),
 			)
 
@@ -110,7 +110,13 @@ var _ = Describe("Validation", func() {
 					"Type":     Equal(field.ErrorTypeInvalid),
 					"Field":    Equal("target"),
 					"BadValue": Equal(".blah.blah"),
-					"Detail":   Equal("target must be a valid IPv4/IPv6 address, domain or hostname"),
+					"Detail":   Equal("must be a valid IP address, (e.g. 10.9.8.7 or 2001:db8::ffff)"),
+				})),
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("target"),
+					"BadValue": Equal(".blah.blah"),
+					"Detail":   Equal("a lowercase RFC 1123 subdomain must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character (e.g. 'example.com', regex used for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*')"),
 				})),
 			)
 
@@ -182,6 +188,26 @@ var _ = Describe("Validation", func() {
 					"Field":    Equal("loggingRules.programNames[2]"),
 					"BadValue": Equal("kubelet/kubelet"),
 					"Detail":   Equal(".programNames can't contain `[`, `:` or `/`"),
+				})),
+			)
+
+			errorList := validation.ValidateRsyslogRelpConfig(&config, path)
+			Expect(errorList).To(matcher)
+		})
+
+		It("should not allow a logging rule with set programNames to have non-printable ASCI characters in the names", func() {
+			config := rsyslog.RsyslogRelpConfig{
+				Target:       relpTarget,
+				Port:         relpTargetPort,
+				LoggingRules: []rsyslog.LoggingRule{{ProgramNames: []string{"kube let"}, Severity: ptr.To(4)}},
+			}
+
+			matcher := ConsistOf(
+				PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":     Equal(field.ErrorTypeInvalid),
+					"Field":    Equal("loggingRules.programNames[0]"),
+					"BadValue": Equal("kube let"),
+					"Detail":   Equal(".programNames can only contain printable characters"),
 				})),
 			)
 
@@ -368,17 +394,11 @@ var _ = Describe("Validation", func() {
 							"BadValue": Equal(""),
 							"Detail":   Equal("value cannot be empty"),
 						})),
-						PointTo(MatchFields(IgnoreExtras, Fields{
-							"Type":     Equal(field.ErrorTypeInvalid),
-							"Field":    Equal("tls.permittedPeer[1]"),
-							"BadValue": Equal(""),
-							"Detail":   Equal(".permitedPeer elements can only match `^SHA1:[0-9A-Fa-f]{40}$` or be a hostname (wildcards allowed)"),
-						})),
 					),
 				),
 
 				Entry("should forbid config if any permittedPeer isn't an allowed value",
-					rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secret-name"), PermittedPeer: []string{"peer1", "SHA1:zzz", "*.*.bar.com", "/peer1"}},
+					rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secret-name"), PermittedPeer: []string{"peer1", "SHA1:zzz", "*.*.bar.com"}},
 					ConsistOf(
 						PointTo(MatchFields(IgnoreExtras, Fields{
 							"Type":     Equal(field.ErrorTypeInvalid),
@@ -388,15 +408,33 @@ var _ = Describe("Validation", func() {
 						})),
 						PointTo(MatchFields(IgnoreExtras, Fields{
 							"Type":     Equal(field.ErrorTypeInvalid),
+							"Field":    Equal("tls.permittedPeer[1]"),
+							"BadValue": Equal("SHA1:zzz"),
+							"Detail":   Equal("a wildcard DNS-1123 subdomain must start with '*.', followed by a valid DNS subdomain, which must consist of lower case alphanumeric characters, '-' or '.' and end with an alphanumeric character (e.g. '*.example.com', regex used for validation is '\\*\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*')"),
+						})),
+						PointTo(MatchFields(IgnoreExtras, Fields{
+							"Type":     Equal(field.ErrorTypeInvalid),
+							"Field":    Equal("tls.permittedPeer[1]"),
+							"BadValue": Equal("SHA1:zzz"),
+							"Detail":   Equal("a lowercase RFC 1123 subdomain must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character (e.g. 'example.com', regex used for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*')"),
+						})),
+						PointTo(MatchFields(IgnoreExtras, Fields{
+							"Type":     Equal(field.ErrorTypeInvalid),
 							"Field":    Equal("tls.permittedPeer[2]"),
 							"BadValue": Equal("*.*.bar.com"),
 							"Detail":   Equal(".permitedPeer elements can only match `^SHA1:[0-9A-Fa-f]{40}$` or be a hostname (wildcards allowed)"),
 						})),
 						PointTo(MatchFields(IgnoreExtras, Fields{
 							"Type":     Equal(field.ErrorTypeInvalid),
-							"Field":    Equal("tls.permittedPeer[3]"),
-							"BadValue": Equal("/peer1"),
-							"Detail":   Equal(".permitedPeer elements can only match `^SHA1:[0-9A-Fa-f]{40}$` or be a hostname (wildcards allowed)"),
+							"Field":    Equal("tls.permittedPeer[2]"),
+							"BadValue": Equal("*.*.bar.com"),
+							"Detail":   Equal("a wildcard DNS-1123 subdomain must start with '*.', followed by a valid DNS subdomain, which must consist of lower case alphanumeric characters, '-' or '.' and end with an alphanumeric character (e.g. '*.example.com', regex used for validation is '\\*\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*')"),
+						})),
+						PointTo(MatchFields(IgnoreExtras, Fields{
+							"Type":     Equal(field.ErrorTypeInvalid),
+							"Field":    Equal("tls.permittedPeer[2]"),
+							"BadValue": Equal("*.*.bar.com"),
+							"Detail":   Equal("a lowercase RFC 1123 subdomain must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character (e.g. 'example.com', regex used for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*')"),
 						})),
 					),
 				),

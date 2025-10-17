@@ -112,12 +112,6 @@ loggingRules:
 					"BadValue": Equal(""),
 					"Detail":   Equal("target must not be empty"),
 				})),
-				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":     Equal(field.ErrorTypeInvalid),
-					"Field":    Equal("target"),
-					"BadValue": Equal(""),
-					"Detail":   Equal("target must be a valid IPv4/IPv6 address, domain or hostname"),
-				})),
 			))
 		})
 
@@ -337,12 +331,6 @@ tls:
 								"Field":    Equal("tls.permittedPeer[1]"),
 								"BadValue": Equal(""),
 								"Detail":   Equal("value cannot be empty"),
-							})),
-							PointTo(MatchFields(IgnoreExtras, Fields{
-								"Type":     Equal(field.ErrorTypeInvalid),
-								"Field":    Equal("tls.permittedPeer[1]"),
-								"BadValue": Equal(""),
-								"Detail":   Equal(".permitedPeer elements can only match `^SHA1:[0-9A-Fa-f]{40}$` or be a hostname (wildcards allowed)"),
 							})),
 						))
 					})
