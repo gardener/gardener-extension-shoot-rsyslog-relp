@@ -142,6 +142,9 @@ func validateLoggingRules(loggingRules []rsyslog.LoggingRule, fldPath *field.Pat
 func validateProgramNames(programNames []string, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 	for index, name := range programNames {
+		if name == "" {
+			allErrs = append(allErrs, field.Invalid(fldPath.Index(index), name, ".programNames can't contain empty program name"))
+		}
 		if invalidCharactersForProgramNameRegex.MatchString(name) {
 			allErrs = append(allErrs, field.Invalid(fldPath.Index(index), name, ".programNames can't contain `[`, `:` or `/`"))
 		}
