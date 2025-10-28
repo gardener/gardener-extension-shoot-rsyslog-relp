@@ -10,10 +10,15 @@ import (
 	"strconv"
 
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
 )
+
+var printableCharactersRegex = regexp.MustCompile(`^[!-~]*$`)
+var invalidCharactersForProgramNameRegex = regexp.MustCompile(`[[:/]`)
+var permittedPeerRegex = regexp.MustCompile(`^SHA1:[0-9A-Fa-f]{40}$`)
 
 // ValidateRsyslogRelpConfig validates the passed configuration instance.
 func ValidateRsyslogRelpConfig(config *rsyslog.RsyslogRelpConfig, _ *field.Path) field.ErrorList {
@@ -30,7 +35,16 @@ func ValidateRsyslogRelpConfig(config *rsyslog.RsyslogRelpConfig, _ *field.Path)
 func validateTarget(target string, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 	if target == "" {
-		allErrs = append(allErrs, field.Required(fldPath, "target must not be empty"))
+		return append(allErrs, field.Required(fldPath, "target must not be empty"))
+	}
+
+	ipErrs := validation.IsValidIP(fldPath, target)
+	dnsErrs := validation.IsDNS1123Subdomain(target)
+	if len(ipErrs) != 0 && len(dnsErrs) != 0 {
+		allErrs = append(allErrs, ipErrs...)
+		for _, err := range dnsErrs {
+			allErrs = append(allErrs, field.Invalid(fldPath, target, err))
+		}
 	}
 
 	return allErrs
@@ -80,6 +94,18 @@ func validateTLS(tls *rsyslog.TLS, fldPath *field.Path) field.ErrorList {
 	for i, permittedPeer := range tls.PermittedPeer {
 		if permittedPeer == "" {
 			allErrs = append(allErrs, field.Required(fldPath.Child("permittedPeer").Index(i), "value cannot be empty"))
+			continue
+		}
+		wildcardErrs := validation.IsWildcardDNS1123Subdomain(permittedPeer)
+		subdomainErrs := validation.IsDNS1123Subdomain(permittedPeer)
+		if !permittedPeerRegex.MatchString(permittedPeer) && len(wildcardErrs) != 0 && len(subdomainErrs) != 0 {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("permittedPeer").Index(i), permittedPeer, ".permitedPeer elements can only match `^SHA1:[0-9A-Fa-f]{40}$` or be a hostname (wildcards allowed)"))
+			for _, err := range wildcardErrs {
+				allErrs = append(allErrs, field.Invalid(fldPath.Child("permittedPeer").Index(i), permittedPeer, err))
+			}
+			for _, err := range subdomainErrs {
+				allErrs = append(allErrs, field.Invalid(fldPath.Child("permittedPeer").Index(i), permittedPeer, err))
+			}
 		}
 	}
 
@@ -95,6 +121,7 @@ func validateLoggingRules(loggingRules []rsyslog.LoggingRule, fldPath *field.Pat
 			if len(rule.ProgramNames) == 0 && rule.Severity == nil && rule.MessageContent == nil {
 				allErrs = append(allErrs, field.Required(fldPath.Index(index), "at least one of .programNames, .messageContent, or .severity is required"))
 			}
+			allErrs = append(allErrs, validateProgramNames(rule.ProgramNames, fldPath.Child("programNames"))...)
 			if rule.MessageContent != nil {
 				if rule.MessageContent.Regex == nil && rule.MessageContent.Exclude == nil {
 					allErrs = append(allErrs, field.Required(fldPath.Index(index).Child("messageContent"), "either .regex or .exclude has to be provided"))
@@ -109,6 +136,22 @@ func validateLoggingRules(loggingRules []rsyslog.LoggingRule, fldPath *field.Pat
 		}
 	}
 
+	return allErrs
+}
+
+func validateProgramNames(programNames []string, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+	for index, name := range programNames {
+		if name == "" {
+			allErrs = append(allErrs, field.Invalid(fldPath.Index(index), name, ".programNames can't contain empty program name"))
+		}
+		if invalidCharactersForProgramNameRegex.MatchString(name) {
+			allErrs = append(allErrs, field.Invalid(fldPath.Index(index), name, ".programNames can't contain `[`, `:` or `/`"))
+		}
+		if !printableCharactersRegex.MatchString(name) {
+			allErrs = append(allErrs, field.Invalid(fldPath.Index(index), name, ".programNames can only contain printable characters"))
+		}
+	}
 	return allErrs
 }
 
