@@ -36,15 +36,15 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 -a exit,always -F arch=b64 -S execve -S execveat -F euid=0 -F auid>0 -F auid!=-1 -F key=privilege_escalation
 -a exit,always -F arch=b64 -S mount -S umount2 -S mknod -S mknodat -S chroot -F auid!=-1 -F key=privileged_special
 -a exit,always -F arch=b64 -S mount_setattr -F auid!=-1 -F key=privileged_special
--a exit,always -F dir=/boot -F perm=wa -F key=system_integrity
--a exit,always -F dir=/etc -F perm=wa -F key=system_integrity
--a exit,always -F dir=/bin -F perm=wa -F key=system_integrity
--a exit,always -F dir=/sbin -F perm=wa -F key=system_integrity
--a exit,always -F dir=/lib -F perm=wa -F key=system_integrity
--a exit,always -F dir=/lib64 -F perm=wa -F key=system_integrity
--a exit,always -F dir=/usr -F perm=wa -F key=system_integrity
--a exit,always -F dir=/opt -F perm=wa -F key=system_integrity
--a exit,always -F dir=/root -F perm=wa -F key=system_integrity
+-a exit,always -F arch=b64 -F dir=/boot -F perm=wa -F key=system_integrity
+-a exit,always -F arch=b64 -F dir=/etc -F perm=wa -F key=system_integrity
+-a exit,always -F arch=b64 -F dir=/bin -F perm=wa -F key=system_integrity
+-a exit,always -F arch=b64 -F dir=/sbin -F perm=wa -F key=system_integrity
+-a exit,always -F arch=b64 -F dir=/lib -F perm=wa -F key=system_integrity
+-a exit,always -F arch=b64 -F dir=/lib64 -F perm=wa -F key=system_integrity
+-a exit,always -F arch=b64 -F dir=/usr -F perm=wa -F key=system_integrity
+-a exit,always -F arch=b64 -F dir=/opt -F perm=wa -F key=system_integrity
+-a exit,always -F arch=b64 -F dir=/root -F perm=wa -F key=system_integrity
 
 `
 
@@ -55,7 +55,7 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 -i
 -a exit,always -F arch=b64 -S execve -S execveat -F euid=0 -F auid>0 -F auid!=-1 -F key=privilege_escalation
 -a exit,always -F arch=b64 -S setuid -S setreuid -S setgid -S setregid -F auid>0 -F auid!=-1 -F key=privilege_escalation
--a exit,always -F dir=/etc -F perm=wa -F key=system_integrity
+-a exit,always -F arch=b64 -F dir=/etc -F perm=wa -F key=system_integrity
 
 `
 	)
