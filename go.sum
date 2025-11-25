@@ -172,8 +172,8 @@ github.com/gardener/dependency-watchdog v1.6.0 h1:ARCIbcNmhjefmV7ex8ADReeD2MPsEa
 github.com/gardener/dependency-watchdog v1.6.0/go.mod h1:NXkna7bW5O+IGxLAX0KdEaW8yFREDfSHSccuoY+YZu0=
 github.com/gardener/etcd-druid/api v0.33.0 h1:YwgsYYldaLig2laJMAAMX/dg9/XsQx/LPz8+iL52V6w=
 github.com/gardener/etcd-druid/api v0.33.0/go.mod h1:Qpl1PDJ+bKa6OPWk4o7WBzvjPqZc/CxIXbiTkdRhCrg=
-github.com/gardener/gardener v1.132.1 h1:RiKgBWTkdOip3PJoJmG/LQVZ1laupoWqNQAty3OFa2k=
-github.com/gardener/gardener v1.132.1/go.mod h1:1ZFdXjQhI92e5xgfAdy2g1dEonzCgnucheAOZktwRV8=
+github.com/gardener/gardener v1.132.2 h1:OYaXbs9JlRZyPKofN1q6yLOkACu1C+FM65zKUte91Bk=
+github.com/gardener/gardener v1.132.2/go.mod h1:1ZFdXjQhI92e5xgfAdy2g1dEonzCgnucheAOZktwRV8=
 github.com/gardener/gardener/hack/tools/logcheck v0.0.0-20251030110950-5e830cc9c44c h1:U4nMgLNX44zqzgmutUFzmVZlbLBqC3rI0r1tof7I9zc=
 github.com/gardener/gardener/hack/tools/logcheck v0.0.0-20251030110950-5e830cc9c44c/go.mod h1:Q7Jrr/hD4fxjbsSLNsU1Hs1Ka6mv/2CNyex0BdXOPEE=
 github.com/gardener/machine-controller-manager v0.60.2 h1:lY6z67lDlwl9dQUEmlJbrmpxWK10o/rVRUu4JB7xK4U=
