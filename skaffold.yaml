@@ -4,7 +4,7 @@ metadata:
   name: rsyslog-relp-echo-server
 build:
   insecureRegistries:
-    - garden.local.gardener.cloud:5001
+    - registry.local.gardener.cloud:5000
   artifacts:
     - image: local-skaffold/gardener-extension-shoot-rsyslog-relp-echo-server
       docker:
@@ -30,7 +30,7 @@ metadata:
   name: extension
 build:
   insecureRegistries:
-    - garden.local.gardener.cloud:5001
+    - registry.local.gardener.cloud:5000
   artifacts:
     - image: local-skaffold/gardener-extension-shoot-rsyslog-relp
       ko:
@@ -90,7 +90,7 @@ metadata:
   name: admission
 build:
   insecureRegistries:
-    - garden.local.gardener.cloud:5001
+    - registry.local.gardener.cloud:5000
   artifacts:
     - image: local-skaffold/gardener-extension-shoot-rsyslog-relp-admission
       ko:
