@@ -7,7 +7,7 @@ images:
 - name: alpine
   sourceRepository: github.com/alpinelinux/docker-alpine
   repository: europe-docker.pkg.dev/gardener-project/releases/3rd/alpine
-  tag: "3.22.2"
+  tag: "3.23.2"
   labels:
   - name: cloud.gardener.cnudie/dso/scanning-hints/binary_id/v1
     value:

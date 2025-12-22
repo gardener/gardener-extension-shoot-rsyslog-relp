@@ -39,7 +39,7 @@ imageVectorOverwrite: {}
   # images:
   #   - name: alpine
   #     repository: europe-docker.pkg.dev/gardener-project/releases/3rd/alpine
-  #     tag: "3.22.2"
+  #     tag: "3.23.2"
   #   - name: pause-container
   #     sourceRepository: github.com/kubernetes/kubernetes/blob/master/build/pause/Dockerfile
   #     repository: registry.k8s.io/pause
