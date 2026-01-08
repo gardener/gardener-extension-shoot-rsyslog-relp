@@ -113,7 +113,7 @@ func deployMonitoringConfig(ctx context.Context, c client.Client, namespace stri
 		scrapeConfig.Spec = monitoringv1alpha1.ScrapeConfigSpec{
 			HonorLabels:   ptr.To(false),
 			ScrapeTimeout: ptr.To(monitoringv1.Duration("30s")),
-			Scheme:        ptr.To("HTTPS"),
+			Scheme:        ptr.To(monitoringv1.SchemeHTTPS),
 			// This is needed because the kubelets' certificates are not are generated for a specific pod IP
 			TLSConfig: &monitoringv1.SafeTLSConfig{InsecureSkipVerify: ptr.To(true)},
 			Authorization: &monitoringv1.SafeAuthorization{Credentials: &corev1.SecretKeySelector{
