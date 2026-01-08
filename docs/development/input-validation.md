@@ -33,12 +33,12 @@ Any new APIs added in the future must be validated in a similar way.
 
 ### Validation of Rsyslog and Auditd Configuration
 
-The `shoot-rsyslog-relp` extension installs a couple of files on the Shoot's nodes that are configured by user input via the [`RsyslogRelpConfig`](../../pkg/apis/rsyslog/types_rsyslog.go) and `Auditd` APIs.
+The `shoot-rsyslog-relp` extension installs a couple of files on the Shoot's nodes that could be configured by user input via the [`RsyslogRelpConfig`](../../pkg/apis/rsyslog/types_rsyslog.go) and `Auditd` APIs.
 These are:
 - The `/var/lib/rsyslog-relp-configurator/rsyslog.d/60-audit.conf` file, which contains the rsyslog configuration.
 - Certificate authority, client certificate and private key for the tls connection to the rsyslog target server.
 - Audit rules files under the `/var/lib/rsyslog-relp-configurator/audit/rules.d` directory.
-- The `/var/lib/rsyslog-relp-configurator/configure-rsyslog.sh` script, which takes care to copy the certificates and rsyslog configuration file and audit rules files to their corresponding directories under `/etc`.
+- The `/var/lib/rsyslog-relp-configurator/configure-rsyslog.sh` script, which copies certificates and rsyslog configuration file and audit rules files to their corresponding directories under `/etc`.
 
 #### Rsyslog Config File
 
@@ -56,8 +56,8 @@ All string fields in the `RsyslogRelpConfig` API must be validated before use. T
 - `target`: must be a valid IP address or DNS-1123 subdomain (validated using Kubernetes helpers `k8s.io/apimachinery/pkg/util/validation.IsValidIP(...)` and `k8s.io/apimachinery/pkg/util/validation.IsDNS1123Subdomain(...)`).
 - `loggingRules.programNames[]`: must contain only printable ASCII characters matching `^[!-~]*$` and must not contain `[`, `:` or `/`.
 - `tls.permittedPeer[]`: must match either the fingerprint format `^SHA1:[0-9A-Fa-f]{40}$` or be a valid hostname (DNS-1123 subdomain, wildcards allowed).
-- `loggingRules.messageContent.regex` and `loggingRules.messageContent.exclude`: must be valid POSIX ERE expressions (validated via `regexp.CompilePOSIX`).
-- `tls.secretReferenceName` and `auditConfig.configMapReferenceName`: validated for presence (non-empty) when the respective feature is enabled.
+- `loggingRules.messageContent.regex` and `loggingRules.messageContent.exclude`: must be valid POSIX Extended Regular Expressions (validated via `regexp.CompilePOSIX`).
+- `tls.secretReferenceName` and `auditConfig.configMapReferenceName`: must be non-empty strings when the respective feature is enabled.
 
 **String Escaping**
 
@@ -84,9 +84,9 @@ The `Secret` is validated by the shoot validator admission webhook to ensure tha
 
 #### Auditd Configuration
 
-The [`Auditd`](../../pkg/apis/rsyslog/types_auditd.go) API allows users to specify custom audit rules via the `auditRules` field. The audit rules are provided as a multi-line string containing audit rules in the format expected by the auditd daemon.
+The [`Auditd`](../../pkg/apis/rsyslog/types_auditd.go) API allows users to specify custom audit rules via the `auditRules` field. The audit rules are provided as a multi-line string containing rules in the format expected by the auditd daemon.
 
-The auditd configuration is provided in a ConfigMap in the user's project namespace. The `RsyslogRelpConfig`'s `auditConfig.configMapReferenceName` field must point to a ConfigMap resource in the Shoot's `spec.resources` array, which in turn references the actual ConfigMap containing the auditd configuration.
+The `Auditd` specification is provided in a ConfigMap in the user's project namespace. The `RsyslogRelpConfig`'s `auditConfig.configMapReferenceName` field must point to a ConfigMap resource in the Shoot's `spec.resources` array, which in turn references the actual ConfigMap containing the `Auditd` specification.
 
 When `auditConfig.enabled` is set to true and such a reference is present, the following validation takes place:
 1. The ConfigMap is validated to be immutable and to contain a single `data.auditd` entry.
