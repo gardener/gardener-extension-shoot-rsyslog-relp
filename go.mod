@@ -5,7 +5,7 @@ go 1.24.5
 require (
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/ahmetb/gen-crd-api-reference-docs v0.3.0
-	github.com/gardener/gardener v1.134.0
+	github.com/gardener/gardener v1.134.1
 	github.com/gardener/gardener/hack/tools/logcheck v0.0.0-20251211215101-1eab8d495db1
 	github.com/go-logr/logr v1.4.3
 	github.com/onsi/ginkgo/v2 v2.27.1
