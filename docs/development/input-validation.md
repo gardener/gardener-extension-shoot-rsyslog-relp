@@ -1,4 +1,4 @@
-# Validation Guidelines
+# Validation Guidelines for Gardener Shoot Rsyslog Relp Extension
 
 This document provides developer guidelines on validation practices and conventions used in the `gardener-extension-shoot-rsyslog-relp` codebase so that the rsyslog and auditd configurations on the Shoot nodes behave as expected and are not vulnerable to malicious input.
 
@@ -65,8 +65,6 @@ All string fields used in the generated `/var/lib/rsyslog-relp-configurator/rsys
 - `loggingRules.programNames[]`: quoted before insertion into `$programname == [...]` lists (see `computeLogFilters()` function).
 - `loggingRules.messageContent.regex` and `loggingRules.messageContent.exclude`: quoted before use inside `re_match($msg, ...)` expressions (see `computeLogFilters()` function).
 - `tls.permittedPeer[]`: each entry quoted before building `tls.permittedpeer=[...]` (see `getRsyslogTLSValues()` function).
-
-Note: Fields like `target` and `port` are placed as `"{{ .target }}"` and `"{{ .port }}"` by the configuration template. Combined with the validation above, explicit `strconv.Quote` is not required for these fields.
 
 **Requirements for Future Development**
 
