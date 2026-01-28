@@ -46,6 +46,8 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 -a exit,always -F arch=b64 -F dir=/usr -F perm=wa -F key=system_integrity
 -a exit,always -F arch=b64 -F dir=/opt -F perm=wa -F key=system_integrity
 -a exit,always -F arch=b64 -F dir=/root -F perm=wa -F key=system_integrity
+-a exit,always -F arch=b64 -S adjtimex -S settimeofday -k time-change
+-a exit,always -F arch=b64 -S clock_settime -k time-change
 
 `
 
