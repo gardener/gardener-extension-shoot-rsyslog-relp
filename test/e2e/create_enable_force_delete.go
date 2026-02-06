@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	e2e "github.com/gardener/gardener/test/e2e/gardener"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -20,7 +21,6 @@ import (
 var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 	f := defaultShootCreationFramework()
 	f.Shoot = e2e.DefaultShoot("e2e-rslog-fd")
-	common.AddOrUpdateRsyslogRelpExtension(f.Shoot, common.WithAuditConfig(&v1alpha1.AuditConfig{Enabled: false}))
 
 	It("Create Shoot with shoot-rsyslog-relp extension enabled and force delete Shoot", Label("force-delete"), func() {
 		ctx, cancel := context.WithTimeout(parentCtx, 20*time.Minute)
@@ -40,6 +40,14 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 		common.ForEachNode(ctx, f.ShootFramework.ShootClient, func(ctx context.Context, node *corev1.Node) {
 			installRsyslogRelp(ctx, f.Logger, f.ShootFramework.ShootClient, node.Name)
 		})
+
+		By("Enable the shoot-rsyslog-relp extension")
+		ctx, cancel = context.WithTimeout(parentCtx, 15*time.Minute)
+		DeferCleanup(cancel)
+		Expect(f.UpdateShoot(ctx, f.Shoot, func(shoot *gardencorev1beta1.Shoot) error {
+			common.AddOrUpdateRsyslogRelpExtension(shoot, common.WithAuditConfig(&v1alpha1.AuditConfig{Enabled: false}))
+			return nil
+		})).To(Succeed())
 
 		By("Verify shoot-rsyslog-relp works")
 		ctx, cancel = context.WithTimeout(parentCtx, 5*time.Minute)
