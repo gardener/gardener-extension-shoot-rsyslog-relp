@@ -205,6 +205,7 @@ func addTestWebhookToManager(mgr manager.Manager) error {
 		"shoot-rsyslog-relp-"+testNamespace.Name,
 		"",
 		map[string]string{corev1.LabelMetadataName: testNamespace.Name},
+		nil,
 		&webhookcmd.ServerOptions{
 			Mode: extensionswebhook.ModeURL,
 			URL:  fmt.Sprintf("%s:%d", testEnv.WebhookInstallOptions.LocalServingHost, testEnv.WebhookInstallOptions.LocalServingPort),
@@ -214,6 +215,6 @@ func addTestWebhookToManager(mgr manager.Manager) error {
 	if err := webhookOptions.Complete(); err != nil {
 		return err
 	}
-	_, err := webhookOptions.Completed().AddToManager(ctx, mgr, nil, false)
+	_, err := webhookOptions.Completed().AddToManager(ctx, mgr, nil)
 	return err
 }

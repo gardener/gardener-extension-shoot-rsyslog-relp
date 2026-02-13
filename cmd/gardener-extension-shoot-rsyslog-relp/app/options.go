@@ -44,6 +44,7 @@ func NewOptions() *Options {
 		"shoot-rsyslog-relp",
 		"",
 		nil,
+		nil,
 		webhookServerOptions,
 		webhookSwitches,
 	)

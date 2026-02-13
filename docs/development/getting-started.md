@@ -7,7 +7,7 @@ If you encounter difficulties, please open an issue so that we can make this pro
 ## Prerequisites
 
 - Make sure that you have a running local Gardener setup. The steps to complete this can be found [here](https://github.com/gardener/gardener/blob/master/docs/deployment/getting_started_locally.md).
-- Make sure you are running Gardener version `>= 1.74.0` or the latest version of the master branch.
+- Make sure you are running Gardener version `>= 1.135.1` or the latest version of the master branch.
 
 > [!TIP]
 > Ensure that the locally used Gardener version matches the version specified by the `github.com/gardener/gardener` dependency.
