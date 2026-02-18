@@ -38,10 +38,17 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 			By("Create NetworkPolicy to allow traffic from Shoot nodes to the rsyslog-relp echo server")
 			Expect(createNetworkPolicyForEchoServer(ctx, f.ShootFramework.SeedClient, f.ShootFramework.ShootSeedNamespace())).To(Succeed())
 
-			By("Install rsyslog-relp unit on Shoot nodes")
-			common.ForEachNode(ctx, f.ShootFramework.ShootClient, func(ctx context.Context, node *corev1.Node) {
-				installRsyslogRelp(ctx, f.Logger, f.ShootFramework.ShootClient, node.Name)
-			})
+			By("Deploy rsyslog-relp unit installer on Shoot")
+			Expect(deployRsyslogRelpInstaller(ctx, f.ShootFramework.ShootClient)).To(Succeed())
+
+			By("Wait for rsyslog-relp unit to be installed on Shoot nodes")
+			Eventually(func() (bool, error) {
+				ctx, cancel := context.WithTimeout(parentCtx, 1*time.Minute)
+				defer cancel()
+				return isRsyslogRelpInstallerReady(ctx, f.ShootFramework.ShootClient)
+			}).WithTimeout(10 * time.Minute).
+				WithPolling(1 * time.Second).
+				Should(BeTrue())
 
 			By("Enable the shoot-rsyslog-relp extension")
 			ctx, cancel = context.WithTimeout(parentCtx, 15*time.Minute)
@@ -59,6 +66,8 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 			})
 
 			By("Disable the shoot-rsyslog-relp extension")
+			ctx, cancel = context.WithTimeout(parentCtx, 15*time.Minute)
+			DeferCleanup(cancel)
 			Expect(f.UpdateShoot(ctx, f.Shoot, func(shoot *gardencorev1beta1.Shoot) error {
 				common.RemoveRsyslogRelpExtension(shoot)
 				return nil
