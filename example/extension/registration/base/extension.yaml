@@ -8,15 +8,15 @@ spec:
       runtimeCluster:
         helm:
           ociRepository:
-            ref: europe-docker.pkg.dev/gardener-project/public/charts/gardener/extensions/shoot-rsyslog-relp-admission-runtime:v0.12.0
+            ref: europe-docker.pkg.dev/gardener-project/public/charts/gardener/extensions/shoot-rsyslog-relp-admission-runtime:v0.13.0-dev
       virtualCluster:
         helm:
           ociRepository:
-            ref: europe-docker.pkg.dev/gardener-project/public/charts/gardener/extensions/shoot-rsyslog-relp-admission-application:v0.12.0
+            ref: europe-docker.pkg.dev/gardener-project/public/charts/gardener/extensions/shoot-rsyslog-relp-admission-application:v0.13.0-dev
     extension:
       helm:
         ociRepository:
-          ref: europe-docker.pkg.dev/gardener-project/public/charts/gardener/extensions/shoot-rsyslog-relp:v0.12.0
+          ref: europe-docker.pkg.dev/gardener-project/public/charts/gardener/extensions/shoot-rsyslog-relp:v0.13.0-dev
   resources:
   - kind: Extension
     type: shoot-rsyslog-relp
