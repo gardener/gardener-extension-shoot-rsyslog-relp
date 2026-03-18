@@ -29,8 +29,8 @@ go.work.sum
 .env
 
 # Editor/IDE
-# .idea/
-# .vscode/
+.idea/
+.vscode/
 ### End: https://github.com/github/gitignore/blob/main/Go.gitignore ###
 
 ### Start: https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore ###
