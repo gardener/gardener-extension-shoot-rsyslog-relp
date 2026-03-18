@@ -1,4 +1,4 @@
-module github.com/gardener/gardener/hack/tools/logcheck
+module github.com/gardener/repo-tools/hack/tools/logcheck
 
 // Version must be kept in sync with Go version of https://github.com/golangci/golangci-lint.
 go 1.25.0

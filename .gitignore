@@ -125,6 +125,7 @@ http-client.private.env.json
 ### Start: Custom ###
 # Binaries
 /hack/tools/bin
+/hack/tools/logcheck/bin
 
 .golangci.yaml
 
