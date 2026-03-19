@@ -127,7 +127,7 @@ http-client.private.env.json
 /hack/tools/bin
 /hack/tools/logcheck/bin
 
-.golangci.yaml
+/hack/.golangci.yaml
 
 hack/tools/logcheck/pkg/logcheck/testdata/src/github.com/go-logr/logr
 hack/tools/logcheck/pkg/logcheck/testdata/src/sigs.k8s.io/controller-runtime/pkg/log
