@@ -16,6 +16,7 @@
 !pkg/
 !test/
 !vendor/
+!repo-tools/
 
 # Exclude any locally build binaries
 !local-rsyslog-relp-build.out
