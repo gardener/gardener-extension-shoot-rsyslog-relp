@@ -199,9 +199,9 @@ spec:
 ```
 
 You can set a few additional parameters for the TLS connection: `.tls.authMode`, `tls.permittedPeer`, and `tls.tlsLib`. Refer to the rsyslog documentation for more information on these parameters:
-- [`.tls.authMode`](https://www.rsyslog.com/doc/v8-stable/configuration/modules/omrelp.html#tls-authmode)
-- [`.tls.permittedPeer`](https://www.rsyslog.com/doc/v8-stable/configuration/modules/omrelp.html#tls-permittedpeer)
-- [`.tls.tlsLib`](https://www.rsyslog.com/doc/v8-stable/configuration/modules/imrelp.html#tls-tlslib)
+- [`.tls.authMode`](https://docs.rsyslog.com/doc/reference/parameters/omrelp-tls-authmode.html)
+- [`.tls.permittedPeer`](https://docs.rsyslog.com/doc/reference/parameters/omrelp-tls-permittedpeer.html)
+- [`.tls.tlsLib`](https://docs.rsyslog.com/doc/reference/parameters/imrelp-tls-tlslib.html)
 
 ### Configuring the Audit Daemon on the Shoot Nodes
 
