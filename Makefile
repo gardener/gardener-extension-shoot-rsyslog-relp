@@ -175,7 +175,9 @@ extension-dev: $(SKAFFOLD) $(HELM) $(KUBECTL) $(KIND)
 
 extension-down: $(SKAFFOLD) $(HELM) $(KUBECTL)
 	$(SKAFFOLD) delete
-	@# The validating webhook is not part of the chart but it is created on admission Pod startup. Hence, we have to delete it explicitly.
+	@# The validating webhook is not part of the chart but it is created on admission Pod startup.
+	@# The approach with the owner Namespace ("--webhook-config-owner-namespace") cannot be used here as the extension is not managed via the operator in this setup.
+	@# Hence, we have to delete the webhook explicitly.
 	$(KUBECTL) delete validatingwebhookconfiguration gardener-extension-shoot-rsyslog-relp-admission --ignore-not-found
 
 remote-extension-up remote-extension-down: export SKAFFOLD_LABEL = skaffold.dev/run-id=extension-remote
@@ -185,7 +187,9 @@ remote-extension-up: $(SKAFFOLD) $(HELM) $(KUBECTL) $(YQ)
 
 remote-extension-down: $(SKAFFOLD) $(HELM) $(KUBECTL)
 	$(SKAFFOLD) delete -m admission,extension
-	@# The validating webhook is not part of the chart but it is created on admission Pod startup. Hence, we have to delete it explicitly.
+	@# The validating webhook is not part of the chart but it is created on admission Pod startup.
+	@# The approach with the owner Namespace ("--webhook-config-owner-namespace") cannot be used here as the extension is not managed via the operator in this setup.
+	@# Hence, we have to delete the webhook explicitly.
 	$(KUBECTL) delete validatingwebhookconfiguration gardener-extension-shoot-rsyslog-relp-admission --ignore-not-found
 
 configure-shoot: $(HELM) $(KUBECTL) $(YQ)
