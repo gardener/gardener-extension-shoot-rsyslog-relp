@@ -4,7 +4,7 @@ go 1.25.6
 
 require (
 	github.com/Masterminds/sprig v2.22.0+incompatible
-	github.com/ahmetb/gen-crd-api-reference-docs v0.3.0
+	github.com/elastic/crd-ref-docs v0.3.0
 	github.com/gardener/gardener v1.140.1
 	github.com/gardener/gardener/hack/tools/logcheck v0.0.0-20260202140600-fd3103ef5d16
 	github.com/gardener/gardener/pkg/apis v1.140.0
