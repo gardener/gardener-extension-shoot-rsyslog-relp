@@ -45,6 +45,7 @@ spec:
           allowPrivilegeEscalation: false
         args:
         - --webhook-config-server-port={{ .Values.webhookConfig.serverPort }}
+        - --webhook-config-service-port={{ .Values.webhookConfig.servicePort }}
         {{- if .Values.gardener.virtualCluster.enabled }}
         - --webhook-config-mode=url
         - --webhook-config-url={{ printf "%s.%s" (include "name" .) (.Release.Namespace) }}
