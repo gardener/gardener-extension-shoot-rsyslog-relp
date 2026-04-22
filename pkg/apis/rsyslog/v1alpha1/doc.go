@@ -7,7 +7,7 @@
 // +k8s:openapi-gen=true
 // +k8s:defaulter-gen=TypeMeta
 
-//go:generate crd-ref-docs --source-path=. --config=../../../../hack/api-reference/rsyslog.yaml --renderer=markdown --templates-dir="$GARDENER_HACK_DIR/api-reference/template" --log-level=ERROR --output-path=../../../../hack/api-reference/rsyslog.md
+//go:generate crd-ref-docs --source-path=. --config=../../../../hack/api-reference/rsyslog.yaml --renderer=markdown --templates-dir=$GARDENER_HACK_DIR/api-reference/template --log-level=ERROR --output-path=../../../../hack/api-reference/rsyslog.md
 
 // Package v1alpha1 contains the Rsyslog Relp Shoot extension.
 // +groupName=rsyslog-relp.extensions.gardener.cloud
