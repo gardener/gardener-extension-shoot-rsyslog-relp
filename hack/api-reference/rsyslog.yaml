@@ -10,7 +10,7 @@ processor:
     - "List$"
 
 render:
-  kubernetesVersion: "1.33"
+  kubernetesVersion: "1.35"
   knownTypes:
     - name: Duration
       package: k8s.io/apimachinery/pkg/apis/meta/v1
