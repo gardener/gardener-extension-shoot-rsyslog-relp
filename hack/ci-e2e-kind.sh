@@ -8,15 +8,6 @@ set -o nounset
 set -o pipefail
 set -o errexit
 
-ensure_local_gardener_cloud_hosts() {
-  if [ -n "${CI:-}" -a -n "${ARTIFACTS:-}" ]; then
-    echo "> Adding local.gardener.cloud entries to /etc/hosts..."
-    printf "\n127.0.0.1 registry.local.gardener.cloud\n" >> /etc/hosts
-    printf "\n::1 registry.local.gardener.cloud\n" >> /etc/hosts
-    echo "> Content of '/etc/hosts' after adding local.gardener.cloud entries:\n$(cat /etc/hosts)"
-  fi
-}
-
 REPO_ROOT="$(readlink -f $(dirname ${0})/..)"
 GARDENER_VERSION=$(go list -m -f '{{.Version}}' github.com/gardener/gardener)
 
@@ -29,8 +20,6 @@ fi
 source "${REPO_ROOT}"/gardener/hack/ci-common.sh
 
 clamp_mss_to_pmtu
-
-ensure_local_gardener_cloud_hosts
 
 # test setup
 make -C "${REPO_ROOT}"/gardener kind-up

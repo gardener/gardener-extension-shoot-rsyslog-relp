@@ -12,11 +12,10 @@ import (
 	_ "github.com/gardener/gardener/.github"
 	_ "github.com/gardener/gardener/.github/ISSUE_TEMPLATE"
 	_ "github.com/gardener/gardener/hack"
-	_ "github.com/gardener/gardener/hack/api-reference/template"
 	_ "github.com/gardener/gardener/hack/tools/logcheck/plugin"
 	_ "github.com/gardener/gardener/hack/tools/report-collector"
 
-	_ "github.com/ahmetb/gen-crd-api-reference-docs"
+	_ "github.com/elastic/crd-ref-docs"
 	_ "golang.org/x/tools/cmd/goimports"
 	_ "k8s.io/code-generator"
 )
