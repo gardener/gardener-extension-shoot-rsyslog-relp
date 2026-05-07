@@ -96,6 +96,7 @@ func (r *rsyslogRelpConfigCleaner) computeResourcesData() (map[string][]byte, er
 			Labels:    getLabels(),
 		},
 		Spec: appsv1.DaemonSetSpec{
+			RevisionHistoryLimit: ptr.To(int32(2)),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: getLabels(),
 			},
