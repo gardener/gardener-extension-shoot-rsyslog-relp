@@ -1,4 +1,4 @@
-# [Gardener Extension to configure rsyslog with relp module](https://gardener.cloud)
+# Gardener Extension to configure rsyslog with relp module
 
 [![REUSE status](https://api.reuse.software/badge/github.com/gardener/gardener-extension-shoot-rsyslog-relp)](https://api.reuse.software/info/github.com/gardener/gardener-extension-shoot-rsyslog-relp)
 [![CI Build status](https://github.com/gardener/gardener-extension-shoot-rsyslog-relp/actions/workflows/non-release.yaml/badge.svg)](https://github.com/gardener/gardener-extension-shoot-rsyslog-relp/actions/workflows/non-release.yaml)
