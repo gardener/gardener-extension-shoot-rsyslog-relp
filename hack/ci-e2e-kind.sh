@@ -23,7 +23,6 @@ clamp_mss_to_pmtu
 
 # test setup
 make -C "${REPO_ROOT}"/gardener kind-up
-export KUBECONFIG=$REPO_ROOT/gardener/example/gardener-local/kind/local/kubeconfig
 
 # export all container logs and events after test execution
 trap '{

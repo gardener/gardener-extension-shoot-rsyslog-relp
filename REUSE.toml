@@ -29,7 +29,7 @@ path = [
     "hack/cherry-pick-pull.sh",
     "test/integration/resources/**.yaml",
     "**/testdata/**",
-    "local-setup/**",
+    "dev-setup/**",
     "go.mod",
     "go.sum",
     "skaffold.yaml"

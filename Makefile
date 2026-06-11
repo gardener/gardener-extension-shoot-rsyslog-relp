@@ -21,6 +21,8 @@ PARALLEL_E2E_TESTS          := 3
 GARDENER_REPO_ROOT          ?= $(REPO_ROOT)/../gardener
 SEED_NAME                   := provider-extensions
 SEED_KUBECONFIG             := $(GARDENER_REPO_ROOT)/example/provider-extensions/seed/kubeconfig
+RUNTIME_KUBECONFIG          := $(GARDENER_REPO_ROOT)/dev-setup/kubeconfigs/runtime/kubeconfig
+VIRTUAL_KUBECONFIG          := $(GARDENER_REPO_ROOT)/dev-setup/kubeconfigs/virtual-garden/kubeconfig
 SHOOT_NAME                  ?= local
 SHOOT_NAMESPACE             ?= garden-local
 
@@ -153,7 +155,7 @@ verify: check format test sast
 verify-extended: check-generate check format test test-cov test-clean sast-report
 
 test-e2e-local: $(GINKGO)
-	./hack/test-e2e-local.sh --procs=$(PARALLEL_E2E_TESTS) ./test/e2e/...
+	KUBECONFIG=$(VIRTUAL_KUBECONFIG) ./hack/test-e2e-local.sh --procs=$(PARALLEL_E2E_TESTS) ./test/e2e/...
 
 ci-e2e-kind: $(KIND) $(YQ)
 	./hack/ci-e2e-kind.sh
@@ -168,17 +170,17 @@ export SKAFFOLD_PUSH = true
 export SKAFFOLD_LABEL = skaffold.dev/run-id=extension-local
 
 extension-up: $(SKAFFOLD) $(HELM) $(KUBECTL) $(KIND)
-	@LD_FLAGS=$(LD_FLAGS) $(SKAFFOLD) run
+	@LD_FLAGS=$(LD_FLAGS) GARDENER_REPO_ROOT=$(GARDENER_REPO_ROOT) $(SKAFFOLD) run --kubeconfig=$(RUNTIME_KUBECONFIG)
 
 extension-dev: $(SKAFFOLD) $(HELM) $(KUBECTL) $(KIND)
-	$(SKAFFOLD) dev --cleanup=false --trigger=manual
+	@LD_FLAGS=$(LD_FLAGS) GARDENER_REPO_ROOT=$(GARDENER_REPO_ROOT) $(SKAFFOLD) dev --cleanup=false --trigger=manual --kubeconfig=$(RUNTIME_KUBECONFIG)
 
 extension-down: $(SKAFFOLD) $(HELM) $(KUBECTL)
 	$(SKAFFOLD) delete
 	@# The validating webhook is not part of the chart but it is created on admission Pod startup.
 	@# The approach with the owner Namespace ("--webhook-config-owner-namespace") cannot be used here as the extension is not managed via the operator in this setup.
 	@# Hence, we have to delete the webhook explicitly.
-	$(KUBECTL) delete validatingwebhookconfiguration gardener-extension-shoot-rsyslog-relp-admission --ignore-not-found
+	$(SKAFFOLD) delete --kubeconfig=$(RUNTIME_KUBECONFIG)
 
 remote-extension-up remote-extension-down: export SKAFFOLD_LABEL = skaffold.dev/run-id=extension-remote
 
