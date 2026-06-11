@@ -11,8 +11,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-
-	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/constants"
 )
 
 const (
@@ -31,9 +29,8 @@ func New(mgr manager.Manager) (*extensionswebhook.Webhook, error) {
 	logger.Info("Setting up webhook", "name", Name)
 
 	return extensionswebhook.New(mgr, extensionswebhook.Args{
-		Provider: constants.ExtensionType,
-		Name:     Name,
-		Path:     "/webhooks/validate",
+		Name: Name,
+		Path: "/webhooks/validate",
 		Validators: map[extensionswebhook.Validator][]extensionswebhook.Type{
 			NewShootValidator(mgr.GetAPIReader(), decoder): {{Obj: &core.Shoot{}}},
 		},
