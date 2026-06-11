@@ -7,7 +7,7 @@ require (
 	github.com/elastic/crd-ref-docs v0.3.0
 	github.com/gardener/gardener v1.144.0
 	github.com/gardener/gardener/hack/tools/logcheck v0.0.0-20260202140600-fd3103ef5d16
-	github.com/gardener/gardener/pkg/apis v1.142.1
+	github.com/gardener/gardener/pkg/apis v1.144.0
 	github.com/go-logr/logr v1.4.3
 	github.com/onsi/ginkgo/v2 v2.29.0
 	github.com/onsi/gomega v1.41.0
