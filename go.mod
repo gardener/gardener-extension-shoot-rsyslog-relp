@@ -6,7 +6,7 @@ require (
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/elastic/crd-ref-docs v0.3.0
 	github.com/gardener/gardener v1.144.0
-	github.com/gardener/gardener/hack/tools/logcheck v0.0.0-20260202140600-fd3103ef5d16
+	github.com/gardener/gardener/hack/tools/logcheck v0.0.0-20260521175212-e62347347cad
 	github.com/gardener/gardener/pkg/apis v1.144.0
 	github.com/go-logr/logr v1.4.3
 	github.com/onsi/ginkgo/v2 v2.29.0
@@ -227,3 +227,7 @@ require (
 	sigs.k8s.io/structured-merge-diff/v6 v6.3.2 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
+
+// Remove the replace when the golang.org/x/tools version in the github.com/gardener/gardener/hack/tools/logcheck module
+// is the same with the one in the github.com/gardener/gardener module.
+replace golang.org/x/tools v0.45.0 => golang.org/x/tools v0.44.0
