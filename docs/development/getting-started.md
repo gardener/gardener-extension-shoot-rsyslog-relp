@@ -39,6 +39,8 @@ kubectl apply -f ./example/shoot.yaml
 
 Once the Shoot's namespace is created, we can create a `networkpolicy` that will allow egress traffic from the `rsyslog` on the Shoot's nodes to the `rsyslog-relp-echo-server` that serves as a fake rsyslog target server.
 
+**Important:** Make sure that for all the following commands your `KUBECONFIG` environment variable is targeting the runtime Garden cluster (i.e. `<path_to_gardener_project>/dev-setup/kubeconfigs/runtime/kubeconfig`).
+
 ```bash
 kubectl apply -f ./example/local/allow-machine-to-rsyslog-relp-echo-server-netpol.yaml
 ```
