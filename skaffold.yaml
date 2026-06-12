@@ -80,14 +80,14 @@ build:
     - image: local-skaffold/gardener-extension-shoot-rsyslog-relp-admission/charts/application
       custom:
         buildCommand: |
-          bash "$GARDENER_REPO_ROOT/dev-setup/push-helm.sh" ./charts/gardener-extension-shoot-rsyslog-relp-admission/charts/application .image.ref
+          bash "$GARDENER_REPO_ROOT/hack/push-helm.sh" ./charts/gardener-extension-shoot-rsyslog-relp-admission/charts/application .image.ref
         dependencies:
           paths:
             - charts/gardener-extension-shoot-rsyslog-relp-admission/charts/application
     - image: local-skaffold/gardener-extension-shoot-rsyslog-relp-admission/charts/runtime
       custom:
         buildCommand: |
-          bash "$GARDENER_REPO_ROOT/dev-setup/push-helm.sh" ./charts/gardener-extension-shoot-rsyslog-relp-admission/charts/runtime .image.ref
+          bash "$GARDENER_REPO_ROOT/hack/push-helm.sh" ./charts/gardener-extension-shoot-rsyslog-relp-admission/charts/runtime .image.ref
         dependencies:
           paths:
             - charts/gardener-extension-shoot-rsyslog-relp-admission/charts/runtime
@@ -97,7 +97,7 @@ build:
     - image: local-skaffold/gardener-extension-shoot-rsyslog-relp/charts/extension
       custom:
         buildCommand: |
-          bash "$GARDENER_REPO_ROOT/dev-setup/push-helm.sh" ./charts/gardener-extension-shoot-rsyslog-relp .image.ref
+          bash "$GARDENER_REPO_ROOT/hack/push-helm.sh" ./charts/gardener-extension-shoot-rsyslog-relp .image.ref
         dependencies:
           paths:
             - charts/gardener-extension-shoot-rsyslog-relp
