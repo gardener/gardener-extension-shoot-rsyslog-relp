@@ -13,15 +13,21 @@ If you encounter difficulties, please open an issue so that we can make this pro
 > Ensure that the locally used Gardener version matches the version specified by the `github.com/gardener/gardener` dependency.
 > The extension’s local setup must run successfully against a local Gardener setup at the version referenced by this dependency, as verified by end-to-end tests.
 
+> [!NOTE]
+> The location of the Gardener project is expected to be under the same root as this repository (for example `~/go/src/github.com/gardener/`). If this is not the case, set the location of the Gardener project in the `GARDENER_REPO_ROOT` environment variable:
+> ```bash
+> export GARDENER_REPO_ROOT="<path_to_gardener_project>"
+> ```
+
 ## Setting up the Rsyslog Relp Extension
 
-**Important:** Make sure that your `KUBECONFIG` env variable is targeting the local Gardener cluster!
+**Important:** Make sure that your `KUBECONFIG` environment variable is targeting the virtual Garden cluster (i.e. `<path_to_gardener_project>/dev-setup/kubeconfigs/virtual-garden/kubeconfig`).
 
 ```bash
 make extension-up
 ```
 
-This will build the `shoot-rsyslog-relp`, `shoot-rsyslog-relp-admission`, and `shoot-rsyslog-relp-echo-server` images and deploy the needed resources and configurations in the garden cluster. The `shoot-rsyslog-relp-echo-server` will act as development replacement of a real rsyslog relp server.
+This will build the `shoot-rsyslog-relp`, `shoot-rsyslog-relp-admission`, and `shoot-rsyslog-relp-echo-server` container images, OCI artifacts for the admission runtime and application charts, and the extension chart. Then, the container images and the OCI artifacts are pushed into the default skaffold registry (i.e. `registry.local.gardener.cloud:5001`). Next, the `shoot-rsyslog-relp` `Extension.operator.gardener.cloud` resource is deployed into the KinD cluster. Based on this resource the gardener-operator will deploy the `shoot-rsyslog-relp` admission component. The `shoot-rsyslog-relp-echo-server` will act as development replacement of a real rsyslog relp server.
 
 ## Creating a Shoot Cluster
 
@@ -32,6 +38,8 @@ kubectl apply -f ./example/shoot.yaml
 ```
 
 Once the Shoot's namespace is created, we can create a `networkpolicy` that will allow egress traffic from the `rsyslog` on the Shoot's nodes to the `rsyslog-relp-echo-server` that serves as a fake rsyslog target server.
+
+**Important:** Make sure that for all the following commands your `KUBECONFIG` environment variable is targeting the runtime Garden cluster (i.e. `<path_to_gardener_project>/dev-setup/kubeconfigs/runtime/kubeconfig`).
 
 ```bash
 kubectl apply -f ./example/local/allow-machine-to-rsyslog-relp-echo-server-netpol.yaml
@@ -70,7 +78,7 @@ To tear down the development environment, delete the Shoot cluster or disable th
 make extension-down
 ```
 
-This will delete the `ControllerRegistration` and `ControllerDeployment` of the extension, the `shoot-rsyslog-relp-admission` deployment, and the `rsyslog-relp-echo-server` deployment.
+This will delete the locally deployed `Extension.operator.gardener.cloud` resource, the `shoot-rsyslog-relp-admission` deployment, and the `rsyslog-relp-echo-server` deployment.
 
 # Maintaining the Publicly Available Image for the rsyslog-relp Echo Server
 

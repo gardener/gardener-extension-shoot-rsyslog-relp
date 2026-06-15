@@ -204,7 +204,7 @@ fi`,
 					Workers: []gardencorev1beta1.Worker{{Name: "worker"}},
 				},
 				Kubernetes: gardencorev1beta1.Kubernetes{
-					Version: "1.35.0",
+					Version: "1.35.4",
 				},
 				Resources: []gardencorev1beta1.NamedResourceReference{
 					{

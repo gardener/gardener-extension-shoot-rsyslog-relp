@@ -27,10 +27,8 @@ deploy:
 apiVersion: skaffold/v4beta7
 kind: Config
 metadata:
-  name: extension
+  name: operator
 build:
-  insecureRegistries:
-    - registry.local.gardener.cloud:5001
   artifacts:
     - image: local-skaffold/gardener-extension-shoot-rsyslog-relp
       ko:
@@ -62,36 +60,6 @@ build:
         ldflags:
           - '{{.LD_FLAGS}}'
         main: ./cmd/gardener-extension-shoot-rsyslog-relp
-manifests:
-  kustomize:
-    paths:
-    - local-setup
-deploy:
-  # --server-side apply is a workaround for https://github.com/gardener/gardener/issues/10267.
-  # kubectl apply attempts a strategic merge patch which fails for a ControllerDeployment.
-  # For more details, see https://github.com/gardener/gardener/issues/10267.
-  #
-  # TODO: Switch back to "kubectl: {}" when the above issue is resolved.
-  kubectl:
-    flags:
-      apply:
-        - --server-side
-        - --force-conflicts
-resourceSelector:
-  # instruct skaffold to inject the built image reference into the image field in our ControllerDeployment
-  allow:
-  - groupKind: ControllerDeployment.core.gardener.cloud
-    image:
-    - .helm.values.image.ref
----
-apiVersion: skaffold/v4beta7
-kind: Config
-metadata:
-  name: admission
-build:
-  insecureRegistries:
-    - registry.local.gardener.cloud:5001
-  artifacts:
     - image: local-skaffold/gardener-extension-shoot-rsyslog-relp-admission
       ko:
         dependencies:
@@ -109,27 +77,45 @@ build:
         ldflags:
           - '{{.LD_FLAGS}}'
         main: ./cmd/gardener-extension-shoot-rsyslog-relp-admission
+    - image: local-skaffold/gardener-extension-shoot-rsyslog-relp-admission/charts/application
+      custom:
+        buildCommand: |
+          bash "$GARDENER_REPO_ROOT/hack/push-helm.sh" ./charts/gardener-extension-shoot-rsyslog-relp-admission/charts/application .image.ref
+        dependencies:
+          paths:
+            - charts/gardener-extension-shoot-rsyslog-relp-admission/charts/application
+    - image: local-skaffold/gardener-extension-shoot-rsyslog-relp-admission/charts/runtime
+      custom:
+        buildCommand: |
+          bash "$GARDENER_REPO_ROOT/hack/push-helm.sh" ./charts/gardener-extension-shoot-rsyslog-relp-admission/charts/runtime .image.ref
+        dependencies:
+          paths:
+            - charts/gardener-extension-shoot-rsyslog-relp-admission/charts/runtime
+      requires:
+        - image: local-skaffold/gardener-extension-shoot-rsyslog-relp-admission
+          alias: IMG
+    - image: local-skaffold/gardener-extension-shoot-rsyslog-relp/charts/extension
+      custom:
+        buildCommand: |
+          bash "$GARDENER_REPO_ROOT/hack/push-helm.sh" ./charts/gardener-extension-shoot-rsyslog-relp .image.ref
+        dependencies:
+          paths:
+            - charts/gardener-extension-shoot-rsyslog-relp
+      requires:
+        - image: local-skaffold/gardener-extension-shoot-rsyslog-relp
+          alias: IMG
+  insecureRegistries:
+    - registry.local.gardener.cloud:5001
+manifests:
+  kustomize:
+    paths:
+      - dev-setup/local
 deploy:
-  helm:
-    releases:
-      - name: shoot-rsyslog-relp-admission-application
-        namespace: garden
-        wait: true
-        chartPath: charts/gardener-extension-shoot-rsyslog-relp-admission/charts/application
-        setValueTemplates:
-          gardener.virtualCluster.enabled: false
-      - name: shoot-rsyslog-relp-admission-runtime
-        namespace: garden
-        wait: true
-        chartPath: charts/gardener-extension-shoot-rsyslog-relp-admission/charts/runtime
-        setValueTemplates:
-          image.repository: '{{.IMAGE_REPO_local_skaffold_gardener_extension_shoot_rsyslog_relp_admission}}'
-          image.tag: '{{.IMAGE_TAG_local_skaffold_gardener_extension_shoot_rsyslog_relp_admission}}@{{.IMAGE_DIGEST_local_skaffold_gardener_extension_shoot_rsyslog_relp_admission}}'
-          gardener.virtualCluster.enabled: false
-profiles:
-  - name: remote-extension
-    patches:
-      - op: add
-        path: /deploy/helm/releases/1/setValues
-        value:
-          vpa.enabled: false
+  kubectl: {}
+resourceSelector:
+  allow:
+    - groupKind: Extension.operator.gardener.cloud
+      image:
+        - .spec.deployment.extension.helm.ociRepository.ref
+        - .spec.deployment.admission.runtimeCluster.helm.ociRepository.ref
+        - .spec.deployment.admission.virtualCluster.helm.ociRepository.ref

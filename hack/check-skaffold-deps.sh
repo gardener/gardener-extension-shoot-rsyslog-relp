@@ -18,8 +18,8 @@ function check() {
   fi
 }
 
-check "skaffold.yaml" "gardener-extension-shoot-rsyslog-relp" "extension"
-check "skaffold.yaml" "gardener-extension-shoot-rsyslog-relp-admission" "admission"
+check "skaffold.yaml" "gardener-extension-shoot-rsyslog-relp" "operator"
+check "skaffold.yaml" "gardener-extension-shoot-rsyslog-relp-admission" "operator"
 
 if [ "$check_successful" = false ] ; then
   exit 1

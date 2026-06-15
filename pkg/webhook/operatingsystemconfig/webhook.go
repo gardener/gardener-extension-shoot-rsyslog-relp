@@ -7,11 +7,9 @@ package operatingsystemconfig
 import (
 	extensionswebhook "github.com/gardener/gardener/extensions/pkg/webhook"
 	"github.com/gardener/gardener/extensions/pkg/webhook/controlplane/genericmutator"
-	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/component/extensions/operatingsystemconfig/original/components/kubelet"
 	oscutils "github.com/gardener/gardener/pkg/component/extensions/operatingsystemconfig/utils"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -46,15 +44,12 @@ func New(mgr manager.Manager) (*extensionswebhook.Webhook, error) {
 		return nil, err
 	}
 
-	namespaceSelector := &metav1.LabelSelector{
-		MatchExpressions: []metav1.LabelSelectorRequirement{
-			{Key: v1beta1constants.LabelExtensionPrefix + constants.ExtensionType, Operator: metav1.LabelSelectorOpIn, Values: []string{"true"}},
-		},
-	}
+	namespaceSelector := extensionswebhook.BuildExtensionTypeNamespaceSelector(constants.ExtensionType, []extensionsv1alpha1.ExtensionClass{
+		extensionsv1alpha1.ExtensionClassShoot,
+	})
 
 	webhook := &extensionswebhook.Webhook{
 		Name:              "operating-system-config",
-		Provider:          "",
 		Types:             types,
 		Target:            extensionswebhook.TargetSeed,
 		Path:              "/operating-system-config",
