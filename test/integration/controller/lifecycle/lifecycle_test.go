@@ -44,6 +44,7 @@ var _ = Describe("Lifecycle controller tests", func() {
 				Namespace: "kube-system",
 			},
 			Spec: appsv1.DaemonSetSpec{
+				RevisionHistoryLimit: ptr.To(int32(2)),
 				Selector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"app.kubernetes.io/instance": "rsyslog-relp-configuration-cleaner",
