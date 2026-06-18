@@ -166,10 +166,10 @@ github.com/gardener/cert-management v0.23.0 h1:kD88XcPn6C4zLc8EYtrHyb+/45Iyaozhb
 github.com/gardener/cert-management v0.23.0/go.mod h1:Mehn8XY+iAkm8XOBbNGHmbMft8fP9ZEJFWzWSonPkfc=
 github.com/gardener/dependency-watchdog v1.7.0 h1:oTAmbmXbPOT/LnxDZ0A0DO0W8GDYe9oykF+I6lCLKpI=
 github.com/gardener/dependency-watchdog v1.7.0/go.mod h1:3nQlFmW17dWL+90KK3PPa52XSnpjnk5mOaC2Pev+VNo=
-github.com/gardener/etcd-druid/api v0.36.3 h1:mBhDE/TJmcn2BY8Fscd5SfBSeWvtK4ZBPEW+v6XsQIQ=
-github.com/gardener/etcd-druid/api v0.36.3/go.mod h1:RwZzKp8K415AS0zg8VoODjBxYepCAUYyLgXnZc1bmbo=
-github.com/gardener/gardener v1.144.0 h1:M5SpEk+QUGsB9HxQu4Wjf9m6z76yNGreRFWljdqne7Q=
-github.com/gardener/gardener v1.144.0/go.mod h1:1RWUwc+ZncSkuPnWGYLMEvtkMfTRy7/LA47KyRtTMj0=
+github.com/gardener/etcd-druid/api v0.36.4 h1:o/17ciPrbh/w+igKMUuglW7N9XLjoMh7AvRKTzsBEVs=
+github.com/gardener/etcd-druid/api v0.36.4/go.mod h1:RwZzKp8K415AS0zg8VoODjBxYepCAUYyLgXnZc1bmbo=
+github.com/gardener/gardener v1.144.2 h1:Xo4bYdbFmoKM/GtUqARDDXRO9Yye8J5c5OSEfrdU0Ts=
+github.com/gardener/gardener v1.144.2/go.mod h1:RBqX3h3eiMtEUG7oDZqVM+wOYT1T1sr7c1WPs3akTeE=
 github.com/gardener/gardener/hack/tools/logcheck v0.0.0-20260521175212-e62347347cad h1:fnJ4SNB3FbH0ve3T2KnMTRvhUWlIq5WfR1951DoFWp4=
 github.com/gardener/gardener/hack/tools/logcheck v0.0.0-20260521175212-e62347347cad/go.mod h1:04M/IIwsAOVeNzzBUkDGBvxPM/Ny2bTJcbji1O7SFYo=
 github.com/gardener/gardener/pkg/apis v1.144.0 h1:xlnGMbliM5TjlK5o2oCxzyFSmtxgGerP4SDwEXdHL2E=
