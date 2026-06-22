@@ -117,7 +117,7 @@ if [[ -d /host/var/lib/rsyslog-relp-configurator ]]; then
   rm -rf /host/var/lib/rsyslog-relp-configurator
 fi`,
 								},
-								Image:           "europe-docker.pkg.dev/gardener-project/releases/3rd/alpine:3.24.0",
+								Image:           "europe-docker.pkg.dev/gardener-project/releases/3rd/alpine:3.24.1",
 								ImagePullPolicy: corev1.PullIfNotPresent,
 								Name:            "rsyslog-relp-configuration-cleaner",
 								SecurityContext: &corev1.SecurityContext{
