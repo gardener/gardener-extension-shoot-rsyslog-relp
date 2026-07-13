@@ -7,9 +7,6 @@ build:
     - registry.local.gardener.cloud:5001
   artifacts:
     - image: local-skaffold/gardener-extension-shoot-rsyslog-relp-echo-server
-      docker:
-        cacheFrom:
-          - local-skaffold/gardener-extension-shoot-rsyslog-relp-echo-server
   local: {}
 deploy:
   helm:
@@ -80,14 +77,14 @@ build:
     - image: local-skaffold/gardener-extension-shoot-rsyslog-relp-admission/charts/application
       custom:
         buildCommand: |
-          bash "$GARDENER_REPO_ROOT/hack/push-helm.sh" ./charts/gardener-extension-shoot-rsyslog-relp-admission/charts/application .image.ref
+          bash "$GARDENER_HACK_DIR/push-helm.sh" ./charts/gardener-extension-shoot-rsyslog-relp-admission/charts/application .image.ref
         dependencies:
           paths:
             - charts/gardener-extension-shoot-rsyslog-relp-admission/charts/application
     - image: local-skaffold/gardener-extension-shoot-rsyslog-relp-admission/charts/runtime
       custom:
         buildCommand: |
-          bash "$GARDENER_REPO_ROOT/hack/push-helm.sh" ./charts/gardener-extension-shoot-rsyslog-relp-admission/charts/runtime .image.ref
+          bash "$GARDENER_HACK_DIR/push-helm.sh" ./charts/gardener-extension-shoot-rsyslog-relp-admission/charts/runtime .image.ref
         dependencies:
           paths:
             - charts/gardener-extension-shoot-rsyslog-relp-admission/charts/runtime
@@ -97,7 +94,7 @@ build:
     - image: local-skaffold/gardener-extension-shoot-rsyslog-relp/charts/extension
       custom:
         buildCommand: |
-          bash "$GARDENER_REPO_ROOT/hack/push-helm.sh" ./charts/gardener-extension-shoot-rsyslog-relp .image.ref
+          bash "$GARDENER_HACK_DIR/push-helm.sh" ./charts/gardener-extension-shoot-rsyslog-relp .image.ref
         dependencies:
           paths:
             - charts/gardener-extension-shoot-rsyslog-relp
@@ -119,3 +116,9 @@ resourceSelector:
         - .spec.deployment.extension.helm.ociRepository.ref
         - .spec.deployment.admission.runtimeCluster.helm.ociRepository.ref
         - .spec.deployment.admission.virtualCluster.helm.ociRepository.ref
+profiles:
+  - name: remote
+    manifests:
+      kustomize:
+        paths:
+          - dev-setup/remote

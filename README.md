@@ -13,5 +13,6 @@ Gardener extension controller which configures the rsyslog and auditd services i
 ## Local Setup and Development
 
 * [Deploying the Rsyslog Relp Extension Locally](docs/development/getting-started.md) - learn how to set up a local development environment
+* [Deploying the Rsyslog Relp Extension in Gardener's Remote Setup](docs/development/getting-started-remotely.md) - learn how to set up a remote development environment using an existing Kubernetes cluster
 * [Developer Docs for Gardener Shoot Rsyslog Relp Extension](docs/development/shoot-rsyslog-relp.md) -  learn about the inner workings
 * [Validation Guidelines for Gardener Shoot Rsyslog Relp Extension](docs/development/input-validation.md) - learn about input validation specifics

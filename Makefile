@@ -19,16 +19,10 @@ IMAGE_TAG                   := $(EFFECTIVE_VERSION)
 LD_FLAGS                    := "-w $(shell EFFECTIVE_VERSION=$(EFFECTIVE_VERSION) bash $(GARDENER_HACK_DIR)/get-build-ld-flags.sh k8s.io/component-base $(REPO_ROOT)/VERSION $(EXTENSION_PREFIX)-$(NAME))"
 PARALLEL_E2E_TESTS          := 3
 GARDENER_REPO_ROOT          ?= $(REPO_ROOT)/../gardener
-SEED_NAME                   := provider-extensions
-SEED_KUBECONFIG             := $(GARDENER_REPO_ROOT)/example/provider-extensions/seed/kubeconfig
 RUNTIME_KUBECONFIG          := $(GARDENER_REPO_ROOT)/dev-setup/kubeconfigs/runtime/kubeconfig
 VIRTUAL_KUBECONFIG          := $(GARDENER_REPO_ROOT)/dev-setup/kubeconfigs/virtual-garden/kubeconfig
 SHOOT_NAME                  ?= local
 SHOOT_NAMESPACE             ?= garden-local
-
-ifneq ($(SEED_NAME),provider-extensions)
-	SEED_KUBECONFIG := $(GARDENER_REPO_ROOT)/example/provider-extensions/seed/kubeconfig-$(SEED_NAME)
-endif
 
 ifndef ARTIFACTS
 	export ARTIFACTS=/tmp/artifacts
@@ -170,29 +164,21 @@ export SKAFFOLD_PUSH = true
 export SKAFFOLD_LABEL = skaffold.dev/run-id=extension-local
 
 extension-up: $(SKAFFOLD) $(HELM) $(KUBECTL) $(KIND)
-	@LD_FLAGS=$(LD_FLAGS) GARDENER_REPO_ROOT=$(GARDENER_REPO_ROOT) $(SKAFFOLD) run --kubeconfig=$(RUNTIME_KUBECONFIG)
+	@LD_FLAGS=$(LD_FLAGS) GARDENER_HACK_DIR=$(GARDENER_HACK_DIR) $(SKAFFOLD) run --kubeconfig=$(RUNTIME_KUBECONFIG)
 
 extension-dev: $(SKAFFOLD) $(HELM) $(KUBECTL) $(KIND)
-	@LD_FLAGS=$(LD_FLAGS) GARDENER_REPO_ROOT=$(GARDENER_REPO_ROOT) $(SKAFFOLD) dev --cleanup=false --trigger=manual --kubeconfig=$(RUNTIME_KUBECONFIG)
+	@LD_FLAGS=$(LD_FLAGS) GARDENER_HACK_DIR=$(GARDENER_HACK_DIR) $(SKAFFOLD) dev --cleanup=false --trigger=manual --kubeconfig=$(RUNTIME_KUBECONFIG)
 
 extension-down: $(SKAFFOLD) $(HELM) $(KUBECTL)
-	$(SKAFFOLD) delete
-	@# The validating webhook is not part of the chart but it is created on admission Pod startup.
-	@# The approach with the owner Namespace ("--webhook-config-owner-namespace") cannot be used here as the extension is not managed via the operator in this setup.
-	@# Hence, we have to delete the webhook explicitly.
 	$(SKAFFOLD) delete --kubeconfig=$(RUNTIME_KUBECONFIG)
 
 remote-extension-up remote-extension-down: export SKAFFOLD_LABEL = skaffold.dev/run-id=extension-remote
 
 remote-extension-up: $(SKAFFOLD) $(HELM) $(KUBECTL) $(YQ)
-	@LD_FLAGS=$(LD_FLAGS) ./hack/remote-extension-up.sh --path-seed-kubeconfig $(SEED_KUBECONFIG)
+	@LD_FLAGS=$(LD_FLAGS) GARDENER_HACK_DIR=$(GARDENER_HACK_DIR) ./hack/remote-extension-up.sh --path-runtime-kubeconfig $(RUNTIME_KUBECONFIG)
 
 remote-extension-down: $(SKAFFOLD) $(HELM) $(KUBECTL)
-	$(SKAFFOLD) delete -m admission,extension
-	@# The validating webhook is not part of the chart but it is created on admission Pod startup.
-	@# The approach with the owner Namespace ("--webhook-config-owner-namespace") cannot be used here as the extension is not managed via the operator in this setup.
-	@# Hence, we have to delete the webhook explicitly.
-	$(KUBECTL) delete validatingwebhookconfiguration gardener-extension-shoot-rsyslog-relp-admission --ignore-not-found
+	$(SKAFFOLD) delete -m operator -p remote --kubeconfig=$(RUNTIME_KUBECONFIG)
 
 configure-shoot: $(HELM) $(KUBECTL) $(YQ)
 	@./hack/configure-shoot.sh --shoot-name $(SHOOT_NAME) --shoot-namespace $(SHOOT_NAMESPACE) --echo-server-image "$(ECHO_SERVER_IMAGE):$(ECHO_SERVER_VERSION)"
