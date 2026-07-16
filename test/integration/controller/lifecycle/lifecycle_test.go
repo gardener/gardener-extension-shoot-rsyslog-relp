@@ -26,7 +26,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	apimachinerytypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/uuid"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
@@ -44,7 +43,7 @@ var _ = Describe("Lifecycle controller tests", func() {
 				Namespace: "kube-system",
 			},
 			Spec: appsv1.DaemonSetSpec{
-				RevisionHistoryLimit: ptr.To(int32(2)),
+				RevisionHistoryLimit: new(int32(2)),
 				Selector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"app.kubernetes.io/instance": "rsyslog-relp-configuration-cleaner",
@@ -59,14 +58,14 @@ var _ = Describe("Lifecycle controller tests", func() {
 						},
 					},
 					Spec: corev1.PodSpec{
-						AutomountServiceAccountToken: ptr.To(false),
+						AutomountServiceAccountToken: new(false),
 						Containers: []corev1.Container{
 							{
 								Image:           "registry.k8s.io/pause:3.10",
 								ImagePullPolicy: corev1.PullIfNotPresent,
 								Name:            "pause-container",
 								SecurityContext: &corev1.SecurityContext{
-									AllowPrivilegeEscalation: ptr.To(false),
+									AllowPrivilegeEscalation: new(false),
 								},
 							},
 						},
@@ -121,7 +120,7 @@ fi`,
 								ImagePullPolicy: corev1.PullIfNotPresent,
 								Name:            "rsyslog-relp-configuration-cleaner",
 								SecurityContext: &corev1.SecurityContext{
-									AllowPrivilegeEscalation: ptr.To(false),
+									AllowPrivilegeEscalation: new(false),
 								},
 								Resources: corev1.ResourceRequirements{
 									Requests: corev1.ResourceList{
@@ -136,7 +135,7 @@ fi`,
 									{
 										Name:             "host-root-volume",
 										MountPath:        "/host",
-										MountPropagation: ptr.To(corev1.MountPropagationHostToContainer),
+										MountPropagation: new(corev1.MountPropagationHostToContainer),
 									},
 								},
 							},
@@ -224,16 +223,16 @@ fi`,
 			Port:   10250,
 			LoggingRules: []rsyslog.LoggingRule{
 				{
-					Severity:       ptr.To(5),
+					Severity:       new(5),
 					ProgramNames:   []string{"systemd", "audisp-syslog"},
-					MessageContent: &rsyslog.MessageContent{Regex: ptr.To("testing"), Exclude: ptr.To("not")},
+					MessageContent: &rsyslog.MessageContent{Regex: new("testing"), Exclude: new("not")},
 				},
 				{
-					Severity:     ptr.To(7),
+					Severity:     new(7),
 					ProgramNames: []string{"kubelet"},
 				},
 				{
-					Severity: ptr.To(2),
+					Severity: new(2),
 				},
 			},
 		}

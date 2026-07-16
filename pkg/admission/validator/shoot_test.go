@@ -21,7 +21,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -65,7 +64,7 @@ var _ = Describe("Shoot", func() {
 		})
 
 		It("should not do anything because extension is disabled", func() {
-			shoot.Spec.Extensions[0].Disabled = ptr.To(true)
+			shoot.Spec.Extensions[0].Disabled = new(true)
 			Expect(shootValidator.Validate(ctx, shoot, nil)).To(Succeed())
 		})
 
@@ -269,7 +268,7 @@ tls:
 								Name:      "rsyslog-secret",
 								Namespace: "bar",
 							},
-							Immutable: ptr.To(true),
+							Immutable: new(true),
 							Data: map[string][]byte{
 								"ca":  []byte("data"),
 								"crt": []byte("data"),
@@ -385,7 +384,7 @@ auditConfig:
 					},
 					Entry(
 						"should return error when referenced configmap is mutable",
-						ptr.To(""), "", false,
+						new(""), "", false,
 						MatchError(ContainSubstring("configMap bar/audit-configmap must be immutable")),
 					),
 					Entry(
@@ -395,17 +394,17 @@ auditConfig:
 					),
 					Entry(
 						"should return error if referenced configMap has no data in 'data.auditd'",
-						ptr.To(""), "", true,
+						new(""), "", true,
 						MatchError(ContainSubstring("empty auditd config. Provide non-empty auditd config in configMap bar/audit-configmap")),
 					),
 					Entry(
 						"should return error if referenced configMap contains invalid config",
-						ptr.To("some policy"), "", true,
+						new("some policy"), "", true,
 						MatchError(ContainSubstring("could not decode 'data.auditd' field of configMap bar/audit-configmap")),
 					),
 					Entry(
 						"should return error if referenced configMap contains config with invalid kind",
-						ptr.To(`apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
+						new(`apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
 kind: Foo`), "",
 						true,
 						MatchError(runtime.NewNotRegisteredErrForKind(
@@ -419,7 +418,7 @@ kind: Foo`), "",
 					),
 					Entry(
 						"should return error if referenced configMap contains invalid auditd config",
-						ptr.To(`apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
+						new(`apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
 kind: Auditd`), "",
 						true,
 						ConsistOf(
@@ -432,7 +431,7 @@ kind: Auditd`), "",
 					),
 					Entry(
 						"should return error if configmap contains extra data",
-						ptr.To(`apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
+						new(`apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
 kind: Auditd
 auditRules: -a exit,always -F arch=b64 -S setuid -S setreuid -S setgid -S setregid -F auid>0 -F auid!=-1 -F key=privilege_escalation`), "foo",
 						true,
@@ -440,7 +439,7 @@ auditRules: -a exit,always -F arch=b64 -S setuid -S setreuid -S setgid -S setreg
 					),
 					Entry(
 						"should succeed",
-						ptr.To(`apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
+						new(`apiVersion: rsyslog-relp.extensions.gardener.cloud/v1alpha1
 kind: Auditd
 auditRules: -a exit,always -F arch=b64 -S setuid -S setreuid -S setgid -S setregid -F auid>0 -F auid!=-1 -F key=privilege_escalation`), "",
 						true,

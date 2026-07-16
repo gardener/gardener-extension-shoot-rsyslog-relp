@@ -16,7 +16,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
@@ -44,7 +43,7 @@ func deployMonitoringConfig(ctx context.Context, c client.Client, namespace stri
 		{
 			Alert: "RsyslogTooManyRelpActionFailures",
 			Expr:  intstr.FromString(`sum(rate(rsyslog_pstat_failed{origin="core.action",name="rsyslg-relp"}[5m])) / sum(rate(rsyslog_pstat_processed{origin="core.action",name="rsyslog-relp"}[5m])) > bool 0.02 == 1`),
-			For:   ptr.To(monitoringv1.Duration("15m")),
+			For:   new(monitoringv1.Duration("15m")),
 			Labels: map[string]string{
 				"service":    "rsyslog-relp",
 				"severity":   "warning",
@@ -59,7 +58,7 @@ func deployMonitoringConfig(ctx context.Context, c client.Client, namespace stri
 		{
 			Alert: "RsyslogRelpActionProcessingRateIsZero",
 			Expr:  intstr.FromString(`rate(rsyslog_pstat_processed{origin="core.action",name="rsyslog-relp"}[5m]) == 0`),
-			For:   ptr.To(monitoringv1.Duration("15m")),
+			For:   new(monitoringv1.Duration("15m")),
 			Labels: map[string]string{
 				"service":    "rsyslog-relp",
 				"severity":   "warning",
@@ -77,7 +76,7 @@ func deployMonitoringConfig(ctx context.Context, c client.Client, namespace stri
 		alertingRules = append(alertingRules, monitoringv1.Rule{
 			Alert: "RsyslogRelpAuditRulesNotLoadedSuccessfully",
 			Expr:  intstr.FromString(`absent(rsyslog_augenrules_load_success == 1)`),
-			For:   ptr.To(monitoringv1.Duration("15m")),
+			For:   new(monitoringv1.Duration("15m")),
 			Labels: map[string]string{
 				"service":    "rsyslog-relp",
 				"severity":   "warning",
@@ -111,17 +110,17 @@ func deployMonitoringConfig(ctx context.Context, c client.Client, namespace stri
 		metav1.SetMetaDataLabel(&scrapeConfig.ObjectMeta, "component", constants.ServiceName)
 		metav1.SetMetaDataLabel(&scrapeConfig.ObjectMeta, "prometheus", "shoot")
 		scrapeConfig.Spec = monitoringv1alpha1.ScrapeConfigSpec{
-			HonorLabels:   ptr.To(false),
-			ScrapeTimeout: ptr.To(monitoringv1.Duration("30s")),
-			Scheme:        ptr.To(monitoringv1.SchemeHTTPS),
+			HonorLabels:   new(false),
+			ScrapeTimeout: new(monitoringv1.Duration("30s")),
+			Scheme:        new(monitoringv1.SchemeHTTPS),
 			// This is needed because the kubelets' certificates are not are generated for a specific pod IP
-			TLSConfig: &monitoringv1.SafeTLSConfig{InsecureSkipVerify: ptr.To(true)},
+			TLSConfig: &monitoringv1.SafeTLSConfig{InsecureSkipVerify: new(true)},
 			Authorization: &monitoringv1.SafeAuthorization{Credentials: &corev1.SecretKeySelector{
 				LocalObjectReference: corev1.LocalObjectReference{Name: "shoot-access-prometheus-shoot"},
 				Key:                  "token",
 			}},
 			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{{
-				APIServer:  ptr.To("https://kube-apiserver"),
+				APIServer:  new("https://kube-apiserver"),
 				Role:       "Endpoints",
 				Namespaces: &monitoringv1alpha1.NamespaceDiscovery{Names: []string{metav1.NamespaceSystem}},
 				Authorization: &monitoringv1.SafeAuthorization{Credentials: &corev1.SecretKeySelector{
@@ -129,18 +128,18 @@ func deployMonitoringConfig(ctx context.Context, c client.Client, namespace stri
 					Key:                  "token",
 				}},
 				// This is needed because we do not fetch the correct cluster CA bundle right now
-				TLSConfig:       &monitoringv1.SafeTLSConfig{InsecureSkipVerify: ptr.To(true)},
-				FollowRedirects: ptr.To(true),
+				TLSConfig:       &monitoringv1.SafeTLSConfig{InsecureSkipVerify: new(true)},
+				FollowRedirects: new(true),
 			}},
 			RelabelConfigs: []monitoringv1.RelabelConfig{
 				{
 					Action:      "replace",
-					Replacement: ptr.To("rsyslog-metrics"),
+					Replacement: new("rsyslog-metrics"),
 					TargetLabel: "job",
 				},
 				{
 					TargetLabel: "type",
-					Replacement: ptr.To("shoot"),
+					Replacement: new("shoot"),
 				},
 				{
 					SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_service_name", "__meta_kubernetes_endpoint_port_name"},
@@ -161,13 +160,13 @@ func deployMonitoringConfig(ctx context.Context, c client.Client, namespace stri
 				},
 				{
 					TargetLabel: "__address__",
-					Replacement: ptr.To("kube-apiserver:443"),
+					Replacement: new("kube-apiserver:443"),
 				},
 				{
 					SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_name", "__meta_kubernetes_pod_container_port_number"},
 					Regex:        `(.+);(.+)`,
 					TargetLabel:  "__metrics_path__",
-					Replacement:  ptr.To("/api/v1/namespaces/kube-system/pods/${1}:${2}/proxy/metrics"),
+					Replacement:  new("/api/v1/namespaces/kube-system/pods/${1}:${2}/proxy/metrics"),
 				},
 			},
 			MetricRelabelConfigs: monitoringutils.StandardMetricRelabelConfig("rsyslog_.+"),
