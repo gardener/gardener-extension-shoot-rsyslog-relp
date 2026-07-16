@@ -15,7 +15,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/imagevector"
@@ -83,7 +82,7 @@ func deployRsyslogRelpInstaller(ctx context.Context, c kubernetes.Interface) err
 						Command: []string{"/bin/sh", "-c"},
 						Args:    []string{"chroot /hostroot apt-get update && chroot /hostroot apt-get install -y rsyslog-relp"},
 						SecurityContext: &corev1.SecurityContext{
-							Privileged: ptr.To(true),
+							Privileged: new(true),
 						},
 						VolumeMounts: []corev1.VolumeMount{{
 							Name:      "root-volume",

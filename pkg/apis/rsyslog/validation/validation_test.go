@@ -10,7 +10,6 @@ import (
 	. "github.com/onsi/gomega/gstruct"
 	gomegatypes "github.com/onsi/gomega/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/utils/ptr"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog/validation"
@@ -37,7 +36,7 @@ var _ = Describe("Validation", func() {
 			loggingRules = []rsyslog.LoggingRule{
 				{
 					ProgramNames: []string{"kubelet"},
-					Severity:     ptr.To(0),
+					Severity:     new(0),
 				},
 			}
 		)
@@ -167,7 +166,7 @@ var _ = Describe("Validation", func() {
 			config := rsyslog.RsyslogRelpConfig{
 				Target:       relpTarget,
 				Port:         relpTargetPort,
-				LoggingRules: []rsyslog.LoggingRule{{ProgramNames: []string{""}, Severity: ptr.To(4)}},
+				LoggingRules: []rsyslog.LoggingRule{{ProgramNames: []string{""}, Severity: new(4)}},
 			}
 
 			matcher := ConsistOf(
@@ -187,7 +186,7 @@ var _ = Describe("Validation", func() {
 			config := rsyslog.RsyslogRelpConfig{
 				Target:       relpTarget,
 				Port:         relpTargetPort,
-				LoggingRules: []rsyslog.LoggingRule{{ProgramNames: []string{"kube[let", ":kubelet", "kubelet/kubelet"}, Severity: ptr.To(4)}},
+				LoggingRules: []rsyslog.LoggingRule{{ProgramNames: []string{"kube[let", ":kubelet", "kubelet/kubelet"}, Severity: new(4)}},
 			}
 
 			matcher := ConsistOf(
@@ -219,7 +218,7 @@ var _ = Describe("Validation", func() {
 			config := rsyslog.RsyslogRelpConfig{
 				Target:       relpTarget,
 				Port:         relpTargetPort,
-				LoggingRules: []rsyslog.LoggingRule{{ProgramNames: []string{"kube let"}, Severity: ptr.To(4)}},
+				LoggingRules: []rsyslog.LoggingRule{{ProgramNames: []string{"kube let"}, Severity: new(4)}},
 			}
 
 			matcher := ConsistOf(
@@ -240,7 +239,7 @@ var _ = Describe("Validation", func() {
 				Target: relpTarget,
 				Port:   relpTargetPort,
 				LoggingRules: []rsyslog.LoggingRule{
-					{}, {ProgramNames: []string{"kubelet"}, Severity: ptr.To(4)},
+					{}, {ProgramNames: []string{"kubelet"}, Severity: new(4)},
 				},
 			}
 
@@ -262,7 +261,7 @@ var _ = Describe("Validation", func() {
 				Target: relpTarget,
 				Port:   relpTargetPort,
 				LoggingRules: []rsyslog.LoggingRule{
-					{ProgramNames: []string{"kubelet"}, Severity: ptr.To(4)},
+					{ProgramNames: []string{"kubelet"}, Severity: new(4)},
 					{MessageContent: &rsyslog.MessageContent{}},
 				},
 			}
@@ -285,8 +284,8 @@ var _ = Describe("Validation", func() {
 				Target: relpTarget,
 				Port:   relpTargetPort,
 				LoggingRules: []rsyslog.LoggingRule{
-					{MessageContent: &rsyslog.MessageContent{Regex: ptr.To("(match")}},
-					{MessageContent: &rsyslog.MessageContent{Exclude: ptr.To("(match")}},
+					{MessageContent: &rsyslog.MessageContent{Regex: new("(match")}},
+					{MessageContent: &rsyslog.MessageContent{Exclude: new("(match")}},
 				},
 			}
 
@@ -317,7 +316,7 @@ var _ = Describe("Validation", func() {
 				},
 
 				Entry("should allow config when all setting are correct",
-					rsyslog.RsyslogRelpConfig{Target: relpTarget, Port: relpTargetPort, TLS: &rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secretRef"), PermittedPeer: []string{"per"}, AuthMode: &authModeName}, LoggingRules: loggingRules, RebindInterval: ptr.To(1000), Timeout: ptr.To(90), ResumeRetryCount: ptr.To(10), ReportSuspensionContinuation: ptr.To(true)},
+					rsyslog.RsyslogRelpConfig{Target: relpTarget, Port: relpTargetPort, TLS: &rsyslog.TLS{Enabled: true, SecretReferenceName: new("secretRef"), PermittedPeer: []string{"per"}, AuthMode: &authModeName}, LoggingRules: loggingRules, RebindInterval: new(1000), Timeout: new(90), ResumeRetryCount: new(10), ReportSuspensionContinuation: new(true)},
 					BeEmpty(),
 				),
 			)
@@ -340,7 +339,7 @@ var _ = Describe("Validation", func() {
 				),
 
 				Entry("should allow config when TLS is enabled and secretReferenceName is set",
-					rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secret-name")},
+					rsyslog.TLS{Enabled: true, SecretReferenceName: new("secret-name")},
 					BeEmpty(),
 				),
 
@@ -357,17 +356,17 @@ var _ = Describe("Validation", func() {
 				),
 
 				Entry("should allow config when TLS authMode is name",
-					rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secret-name"), AuthMode: &authModeName},
+					rsyslog.TLS{Enabled: true, SecretReferenceName: new("secret-name"), AuthMode: &authModeName},
 					BeEmpty(),
 				),
 
 				Entry("should allow config when TLS authMode is fingerprint",
-					rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secret-name"), AuthMode: &authModeFingerPrint},
+					rsyslog.TLS{Enabled: true, SecretReferenceName: new("secret-name"), AuthMode: &authModeFingerPrint},
 					BeEmpty(),
 				),
 
 				Entry("should forbid config when TLS authMode is invalid",
-					rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secret-name"), AuthMode: &authModeInvalid},
+					rsyslog.TLS{Enabled: true, SecretReferenceName: new("secret-name"), AuthMode: &authModeInvalid},
 					ConsistOf(
 						PointTo(MatchFields(IgnoreExtras, Fields{
 							"Type":     Equal(field.ErrorTypeNotSupported),
@@ -379,17 +378,17 @@ var _ = Describe("Validation", func() {
 				),
 
 				Entry("should allow config when tls lib is openssl",
-					rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secret-name"), TLSLib: &tlsLibOpenSSL},
+					rsyslog.TLS{Enabled: true, SecretReferenceName: new("secret-name"), TLSLib: &tlsLibOpenSSL},
 					BeEmpty(),
 				),
 
 				Entry("should allow config when tls lib is gnutls",
-					rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secret-name"), TLSLib: &tlsLibGnuTLS},
+					rsyslog.TLS{Enabled: true, SecretReferenceName: new("secret-name"), TLSLib: &tlsLibGnuTLS},
 					BeEmpty(),
 				),
 
 				Entry("should forbid config when tls lib is invalid",
-					rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secret-name"), TLSLib: &tlsLibInvalid},
+					rsyslog.TLS{Enabled: true, SecretReferenceName: new("secret-name"), TLSLib: &tlsLibInvalid},
 					ConsistOf(
 						PointTo(MatchFields(IgnoreExtras, Fields{
 							"Type":     Equal(field.ErrorTypeNotSupported),
@@ -401,12 +400,12 @@ var _ = Describe("Validation", func() {
 				),
 
 				Entry("should allow config when permittedPeer is specified",
-					rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secret-name"), PermittedPeer: []string{"peer1", "peer2"}},
+					rsyslog.TLS{Enabled: true, SecretReferenceName: new("secret-name"), PermittedPeer: []string{"peer1", "peer2"}},
 					BeEmpty(),
 				),
 
 				Entry("should forbid config if any permittedPeer is empty",
-					rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secret-name"), PermittedPeer: []string{"peer1", ""}},
+					rsyslog.TLS{Enabled: true, SecretReferenceName: new("secret-name"), PermittedPeer: []string{"peer1", ""}},
 					ConsistOf(
 						PointTo(MatchFields(IgnoreExtras, Fields{
 							"Type":     Equal(field.ErrorTypeRequired),
@@ -418,7 +417,7 @@ var _ = Describe("Validation", func() {
 				),
 
 				Entry("should forbid config if any permittedPeer isn't an allowed value",
-					rsyslog.TLS{Enabled: true, SecretReferenceName: ptr.To("secret-name"), PermittedPeer: []string{"peer1", "SHA1:zzz", "*.*.bar.com"}},
+					rsyslog.TLS{Enabled: true, SecretReferenceName: new("secret-name"), PermittedPeer: []string{"peer1", "SHA1:zzz", "*.*.bar.com"}},
 					ConsistOf(
 						PointTo(MatchFields(IgnoreExtras, Fields{
 							"Type":     Equal(field.ErrorTypeInvalid),

@@ -10,7 +10,6 @@ import (
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenerutils "github.com/gardener/gardener/pkg/utils"
-	"k8s.io/utils/ptr"
 )
 
 var (
@@ -41,7 +40,7 @@ func GetAuditRulesFiles(useExpectedContent bool) []extensionsv1alpha1.File {
 	return []extensionsv1alpha1.File{
 		{
 			Path:        "/var/lib/rsyslog-relp-configurator/audit/rules.d/00-base-config.rules",
-			Permissions: ptr.To(uint32(0744)),
+			Permissions: new(uint32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -51,7 +50,7 @@ func GetAuditRulesFiles(useExpectedContent bool) []extensionsv1alpha1.File {
 		},
 		{
 			Path:        "/var/lib/rsyslog-relp-configurator/audit/rules.d/10-privilege-escalation.rules",
-			Permissions: ptr.To(uint32(0744)),
+			Permissions: new(uint32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -61,7 +60,7 @@ func GetAuditRulesFiles(useExpectedContent bool) []extensionsv1alpha1.File {
 		},
 		{
 			Path:        "/var/lib/rsyslog-relp-configurator/audit/rules.d/11-privileged-special.rules",
-			Permissions: ptr.To(uint32(0744)),
+			Permissions: new(uint32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -71,7 +70,7 @@ func GetAuditRulesFiles(useExpectedContent bool) []extensionsv1alpha1.File {
 		},
 		{
 			Path:        "/var/lib/rsyslog-relp-configurator/audit/rules.d/12-system-integrity.rules",
-			Permissions: ptr.To(uint32(0744)),
+			Permissions: new(uint32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -87,7 +86,7 @@ func GetRsyslogFiles(rsyslogConfig []byte, useExpectedContent bool) []extensions
 	return []extensionsv1alpha1.File{
 		{
 			Path:        "/var/lib/rsyslog-relp-configurator/rsyslog.d/60-audit.conf",
-			Permissions: ptr.To(uint32(0744)),
+			Permissions: new(uint32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -97,7 +96,7 @@ func GetRsyslogFiles(rsyslogConfig []byte, useExpectedContent bool) []extensions
 		},
 		{
 			Path:        "/var/lib/rsyslog-relp-configurator/configure-rsyslog.sh",
-			Permissions: ptr.To(uint32(0744)),
+			Permissions: new(uint32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -107,7 +106,7 @@ func GetRsyslogFiles(rsyslogConfig []byte, useExpectedContent bool) []extensions
 		},
 		{
 			Path:        "/var/lib/rsyslog-relp-configurator/process-rsyslog-pstats.sh",
-			Permissions: ptr.To(uint32(0744)),
+			Permissions: new(uint32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -117,7 +116,7 @@ func GetRsyslogFiles(rsyslogConfig []byte, useExpectedContent bool) []extensions
 		},
 		{
 			Path:        "/etc/systemd/system/rsyslog.service.d/10-shoot-rsyslog-relp-memory-limits.conf",
-			Permissions: ptr.To(uint32(0644)),
+			Permissions: new(uint32(0644)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Data: GetBasedOnCondition(useExpectedContent, `[Service]
@@ -136,7 +135,7 @@ func GetRsyslogTLSFiles(useExpectedContent bool) []extensionsv1alpha1.File {
 	return []extensionsv1alpha1.File{
 		{
 			Path:        "/var/lib/rsyslog-relp-configurator/tls/ca.crt",
-			Permissions: ptr.To(uint32(0600)),
+			Permissions: new(uint32(0600)),
 			Content: extensionsv1alpha1.FileContent{
 				SecretRef: &extensionsv1alpha1.FileContentSecretRef{
 					Name:    GetBasedOnCondition(useExpectedContent, "ref-rsyslog-tls", "ref-rsyslog-tls-old"),
@@ -146,7 +145,7 @@ func GetRsyslogTLSFiles(useExpectedContent bool) []extensionsv1alpha1.File {
 		},
 		{
 			Path:        "/var/lib/rsyslog-relp-configurator/tls/tls.crt",
-			Permissions: ptr.To(uint32(0600)),
+			Permissions: new(uint32(0600)),
 			Content: extensionsv1alpha1.FileContent{
 				SecretRef: &extensionsv1alpha1.FileContentSecretRef{
 					Name:    GetBasedOnCondition(useExpectedContent, "ref-rsyslog-tls", "ref-rsyslog-tls-old"),
@@ -156,7 +155,7 @@ func GetRsyslogTLSFiles(useExpectedContent bool) []extensionsv1alpha1.File {
 		},
 		{
 			Path:        "/var/lib/rsyslog-relp-configurator/tls/tls.key",
-			Permissions: ptr.To(uint32(0600)),
+			Permissions: new(uint32(0600)),
 			Content: extensionsv1alpha1.FileContent{
 				SecretRef: &extensionsv1alpha1.FileContentSecretRef{
 					Name:    GetBasedOnCondition(useExpectedContent, "ref-rsyslog-tls", "ref-rsyslog-tls-old"),
@@ -171,9 +170,9 @@ func GetRsyslogTLSFiles(useExpectedContent bool) []extensionsv1alpha1.File {
 func GetRsyslogConfiguratorUnit(useExpectedContent bool) extensionsv1alpha1.Unit {
 	return extensionsv1alpha1.Unit{
 		Name:    "rsyslog-configurator.service",
-		Command: ptr.To(extensionsv1alpha1.CommandStart),
-		Enable:  ptr.To(true),
-		Content: ptr.To(GetBasedOnCondition(useExpectedContent, `[Unit]
+		Command: new(extensionsv1alpha1.CommandStart),
+		Enable:  new(true),
+		Content: new(GetBasedOnCondition(useExpectedContent, `[Unit]
 Description=rsyslog configurator daemon
 Documentation=https://github.com/gardener/gardener-extension-shoot-rsyslog-relp
 [Service]
