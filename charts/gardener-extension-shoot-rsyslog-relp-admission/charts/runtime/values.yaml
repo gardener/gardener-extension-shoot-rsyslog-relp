@@ -20,7 +20,7 @@ vpa:
       cpu: 50m
       memory: 64Mi
   updatePolicy:
-    updateMode: "Recreate"
+    updateMode: "InPlaceOrRecreate"
 webhookConfig:
   serverPort: 10250
   servicePort: 443
