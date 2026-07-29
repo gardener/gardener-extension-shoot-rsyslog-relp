@@ -16,7 +16,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/constants"
@@ -96,7 +95,7 @@ func (r *rsyslogRelpConfigCleaner) computeResourcesData() (map[string][]byte, er
 			Labels:    getLabels(),
 		},
 		Spec: appsv1.DaemonSetSpec{
-			RevisionHistoryLimit: ptr.To(int32(2)),
+			RevisionHistoryLimit: new(int32(2)),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: getLabels(),
 			},
@@ -105,7 +104,7 @@ func (r *rsyslogRelpConfigCleaner) computeResourcesData() (map[string][]byte, er
 					Labels: getLabels(),
 				},
 				Spec: corev1.PodSpec{
-					AutomountServiceAccountToken: ptr.To(false),
+					AutomountServiceAccountToken: new(false),
 					PriorityClassName:            v1beta1constants.PriorityClassNameShootSystem700,
 					SecurityContext: &corev1.PodSecurityContext{
 						SeccompProfile: &corev1.SeccompProfile{
@@ -119,7 +118,7 @@ func (r *rsyslogRelpConfigCleaner) computeResourcesData() (map[string][]byte, er
 							ImagePullPolicy: corev1.PullIfNotPresent,
 							Command:         computeCommand(),
 							SecurityContext: &corev1.SecurityContext{
-								AllowPrivilegeEscalation: ptr.To(false),
+								AllowPrivilegeEscalation: new(false),
 							},
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
@@ -145,7 +144,7 @@ func (r *rsyslogRelpConfigCleaner) computeResourcesData() (map[string][]byte, er
 							Image:           r.values.PauseContainerImage,
 							ImagePullPolicy: corev1.PullIfNotPresent,
 							SecurityContext: &corev1.SecurityContext{
-								AllowPrivilegeEscalation: ptr.To(false),
+								AllowPrivilegeEscalation: new(false),
 							},
 						},
 					},

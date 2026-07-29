@@ -23,7 +23,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -86,19 +85,19 @@ var _ = Describe("Ensurer", func() {
 			Port:   10250,
 			LoggingRules: []rsyslog.LoggingRule{
 				{
-					Severity:     ptr.To(5),
+					Severity:     new(5),
 					ProgramNames: []string{"systemd", "audisp-syslog"},
 					MessageContent: &rsyslog.MessageContent{
-						Regex:   ptr.To("foo"),
-						Exclude: ptr.To("bar"),
+						Regex:   new("foo"),
+						Exclude: new("bar"),
 					},
 				},
 				{
-					Severity:     ptr.To(7),
+					Severity:     new(7),
 					ProgramNames: []string{"kubelet"},
 				},
 				{
-					Severity: ptr.To(2),
+					Severity: new(2),
 				},
 			},
 			AuditConfig: &rsyslog.AuditConfig{
@@ -196,7 +195,7 @@ var _ = Describe("Ensurer", func() {
 
 				extensionProviderConfig.TLS = &rsyslog.TLS{
 					Enabled:             true,
-					SecretReferenceName: ptr.To("rsyslog-tls"),
+					SecretReferenceName: new("rsyslog-tls"),
 					AuthMode:            &authModeName,
 					TLSLib:              &tlsLibOpenSSL,
 					PermittedPeer:       []string{"rsyslog-server.foo", "rsyslog-server.foo.bar"},
@@ -249,14 +248,14 @@ auditRules: |
 
 				extensionProviderConfig.AuditConfig = &rsyslog.AuditConfig{
 					Enabled:                true,
-					ConfigMapReferenceName: ptr.To("audit-rules"),
+					ConfigMapReferenceName: new("audit-rules"),
 				}
 
 				expectedFiles = append([]extensionsv1alpha1.File{oldFile}, webhooktest.GetRsyslogFiles(webhooktest.GetTestingRsyslogConfig(), true)...)
 				expectedFiles = append(expectedFiles, []extensionsv1alpha1.File{
 					{
 						Path:        "/var/lib/rsyslog-relp-configurator/audit/rules.d/00_shoot_rsyslog_relp.rules",
-						Permissions: ptr.To(uint32(0644)),
+						Permissions: new(uint32(0644)),
 						Content: extensionsv1alpha1.FileContent{
 							Inline: &extensionsv1alpha1.FileContentInline{
 								Encoding: "b64",

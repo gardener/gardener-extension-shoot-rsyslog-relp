@@ -14,7 +14,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	rsyslogv1alpha1 "github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog/v1alpha1"
@@ -123,7 +122,7 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 				common.AddOrUpdateRsyslogRelpExtension(
 					shoot,
 					common.WithTarget(echoServerIP),
-					common.AppendLoggingRule(rsyslogv1alpha1.LoggingRule{ProgramNames: []string{"audisp-syslog", "audispd"}, Severity: ptr.To(7)}),
+					common.AppendLoggingRule(rsyslogv1alpha1.LoggingRule{ProgramNames: []string{"audisp-syslog", "audispd"}, Severity: new(7)}),
 				)
 				return nil
 			})
@@ -159,7 +158,7 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 					common.WithPort(443),
 					common.WithTLSWithSecretRefNameAndTLSLib(secretReferenceName, "openssl"),
 					common.WithTarget(echoServerIP),
-					common.AppendLoggingRule(rsyslogv1alpha1.LoggingRule{ProgramNames: []string{"audisp-syslog", "audispd"}, Severity: ptr.To(7)}),
+					common.AppendLoggingRule(rsyslogv1alpha1.LoggingRule{ProgramNames: []string{"audisp-syslog", "audispd"}, Severity: new(7)}),
 				)
 				common.AddOrUpdateResourceReference(shoot, secretReferenceName, "Secret", createdResources[0].GetName())
 				return nil
@@ -204,8 +203,8 @@ var _ = Describe("Shoot rsyslog-relp testing", func() {
 				common.AddOrUpdateRsyslogRelpExtension(
 					shoot,
 					common.WithTarget(echoServerIP),
-					common.AppendLoggingRule(rsyslogv1alpha1.LoggingRule{ProgramNames: []string{"audisp-syslog", "audispd"}, Severity: ptr.To(7)}),
-					common.WithAuditConfig(&rsyslogv1alpha1.AuditConfig{Enabled: true, ConfigMapReferenceName: ptr.To(configMapRefName)}),
+					common.AppendLoggingRule(rsyslogv1alpha1.LoggingRule{ProgramNames: []string{"audisp-syslog", "audispd"}, Severity: new(7)}),
+					common.WithAuditConfig(&rsyslogv1alpha1.AuditConfig{Enabled: true, ConfigMapReferenceName: new(configMapRefName)}),
 				)
 				common.AddOrUpdateResourceReference(shoot, configMapRefName, "ConfigMap", createdResources[0].GetName())
 				return nil

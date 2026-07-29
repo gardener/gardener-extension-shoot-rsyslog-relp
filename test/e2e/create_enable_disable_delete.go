@@ -15,7 +15,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog/v1alpha1"
@@ -145,10 +144,10 @@ var _ = Describe("Shoot Rsyslog Relp Extension Tests", func() {
 		enableExtensionFunc := func(shoot *gardencorev1beta1.Shoot) error {
 			loggingRule := v1alpha1.LoggingRule{
 				ProgramNames: []string{"filter-program"},
-				Severity:     ptr.To(3),
+				Severity:     new(3),
 				MessageContent: &v1alpha1.MessageContent{
-					Regex:   ptr.To("included"),
-					Exclude: ptr.To("excluded"),
+					Regex:   new("included"),
+					Exclude: new("excluded"),
 				},
 			}
 

@@ -17,7 +17,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
@@ -79,7 +78,7 @@ func getAuditConfigFromConfigMap(ctx context.Context, c client.Client, decoder r
 
 	return []extensionsv1alpha1.File{{
 		Path:        fmt.Sprintf("%s/%s", constants.AuditRulesFromOSCDir, "00_shoot_rsyslog_relp.rules"),
-		Permissions: ptr.To(uint32(0644)),
+		Permissions: new(uint32(0644)),
 		Content: extensionsv1alpha1.FileContent{
 			Inline: &extensionsv1alpha1.FileContentInline{
 				Encoding: "b64",
@@ -93,7 +92,7 @@ func getDefaultAuditRules() []extensionsv1alpha1.File {
 	return []extensionsv1alpha1.File{
 		{
 			Path:        baseConfigRulesPath,
-			Permissions: ptr.To(uint32(0744)),
+			Permissions: new(uint32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -103,7 +102,7 @@ func getDefaultAuditRules() []extensionsv1alpha1.File {
 		},
 		{
 			Path:        privilegeEscalationRulesPath,
-			Permissions: ptr.To(uint32(0744)),
+			Permissions: new(uint32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -113,7 +112,7 @@ func getDefaultAuditRules() []extensionsv1alpha1.File {
 		},
 		{
 			Path:        privilegeSpecialRulesPath,
-			Permissions: ptr.To(uint32(0744)),
+			Permissions: new(uint32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -123,7 +122,7 @@ func getDefaultAuditRules() []extensionsv1alpha1.File {
 		},
 		{
 			Path:        systemIntegrityRulesPath,
-			Permissions: ptr.To(uint32(0744)),
+			Permissions: new(uint32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",

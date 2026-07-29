@@ -18,7 +18,6 @@ import (
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenerutils "github.com/gardener/gardener/pkg/utils"
-	"k8s.io/utils/ptr"
 
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/apis/rsyslog"
 	"github.com/gardener/gardener-extension-shoot-rsyslog-relp/pkg/constants"
@@ -115,7 +114,7 @@ func getRsyslogFiles(rsyslogRelpConfig *rsyslog.RsyslogRelpConfig, cluster *exte
 	rsyslogFiles = append(rsyslogFiles, []extensionsv1alpha1.File{
 		{
 			Path:        constants.RsyslogConfigFromOSCPath,
-			Permissions: ptr.To(uint32(0744)),
+			Permissions: new(uint32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -125,7 +124,7 @@ func getRsyslogFiles(rsyslogRelpConfig *rsyslog.RsyslogRelpConfig, cluster *exte
 		},
 		{
 			Path:        constants.ConfigureRsyslogScriptPath,
-			Permissions: ptr.To(uint32(0744)),
+			Permissions: new(uint32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -135,7 +134,7 @@ func getRsyslogFiles(rsyslogRelpConfig *rsyslog.RsyslogRelpConfig, cluster *exte
 		},
 		{
 			Path:        constants.ProcessRsyslogPstatsScriptPath,
-			Permissions: ptr.To(uint32(0744)),
+			Permissions: new(uint32(0744)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Encoding: "b64",
@@ -145,7 +144,7 @@ func getRsyslogFiles(rsyslogRelpConfig *rsyslog.RsyslogRelpConfig, cluster *exte
 		},
 		{
 			Path:        rsyslogServiceMemoryLimitsDropInPath,
-			Permissions: ptr.To(uint32(0644)),
+			Permissions: new(uint32(0644)),
 			Content: extensionsv1alpha1.FileContent{
 				Inline: &extensionsv1alpha1.FileContentInline{
 					Data: `[Service]
@@ -167,9 +166,9 @@ func getRsyslogValues(rsyslogRelpConfig *rsyslog.RsyslogRelpConfig, cluster *ext
 	var reportSuspensionContinuation *string
 	if rsyslogRelpConfig.ReportSuspensionContinuation != nil {
 		if *rsyslogRelpConfig.ReportSuspensionContinuation {
-			reportSuspensionContinuation = ptr.To("on")
+			reportSuspensionContinuation = new("on")
 		} else {
-			reportSuspensionContinuation = ptr.To("off")
+			reportSuspensionContinuation = new("off")
 		}
 	}
 
@@ -227,7 +226,7 @@ func getRsyslogTLSFiles(cluster *extensionscontroller.Cluster, secretRefName str
 	return []extensionsv1alpha1.File{
 		{
 			Path:        constants.RsyslogTLSFromOSCDir + "/ca.crt",
-			Permissions: ptr.To(uint32(0600)),
+			Permissions: new(uint32(0600)),
 			Content: extensionsv1alpha1.FileContent{
 				SecretRef: &extensionsv1alpha1.FileContentSecretRef{
 					Name:    refSecretName,
@@ -237,7 +236,7 @@ func getRsyslogTLSFiles(cluster *extensionscontroller.Cluster, secretRefName str
 		},
 		{
 			Path:        constants.RsyslogTLSFromOSCDir + "/tls.crt",
-			Permissions: ptr.To(uint32(0600)),
+			Permissions: new(uint32(0600)),
 			Content: extensionsv1alpha1.FileContent{
 				SecretRef: &extensionsv1alpha1.FileContentSecretRef{
 					Name:    refSecretName,
@@ -247,7 +246,7 @@ func getRsyslogTLSFiles(cluster *extensionscontroller.Cluster, secretRefName str
 		},
 		{
 			Path:        constants.RsyslogTLSFromOSCDir + "/tls.key",
-			Permissions: ptr.To(uint32(0600)),
+			Permissions: new(uint32(0600)),
 			Content: extensionsv1alpha1.FileContent{
 				SecretRef: &extensionsv1alpha1.FileContentSecretRef{
 					Name:    refSecretName,
@@ -261,9 +260,9 @@ func getRsyslogTLSFiles(cluster *extensionscontroller.Cluster, secretRefName str
 func getRsyslogConfiguratorUnit() extensionsv1alpha1.Unit {
 	return extensionsv1alpha1.Unit{
 		Name:    "rsyslog-configurator.service",
-		Command: ptr.To(extensionsv1alpha1.CommandStart),
-		Enable:  ptr.To(true),
-		Content: ptr.To(`[Unit]
+		Command: new(extensionsv1alpha1.CommandStart),
+		Enable:  new(true),
+		Content: new(`[Unit]
 Description=rsyslog configurator daemon
 Documentation=https://github.com/gardener/gardener-extension-shoot-rsyslog-relp
 [Service]
