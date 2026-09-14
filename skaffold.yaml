@@ -33,6 +33,7 @@ build:
           paths:
             - cmd/gardener-extension-shoot-rsyslog-relp
             - cmd/gardener-extension-shoot-rsyslog-relp/app
+            - imagevector
             - pkg/apis/config
             - pkg/apis/config/v1alpha1
             - pkg/apis/rsyslog
@@ -42,17 +43,8 @@ build:
             - pkg/component/rsyslogrelpconfigcleaner
             - pkg/constants
             - pkg/controller/lifecycle
-            - imagevector
-            - imagevector/images.yaml
             - pkg/utils
             - pkg/webhook/operatingsystemconfig
-            - pkg/webhook/operatingsystemconfig/resources/auditrules/00-base-config.rules
-            - pkg/webhook/operatingsystemconfig/resources/auditrules/10-privilege-escalation.rules
-            - pkg/webhook/operatingsystemconfig/resources/auditrules/11-privileged-special.rules
-            - pkg/webhook/operatingsystemconfig/resources/auditrules/12-system-integrity.rules
-            - pkg/webhook/operatingsystemconfig/resources/templates/60-audit.conf.tpl
-            - pkg/webhook/operatingsystemconfig/resources/templates/scripts/configure-rsyslog.tpl.sh
-            - pkg/webhook/operatingsystemconfig/resources/templates/scripts/process-rsyslog-pstats.tpl.sh
             - VERSION
         ldflags:
           - '{{.LD_FLAGS}}'
