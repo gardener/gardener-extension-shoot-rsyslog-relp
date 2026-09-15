@@ -122,7 +122,7 @@ func createNetworkPolicyForEchoServer(ctx context.Context, c kubernetes.Interfac
 	networkPolicy := &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "allow-machine-to-rsyslog-relp-echo-server",
-			Namespace: namespace,
+			Namespace: "infra-" + namespace,
 		},
 		Spec: networkingv1.NetworkPolicySpec{
 			PodSelector: metav1.LabelSelector{
