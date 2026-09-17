@@ -159,7 +159,7 @@ var _ = BeforeSuite(func() {
 		},
 		Spec: gardencorev1beta1.ShootSpec{
 			Kubernetes: gardencorev1beta1.Kubernetes{
-				Version: "1.35.4",
+				Version: "1.36.0",
 			},
 		},
 	}
@@ -172,7 +172,7 @@ var _ = BeforeSuite(func() {
 		},
 		Spec: extensionsv1alpha1.ClusterSpec{
 			CloudProfile: runtime.RawExtension{Raw: []byte("{}")},
-			Seed:         runtime.RawExtension{Raw: []byte("{}")},
+			Seed:         &runtime.RawExtension{Raw: []byte("{}")},
 			Shoot:        runtime.RawExtension{Raw: shootJSON},
 		},
 	}

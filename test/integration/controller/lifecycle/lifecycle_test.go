@@ -204,7 +204,7 @@ fi`,
 					Workers: []gardencorev1beta1.Worker{{Name: "worker"}},
 				},
 				Kubernetes: gardencorev1beta1.Kubernetes{
-					Version: "1.35.4",
+					Version: "1.36.0",
 				},
 				Resources: []gardencorev1beta1.NamedResourceReference{
 					{
@@ -248,7 +248,7 @@ fi`,
 				Shoot: runtime.RawExtension{
 					Object: shoot,
 				},
-				Seed: runtime.RawExtension{
+				Seed: &runtime.RawExtension{
 					Object: &gardencorev1beta1.Seed{},
 				},
 				CloudProfile: runtime.RawExtension{
